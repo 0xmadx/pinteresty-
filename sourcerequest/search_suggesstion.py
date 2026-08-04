@@ -1,0 +1,25 @@
+curl 'https://www.etsy-jdikljda.com/api/v3/ajax/public/search/zero-pane-trending-searches/true?dataset=smu_trending_queries_v3' \
+  -H 'accept: */*' \
+  -H 'accept-language: en-US,en;q=0.9' \
+  -H 'content-type: application/json' \
+  -b 'uaid=9zG-A_YQg8LZ-MCPz_x5-rdcgZFjZACCrAx-dxhdrVSamJmiZKXkWBVREGSZHxzq6Jnm6O_pnOGcWFmeWpEVFpRTpVTLAAA.; fve=1785204551.0; _fbp=fb.1.1785204551605.4242888094241905; exp_ebid=m=gWB4xrGVR2fndh7mnJJstfCVEd5G5%2FpUpET2%2BQaleEQ%3D,v=q2sfF5kjpsZTnbv7TIxKDFGIYA0kd1tU; ua=531227642bc86f3b5fd7103a0c0b4fd6; g_state={"i_l":0,"i_ll":1785204553481,"i_b":"kXeTOkHFpt/B0i/Bnb4tnKRTlJMm8P9xU17EBK0TSms","i_e":{"enable_itp_optimization":24},"i_et":1785204553481}; _axwrt_ts=238c5b78-75ad-4e6f-9b5c-e0b64ce08594.1785204553596; _axwrt=238c5b78-75ad-4e6f-9b5c-e0b64ce08594; _ga=GA1.1.1925758626.1785204554; _tt_enable_cookie=1; _ttp=01KYK7QFV2AJWKY1Y218W1T7AX_.tt.1; session-key-www=1270145053-1503888625433-fbfbe74efb7f072415e2f05990ea135d1adfaf389bc6e36978fe4278|1792980603; session-key-apex=1270145053-1503888625433-9e7bdbfeeb5105c0e50177c6462905b1ed8d382762ef8a56a34d4a77|1792980603; LD=1; sign_in_method=o_NagqSN-m3_TKbvUeIwrH2fESZjZACCrAz-KhhdXJyvW5SanJpXYpWen5-ek8oAAA..; last_browse_page=https%3A%2F%2Fwww.etsy-jdikljda.com%2F%3Fref_login_action%3Dsignin-header; session-binding-www=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImJsdWUifQ.eyJzY29wZSI6Ind3dyIsInNlc3Npb25fa2V5IjoiMTI3MDE0NTA1My0xNTAzODg4NjI1NDMzLWZiZmJlNzRlZmI3ZjA3MjQxNWUyZjA1OTkwZWExMzVkMWFkZmFmMzg5YmM2ZTM2OTc4ZmU0Mjc4IiwiaWF0IjoxNzg1MjA0NjA0LCJleHAiOjE3ODUyMDU1NjR9.0JoxerIKBr5EgF6ILls3V73Ky0kh5GaNJPc1rUkjLCQ; _gcl_au=1.1.966418974.1785204553.-.-.1785204553.827741123.1785204554.1785204605; ax_visitor=%7B%22firstVisitTs%22%3A1785204553603%2C%22lastVisitTs%22%3Anull%2C%22currentVisitStartTs%22%3A1785204553603%2C%22ts%22%3A1785204605769%2C%22visitCount%22%3A1%7D; _ga_KR3J610VYM=GS2.1.s1785204553$o1$g1$t1785204605$j8$l0$h0; _uetsid=54a3c3508a2911f1bbe3b3f581b48fc3|1am56am|2|g84|0|2400; ttcsid_CD255AJC77U2F908QPL0=1785204555623::UIGIbss14HtX0H-0Qhba.1.1785204606372.1; ttcsid=1785204555624::AYcPaJbS5IRrFLX0wbmq.1.1785204606373.0::1.47619.50749::39931.2.765.633::0.0.0; _pin_unauth=dWlkPU1UVm1aRGxrTURNdE16TTFNQzAwWW1Rd0xXRXhZVGd0TW1FelptWXpPVEl5TWpGag; QSI_HistorySession=https%3A%2F%2Fwww.etsy-jdikljda.com%2F~1785204556424%7Chttps%3A%2F%2Fwww.etsy-jdikljda.com%2F%3F~1785204606439; _uetvid=54a456708a2911f1bca45b4656638d1a|h9imvq|1785204606644|2|1|bat.bing.com/p/insights/c/f; user_prefs=bkl-EwShO7clG2AfzJmsxN9akl9jZACCrAx-dyjdHK0UGuyipJNXmpOjo5SapxsarKSjBCLAIkYQCi8RywAA; datadome=gRcNfR~9LVIoL97d1SFpHhNlAeQE~t0tOEqtdSX3ho924WpP53_mgJKQcubWBTk2EjKpKEJA1tUzMSEOWyAAKW6r9Oih9u_n70youe8QJ3H2KEnfduO9dTwhOh_HLXlH; tsd=%7B%22gnav_search_focus%22%3A%7B%22event_name%22%3A%22gnav_search_focus%22%2C%22interaction_type%22%3A%22click%22%7D%7D' \
+  -H 'downlink: 10' \
+  -H 'dpr: 1.25' \
+  -H 'ect: 4g' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://www.etsy.com/?' \
+  -H 'rtt: 50' \
+  -H 'sec-ch-dpr: 1.25' \
+  -H 'sec-ch-ua: "Not;A=Brand";v="8", "Chromium";v="150", "Google Chrome";v="150"' \
+  -H 'sec-ch-ua-arch: "x86"' \
+  -H 'sec-ch-ua-bitness: "64"' \
+  -H 'sec-ch-ua-full-version-list: "Not;A=Brand";v="8.0.0.0", "Chromium";v="150.0.7871.125", "Google Chrome";v="150.0.7871.125"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-ch-ua-platform-version: "19.0.0"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36' \
+  -H 'x-detected-locale: USD|en-US|US' \
+  -H 'x-page-guid: 103c80dccca9.6b18775a6173ecd19d35.00'
