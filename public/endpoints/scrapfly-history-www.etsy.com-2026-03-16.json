@@ -1,0 +1,871 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-08-04T09:40:09.996Z",
+  "item": {
+    "id": "detection_1773622171604_653712113",
+    "url": "https://www.etsy.com/",
+    "hostname": "www.etsy.com",
+    "title": "Etsy - Shop for handmade, vintage, custom, and unique gifts for everyone",
+    "favicon": "https://www.google.com/s2/favicons?domain=www.etsy.com",
+    "timestamp": 1773622171604,
+    "detections": [
+      {
+        "detector": {
+          "id": "detect-battery-fingerprint",
+          "name": "Battery API Fingerprint",
+          "icon": "custom.png",
+          "color": "#10b981",
+          "description": "Battery Status API used for device fingerprinting via battery level and charging state"
+        },
+        "category": "fingerprint",
+        "confidence": 95,
+        "detectionMethods": [
+          "js_hooks",
+          "window"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "EventTarget.prototype.addEventListener",
+            "value": "addEventListener",
+            "confidence": 90,
+            "description": "Listens to battery status changes"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "Navigator.prototype.getBattery",
+            "value": "getBattery",
+            "confidence": 95,
+            "description": "Gets battery status object for fingerprinting"
+          },
+          {
+            "type": "window",
+            "pattern": "navigator.getBattery",
+            "confidence": 80,
+            "description": "Battery Status API access point",
+            "actualType": "function",
+            "condition": "typeof function"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-gamepads-fingerprint",
+          "name": "Gamepads API Fingerprint",
+          "icon": "custom.png",
+          "color": "#ef4444",
+          "description": "Gamepads API for detecting connected input devices and device capabilities"
+        },
+        "category": "fingerprint",
+        "confidence": 75,
+        "detectionMethods": [
+          "js_hooks",
+          "window"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "EventTarget.prototype.addEventListener",
+            "value": "addEventListener",
+            "confidence": 75,
+            "description": "Listens for gamepad connection events"
+          },
+          {
+            "type": "window",
+            "pattern": "navigator.getGamepads",
+            "confidence": 80,
+            "description": "Gamepads API access point",
+            "actualType": "function",
+            "condition": "typeof function"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-orientation-fingerprint",
+          "name": "Device Orientation Fingerprint",
+          "icon": "custom.png",
+          "color": "#f97316",
+          "description": "Device orientation and motion sensors for fingerprinting mobile and sensor-enabled devices"
+        },
+        "category": "fingerprint",
+        "confidence": 70,
+        "detectionMethods": [
+          "js_hooks",
+          "window"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "EventTarget.prototype.addEventListener",
+            "value": "addEventListener",
+            "confidence": 70,
+            "description": "Adds listeners for device sensors"
+          },
+          {
+            "type": "window",
+            "pattern": "DeviceOrientationEvent",
+            "confidence": 80,
+            "description": "Device orientation sensor API",
+            "actualType": "function",
+            "condition": "typeof function"
+          },
+          {
+            "type": "window",
+            "pattern": "DeviceMotionEvent",
+            "confidence": 80,
+            "description": "Device motion sensor API",
+            "actualType": "function",
+            "condition": "typeof function"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-performance-fingerprint",
+          "name": "Performance Fingerprint",
+          "icon": "custom.png",
+          "color": "#7c3aed",
+          "description": "Performance timing and resource measurement fingerprinting for device and network profiling"
+        },
+        "category": "fingerprint",
+        "confidence": 95,
+        "detectionMethods": [
+          "js_hooks"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "Performance.prototype.getEntriesByType",
+            "value": "getEntriesByType",
+            "confidence": 85,
+            "description": "Retrieves performance entries by type"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "Performance.prototype.now",
+            "value": "now",
+            "confidence": 95,
+            "description": "Reads high-resolution timestamps for timing analysis"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-screen-fingerprint",
+          "name": "Screen Fingerprint",
+          "icon": "custom.png",
+          "color": "#7c3aed",
+          "description": "Screen and display properties fingerprinting including dimensions, color depth, and pixel ratio"
+        },
+        "category": "fingerprint",
+        "confidence": 90,
+        "detectionMethods": [
+          "js_hooks"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "Screen.prototype.height",
+            "value": "height",
+            "confidence": 85,
+            "description": "Reads screen height for display fingerprinting"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "Screen.prototype.width",
+            "value": "width",
+            "confidence": 85,
+            "description": "Reads screen width for display fingerprinting"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "window.devicePixelRatio",
+            "value": "devicePixelRatio",
+            "confidence": 90,
+            "description": "Reads device pixel ratio for high-DPI detection"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "Screen.prototype.availHeight",
+            "value": "availHeight",
+            "confidence": 80,
+            "description": "Reads available screen height"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "Screen.prototype.colorDepth",
+            "value": "colorDepth",
+            "confidence": 90,
+            "description": "Reads screen color depth"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-storage-fingerprint",
+          "name": "Web Storage Fingerprint",
+          "icon": "custom.png",
+          "color": "#14b8a6",
+          "description": "Web Storage API (localStorage/sessionStorage) detection for persistent fingerprinting"
+        },
+        "category": "fingerprint",
+        "confidence": 95,
+        "detectionMethods": [
+          "js_hooks",
+          "window",
+          "content"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "Storage.prototype.getItem",
+            "value": "getItem",
+            "confidence": 90,
+            "description": "Retrieves stored data"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "Storage.prototype.setItem",
+            "value": "setItem",
+            "confidence": 95,
+            "description": "Stores data in localStorage/sessionStorage"
+          },
+          {
+            "type": "window",
+            "pattern": "localStorage",
+            "confidence": 80,
+            "description": "Persistent local storage",
+            "actualType": "object",
+            "condition": "typeof object"
+          },
+          {
+            "type": "window",
+            "pattern": "sessionStorage",
+            "confidence": 80,
+            "description": "Session storage",
+            "actualType": "object",
+            "condition": "typeof object"
+          },
+          {
+            "type": "content",
+            "pattern": "localStorage.setItem",
+            "value": "localStorage.setItem",
+            "confidence": 90,
+            "description": "Local storage usage for fingerprinting"
+          },
+          {
+            "type": "content",
+            "pattern": "sessionStorage",
+            "value": "sessionStorage",
+            "confidence": 85,
+            "description": "Session storage access"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-webgl-fingerprint",
+          "name": "WebGL Fingerprint",
+          "icon": "custom.png",
+          "color": "#7c3aed",
+          "description": "WebGL-based graphics hardware and driver fingerprinting"
+        },
+        "category": "fingerprint",
+        "confidence": 95,
+        "detectionMethods": [
+          "js_hooks"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "WebGLRenderingContext.prototype.getExtension",
+            "value": "getExtension",
+            "confidence": 85,
+            "description": "Gets specific WebGL extension for fingerprinting"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "WebGLRenderingContext.prototype.getParameter",
+            "value": "getParameter",
+            "confidence": 95,
+            "description": "Retrieves WebGL parameters for hardware fingerprinting"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-css-fingerprint",
+          "name": "CSS Fingerprint",
+          "icon": "custom.png",
+          "color": "#0ea5e9",
+          "description": "CSS property support and computed style detection for device fingerprinting"
+        },
+        "category": "fingerprint",
+        "confidence": 85,
+        "detectionMethods": [
+          "js_hooks",
+          "window"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "CSSStyleDeclaration.prototype.getPropertyValue",
+            "value": "getPropertyValue",
+            "confidence": 85,
+            "description": "Gets CSS property values for feature detection"
+          },
+          {
+            "type": "window",
+            "pattern": "CSS.supports",
+            "confidence": 80,
+            "description": "CSS.supports() method for CSS feature detection",
+            "actualType": "function",
+            "condition": "typeof function"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-navigator-fingerprint",
+          "name": "Navigator Fingerprint",
+          "icon": "custom.png",
+          "color": "#7c3aed",
+          "description": "Browser navigator object fingerprinting to identify user agent, platform, language, and hardware details"
+        },
+        "category": "fingerprint",
+        "confidence": 95,
+        "detectionMethods": [
+          "js_hooks"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "Navigator.prototype.userAgent",
+            "value": "userAgent",
+            "confidence": 90,
+            "description": "Reads browser user agent string"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "Navigator.prototype.languages",
+            "value": "languages",
+            "confidence": 85,
+            "description": "Reads browser language preferences"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "Navigator.prototype.hardwareConcurrency",
+            "value": "hardwareConcurrency",
+            "confidence": 90,
+            "description": "Reads CPU core count"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "Navigator.prototype.webdriver",
+            "value": "webdriver",
+            "confidence": 95,
+            "description": "Detects automated browsing (Selenium, Puppeteer)"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "Navigator.prototype.platform",
+            "value": "platform",
+            "confidence": 85,
+            "description": "Reads operating system platform"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "Navigator.prototype.deviceMemory",
+            "value": "deviceMemory",
+            "confidence": 90,
+            "description": "Reads device memory (RAM) in GB"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "NavigatorUAData.prototype.getHighEntropyValues",
+            "value": "getHighEntropyValues",
+            "confidence": 95,
+            "description": "Reads high entropy user agent client hints"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-crypto-fingerprint",
+          "name": "Crypto Fingerprint",
+          "icon": "custom.png",
+          "color": "#7c3aed",
+          "description": "Web Crypto API usage detection for random number generation and cryptographic operations"
+        },
+        "category": "fingerprint",
+        "confidence": 95,
+        "detectionMethods": [
+          "js_hooks"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "Crypto.prototype.getRandomValues",
+            "value": "getRandomValues",
+            "confidence": 95,
+            "description": "Generates cryptographically secure random values"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-hardware-fingerprint",
+          "name": "Hardware Fingerprint",
+          "icon": "custom.png",
+          "color": "#ec4899",
+          "description": "Hardware capabilities detection including CPU cores, memory, and device specifications"
+        },
+        "category": "fingerprint",
+        "confidence": 95,
+        "detectionMethods": [
+          "js_hooks",
+          "window",
+          "content"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "Navigator.prototype.hardwareConcurrency",
+            "value": "hardwareConcurrency",
+            "confidence": 95,
+            "description": "Gets number of CPU cores"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "Navigator.prototype.deviceMemory",
+            "value": "deviceMemory",
+            "confidence": 95,
+            "description": "Gets device memory in GB"
+          },
+          {
+            "type": "window",
+            "pattern": "navigator.hardwareConcurrency",
+            "confidence": 80,
+            "description": "CPU core count",
+            "actualType": "number",
+            "condition": "> 0"
+          },
+          {
+            "type": "window",
+            "pattern": "navigator.deviceMemory",
+            "confidence": 80,
+            "description": "Device RAM in gigabytes",
+            "actualType": "number",
+            "condition": "> 0"
+          },
+          {
+            "type": "window",
+            "pattern": "navigator.maxTouchPoints",
+            "confidence": 80,
+            "description": "Maximum touch points supported",
+            "actualType": "number",
+            "condition": ">= 0"
+          },
+          {
+            "type": "content",
+            "pattern": "hardwareConcurrency",
+            "value": "hardwareConcurrency",
+            "confidence": 90,
+            "description": "CPU detection for device fingerprinting"
+          },
+          {
+            "type": "content",
+            "pattern": "deviceMemory",
+            "value": "deviceMemory",
+            "confidence": 90,
+            "description": "Memory detection in scripts"
+          },
+          {
+            "type": "content",
+            "pattern": "maxTouchPoints",
+            "value": "maxTouchPoints",
+            "confidence": 85,
+            "description": "Touch capabilities detection"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-media-fingerprint",
+          "name": "Media Fingerprint",
+          "icon": "custom.png",
+          "color": "#7c3aed",
+          "description": "Media device, battery, voice synthesis, and plugin/mimetype enumeration fingerprinting"
+        },
+        "category": "fingerprint",
+        "confidence": 95,
+        "detectionMethods": [
+          "js_hooks"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "Navigator.prototype.getBattery",
+            "value": "getBattery",
+            "confidence": 95,
+            "description": "Accesses battery information for hardware fingerprinting"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "HTMLMediaElement.prototype.canPlayType",
+            "value": "canPlayType",
+            "confidence": 90,
+            "description": "Detects supported media codecs"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "PluginArray.prototype.length",
+            "value": "length",
+            "confidence": 85,
+            "description": "Counts installed browser plugins"
+          },
+          {
+            "type": "js_hooks",
+            "pattern": "MimeTypeArray.prototype.length",
+            "value": "length",
+            "confidence": 85,
+            "description": "Counts supported MIME types"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-font-fingerprint",
+          "name": "Font Fingerprint",
+          "icon": "custom.png",
+          "color": "#f59e0b"
+        },
+        "category": "fingerprint",
+        "confidence": 85,
+        "detectionMethods": [
+          "js_hooks"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "Document.prototype.fonts",
+            "value": "fonts",
+            "confidence": 85,
+            "description": "Accesses FontFaceSet for font enumeration"
+          }
+        ]
+      },
+      {
+        "detector": {
+          "id": "detect-webrtc-fingerprint",
+          "name": "WebRTC Fingerprint",
+          "icon": "custom.png",
+          "color": "#f59e0b"
+        },
+        "category": "fingerprint",
+        "confidence": 95,
+        "detectionMethods": [
+          "js_hooks"
+        ],
+        "matches": [
+          {
+            "type": "js_hooks",
+            "pattern": "MediaDevices.prototype.enumerateDevices",
+            "value": "enumerateDevices",
+            "confidence": 95,
+            "description": "Enumerates media devices for hardware fingerprinting"
+          }
+        ]
+      },
+      {
+        "detected": true,
+        "confidence": 80,
+        "matches": [
+          {
+            "type": "window",
+            "pattern": "navigator.clipboard",
+            "confidence": 80,
+            "description": "Clipboard API access point",
+            "actualType": "object",
+            "condition": "typeof object"
+          }
+        ],
+        "detectionMethods": [
+          "window"
+        ],
+        "category": "fingerprint",
+        "detector": {
+          "id": "detect-clipboard-fingerprint",
+          "name": "Clipboard API Fingerprint",
+          "icon": "custom.png",
+          "color": "#f59e0b",
+          "description": "Clipboard API access used for fingerprinting clipboard contents and capabilities"
+        }
+      },
+      {
+        "detected": true,
+        "confidence": 80,
+        "matches": [
+          {
+            "type": "window",
+            "pattern": "navigator.geolocation",
+            "confidence": 80,
+            "description": "Geolocation API access point",
+            "actualType": "object",
+            "condition": "typeof object"
+          },
+          {
+            "type": "window",
+            "pattern": "navigator.geolocation.getCurrentPosition",
+            "confidence": 80,
+            "description": "Location request method",
+            "actualType": "function",
+            "condition": "typeof function"
+          }
+        ],
+        "detectionMethods": [
+          "window"
+        ],
+        "category": "fingerprint",
+        "detector": {
+          "id": "detect-geolocation-fingerprint",
+          "name": "Geolocation Fingerprint",
+          "icon": "custom.png",
+          "color": "#3b82f6",
+          "description": "Geolocation API access for location-based fingerprinting and user tracking"
+        }
+      },
+      {
+        "detected": true,
+        "confidence": 80,
+        "matches": [
+          {
+            "type": "window",
+            "pattern": "indexedDB",
+            "confidence": 80,
+            "description": "IndexedDB API access point",
+            "actualType": "object",
+            "condition": "typeof object"
+          },
+          {
+            "type": "window",
+            "pattern": "indexedDB.databases",
+            "confidence": 80,
+            "description": "Method to list available databases",
+            "actualType": "function",
+            "condition": "typeof function"
+          }
+        ],
+        "detectionMethods": [
+          "window"
+        ],
+        "category": "fingerprint",
+        "detector": {
+          "id": "detect-indexeddb-fingerprint",
+          "name": "IndexedDB Fingerprint",
+          "icon": "custom.png",
+          "color": "#8b5cf6",
+          "description": "IndexedDB API access for local storage-based fingerprinting and database enumeration"
+        }
+      },
+      {
+        "detected": true,
+        "confidence": 90,
+        "matches": [
+          {
+            "type": "window",
+            "pattern": "Intl",
+            "confidence": 80,
+            "description": "Internationalization API",
+            "actualType": "object",
+            "condition": "typeof object"
+          },
+          {
+            "type": "window",
+            "pattern": "Intl.DateTimeFormat",
+            "confidence": 80,
+            "description": "Date and time formatting",
+            "actualType": "function",
+            "condition": "typeof function"
+          },
+          {
+            "type": "content",
+            "pattern": "resolvedOptions",
+            "value": "resolvedOptions",
+            "confidence": 90,
+            "description": "Getting locale and timezone info"
+          }
+        ],
+        "detectionMethods": [
+          "window",
+          "content"
+        ],
+        "category": "fingerprint",
+        "detector": {
+          "id": "detect-timezone-fingerprint",
+          "name": "Timezone/Intl Fingerprint",
+          "icon": "custom.png",
+          "color": "#06b6d4",
+          "description": "Timezone and internationalization API detection for locale-based fingerprinting"
+        }
+      },
+      {
+        "detected": true,
+        "confidence": 80,
+        "matches": [
+          {
+            "type": "window",
+            "pattern": "navigator.usb",
+            "confidence": 80,
+            "description": "WebUSB API access point",
+            "actualType": "object",
+            "condition": "typeof object"
+          },
+          {
+            "type": "window",
+            "pattern": "navigator.usb.getDevices",
+            "confidence": 80,
+            "description": "USB device enumeration method",
+            "actualType": "function",
+            "condition": "typeof function"
+          }
+        ],
+        "detectionMethods": [
+          "window"
+        ],
+        "category": "fingerprint",
+        "detector": {
+          "id": "detect-usb-fingerprint",
+          "name": "USB API Fingerprint",
+          "icon": "custom.png",
+          "color": "#6366f1",
+          "description": "WebUSB API access for detecting connected USB devices and device enumeration"
+        }
+      },
+      {
+        "detected": true,
+        "confidence": 90,
+        "matches": [
+          {
+            "type": "url",
+            "pattern": "/([a-zA-Z0-9_-]{2,30}/){4,}[a-zA-Z0-9_-]{2,30}$",
+            "value": "/api/v3/ajax/bespoke/member/neu/specs/home_async_signed_out",
+            "fullUrl": "https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/home_async_signed_out",
+            "resourceType": "xmlhttprequest",
+            "method": "POST",
+            "confidence": 90,
+            "description": "Akamai random path challenge (multiple encoded segments)"
+          }
+        ],
+        "detectionMethods": [
+          "url"
+        ],
+        "detector": {
+          "name": "Akamai Bot Manager",
+          "icon": "akamai_official.png",
+          "id": "detect-akamai",
+          "description": "Enterprise-grade bot management solution providing real-time detection and mitigation"
+        },
+        "category": "antibot"
+      },
+      {
+        "detected": true,
+        "confidence": 85,
+        "matches": [
+          {
+            "type": "content",
+            "pattern": "cheq",
+            "value": "cheq",
+            "confidence": 85,
+            "description": "Cheq reference"
+          }
+        ],
+        "detectionMethods": [
+          "content"
+        ],
+        "detector": {
+          "name": "Cheq",
+          "icon": "custom.png",
+          "id": "detect-cheq",
+          "description": "Cheq bot detection and prevention with light obfuscation"
+        },
+        "category": "antibot"
+      },
+      {
+        "detected": true,
+        "confidence": 100,
+        "matches": [
+          {
+            "type": "cookie",
+            "name": "datadome",
+            "value": "datadome=oMjVGwtdMkVA4zccAcW2SNzLcYL7BvygclUeVhVga2~3O_21KT7CHGknNB3eSdhhJoZo3Dm7_z0jbZmEyAUAIcs~sNTdIcR3qWqH",
+            "confidence": 100,
+            "description": "Main DataDome tracking cookie"
+          }
+        ],
+        "detectionMethods": [
+          "cookie"
+        ],
+        "detector": {
+          "name": "DataDome",
+          "icon": "datadome_official.png",
+          "id": "detect-datadome",
+          "description": "Real-time bot protection with machine learning-based detection"
+        },
+        "category": "antibot"
+      },
+      {
+        "detected": true,
+        "confidence": 100,
+        "matches": [
+          {
+            "type": "content",
+            "pattern": "grecaptcha",
+            "value": "grecaptcha",
+            "confidence": 100,
+            "description": "Global reCAPTCHA object"
+          },
+          {
+            "type": "content",
+            "pattern": "recaptcha",
+            "value": "recaptcha",
+            "confidence": 85
+          },
+          {
+            "type": "content",
+            "pattern": "g-recaptcha",
+            "value": "g-recaptcha",
+            "confidence": 90,
+            "description": "reCAPTCHA container class"
+          },
+          {
+            "type": "dom",
+            "selector": ".g-recaptcha",
+            "value": ".g-recaptcha=",
+            "confidence": 95,
+            "description": "reCAPTCHA container"
+          }
+        ],
+        "detectionMethods": [
+          "content",
+          "dom"
+        ],
+        "detector": {
+          "name": "Google reCAPTCHA",
+          "icon": "recaptcha_official.png",
+          "id": "detect-recaptcha",
+          "description": "Google's CAPTCHA service for protecting websites from spam and abuse"
+        },
+        "category": "captcha"
+      }
+    ],
+    "detectionCount": 23,
+    "categories": [
+      "fingerprint",
+      "antibot",
+      "captcha"
+    ],
+    "cacheScope": "domain"
+  }
+}
