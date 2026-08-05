@@ -1,444 +1,99 @@
+# Etsy Data Extraction Agent Documentation
+
+This project is a heavily generalized, anti-bot scraping architecture designed to fetch massive amounts of raw data from Etsy's backend endpoints while entirely bypassing DataDome and Akamai protections.
+
+This workspace is explicitly prepared for downstream AI agents or data pipelines to consume raw JSON/HTML data. 
+
+## Core Architecture Overview
+
+We use a completely generalized Endpoint Engine. Rather than hardcoding Python requests for every single Etsy URL, the engine dynamically translates raw cURL commands from your browser into execution templates, handles dynamic cookie injection, and executes them flawlessly.
+
+1. **`SessionManager` (`src/core/session_manager.py`)**
+   - Automatically polls a local Cookie Server to retrieve a valid DataDome bypass cookie.
+   - Bootstraps a `curl_cffi` Impersonated Session with TLS/JA3 fingerprints exactly matching Chrome 124 on Windows.
+   - Strips dangerous headers (`sec-ch-ua`) that trigger DataDome blocks.
+
+2. **`EndpointManager` (`src/endpoints/manager.py`)**
+   - Scans the `inputs/curl_commands/` folder for `.py` files containing raw cURL commands.
+   - Parses the cURL strings and maps them into dynamic templates inside `inputs/registry.json`.
+
+3. **`EndpointExecutor` (`src/services/executor.py`)**
+   - Uses the `SessionManager` to execute the registered endpoints.
+   - Automatically handles dynamic payload injection (e.g., dynamically changing the search query, pagination, etc.).
+   - Saves 100% of the raw output (JSON/HTML) directly to the `data/raw/` directory.
 
 ---
 
-# 🛰️ Antigravity Scraper
+## 📂 The `inputs/curl_commands/` Folder (Add Your Endpoints Here!)
 
-> A modular, browser-impersonating web scraping framework built on `curl_cffi` with live Chrome Canary cookie pooling.
+To add a new data source to this scraper, you **do not need to write any Python code**.
+Simply go to your browser, right-click an Etsy Network request, select **Copy as cURL (bash)**, and paste it into a `.py` file inside `inputs/curl_commands/`.
 
----
+### Currently Registered Endpoints:
 
-## Table of Contents
+#### 1. `filter_new` & `filter_relevant_aftersearch` (Search Grid)
+* **What it is**: The internal `listingCards` POST endpoint that generates the massive search grid.
+* **Raw Output**: `data/raw/filter_new_listingCards.json`
+* **Data Contained**: Total market size (`organic_listings_count`), hidden ad spend intel (`listing_source="ads"`), grid placement rank, and exact pricing/discount logic.
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Module Reference](#module-reference)
-- [Cookie Pool](#cookie-pool)
-- [Browser Impersonation](#browser-impersonation)
-- [Development](#development)
-- [Troubleshooting](#troubleshooting)
+#### 2. `search` (Main HTML Search)
+* **What it is**: A standard GET request to `www.etsy.com/search`.
+* **Raw Output**: `data/raw/search_search.html`
+* **Data Contained**: The raw HTML of the search page.
 
----
+#### 3. `search_suggesstion` (Trending Queries)
+* **What it is**: The `smu_trending_queries_v3` GET endpoint.
+* **Raw Output**: `data/raw/search_suggesstion_true.json`
+* **Data Contained**: Array of highly searched, trending long-tail keywords. 
 
-## Overview
+#### 4. `typing_search suggestion` (Autocomplete)
+* **What it is**: The `suggestions_ajax.php` GET endpoint triggered when a user types in the search bar.
+* **Raw Output**: `data/raw/typing_search suggestion_suggestions_ajax.php.json`
+* **Data Contained**: Ranked autocomplete suggestions based on search volume.
 
-Antigravity Scraper is a production-ready scraping framework designed to mimic real browser behavior as closely as possible. It extracts live cookies using a dynamically launched Playwright browser (with stealth injections) and uses `curl_cffi` to impersonate browser TLS/JA3 fingerprints — making detection significantly harder than standard `requests` or `httpx`.
+#### 5. `reviews` & `reviews_seconad` (Deep Dive Reviews)
+* **What it is**: The internal POST endpoint for fetching paginated listing reviews.
+* **Raw Output**: `data/raw/reviews_deep_dive_reviews.json`
+* **Data Contained**: Buyer profiles, review dates (useful for sales velocity calculations), and long-tail keyword sentiment.
+* *Note*: This endpoint supports dynamic payload injection via `src/services/review_service.py` to paginate through thousands of reviews safely with anti-ban randomized delays.
 
-### Key Features
-
-| Feature | Description |
-|---------|-------------|
-| 🔐 **Playwright Stealth Auth** | Automatically defeats initial bot protections using `playwright-stealth` to grab live session cookies |
-| 🎭 **Browser Impersonation** | Uses `curl_cffi` to match Chrome/Safari TLS & HTTP/2 signatures |
-| 🧩 **CapSolver Integration** | Automatically detects and solves DataDome captchas via CapSolver API |
-| 🌍 **Proxy Synchronization** | Injects identical proxies natively into both Playwright (cookie gathering) and the HTTP client (scraping) to prevent IP mismatch |
-| 🛡️ **Robust Error Handling** | Fully wraps browser lifecycle and navigation in exception handlers for self-healing |
-| 🧩 **Modular Design** | Clean separation of HTTP, parsing, and business logic |
-| ⌨️ **Typing Simulation** | Simulates human keystroke patterns to evade behavioral detection |
-| 🔁 **Auto-Refresh** | Automatically refreshes cookies on auth failure |
-| 📦 **Typed Models** | Pydantic schemas for all data structures |
+#### 6. Single Listing Extraction (`SearchClient.get_listing`)
+* **What it is**: A utility in `src/parsers/search_client.py` that takes any listing URL and fetches the raw HTML using the bypass session.
+* **Raw Output**: `data/raw/single_listing_<id>.html`
+* **Data Contained**: The raw listing HTML, which contains hidden bottom tags, H1 keyword stuffing, and Google JSON-LD Structured Product Data.
 
 ---
 
-## Architecture
+## 🚀 Execution & Testing
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        main.py                               │
-│                    (Entry Point)                             │
-└───────────────────────┬─────────────────────────────────────┘
-                        │
-        ┌───────────────┼───────────────┐
-        ▼               ▼               ▼
-┌──────────────┐ ┌─────────────┐ ┌──────────────┐
-│   Config     │ │ Cookie Pool │ │   Session    │
-│  (settings)  │ │(Playwright) │ │   Factory    │
-└──────┬───────┘ └──────┬──────┘ └──────┬───────┘
-       │                │               │
-       └────────────────┴───────────────┘
-                          │
-                          ▼
-               ┌─────────────────────┐
-               │   SearchService     │
-               │  (Orchestration)    │
-               └──────────┬──────────┘
-                          │
-            ┌─────────────┼─────────────┐
-            ▼             ▼             ▼
-    ┌────────────┐ ┌──────────┐ ┌──────────┐
-    │   Search   │ │  Parser  │ │  Typing  │
-    │   Client   │ │  (Soup)  │ │  Events  │
-    │  (HTTP)    │ │ (Pure)   │ │ (Human)  │
-    └────────────┘ └──────────┘ └──────────┘
-```
-
-### Separation of Responsibilities
-
-| Layer | Responsibility | File |
-|-------|---------------|------|
-| **Config** | Constants, paths, timeouts | `config/settings.py` |
-| **Core** | Cookie extraction, session building | `core/` |
-| **Models** | Pydantic data validation | `models/schemas.py` |
-| **Scraper** | HTTP requests & HTML parsing | `scraper/` |
-| **Service** | Business logic & orchestration | `services/search_service.py` |
-
----
-
-## Quick Start
+### The Master Script (`main.py`)
+Run `main.py` in the root directory to execute the entire batch pipeline.
+It will automatically scan `inputs/curl_commands/`, build the `registry.json`, execute every single endpoint, and dump the fresh raw data into `data/raw/`.
 
 ```bash
-# 1. Clone & enter directory
-git clone <repo-url>
-cd antigravity_scraper
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Install Playwright browsers
-playwright install chromium
-
-# 4. Run (a browser window will pop up briefly to grab auth cookies)
-
-# 5. Run
 python main.py
 ```
 
----
+### Dedicated Pipeline Tests (`tests/`)
+If you only want to hit specific endpoints to test their raw output without running the master script, you can run the dedicated test scripts:
 
-## Installation
+* `python tests/test_suggestions.py`
+* `python tests/test_search_grid.py`
+* `python tests/test_single_listing.py`
+* `python tests/test_reviews.py`
 
-### Prerequisites
-
-- Python 3.10+
-- Chrome Canary (installed and logged into target site)
-- Windows / Linux / macOS
-
-### Dependencies
-
-```bash
-pip install curl_cffi beautifulsoup4 lxml pydantic playwright playwright-stealth python-dotenv capsolver
-playwright install chromium
-```
-
-Or use the provided `requirements.txt`:
-
-```text
-curl_cffi>=0.7.0
-beautifulsoup4>=4.12.0
-lxml>=5.0.0
-pydantic>=2.0.0
-playwright>=1.40.0
-playwright-stealth>=1.0.6
-python-dotenv>=1.0.0
-capsolver>=1.0.1
-```
-
-### Environment Variables
-
-Create a `.env` file in the root of the project to enable API solving and proxies:
-
-```env
-CAPSOLVER_API_KEY=your_api_key_here
-USE_PROXY=False
-PROXY_URL=http://user:pass@host:port
-```
+*(All of these tests will output their data straight to `data/raw/`)*
 
 ---
 
-## Configuration
+## 🔗 The Pipeline Architecture (`src/pipelines/`)
 
-Edit `config/settings.py` to match your environment:
+While the endpoints are isolated and "dumb" (simply fetching raw data), we have scaffolding for orchestrating complex tasks. 
 
-```python
-@dataclass(frozen=True)
-class ScraperConfig:
-    # CapSolver Settings
-    CAPSOLVER_API_KEY: str = os.environ.get("CAPSOLVER_API_KEY", "")
-    
-    # Proxy Settings (Critical for Akamai/DataDome)
-    USE_PROXY: bool = os.environ.get("USE_PROXY", "False").lower() in ("true", "1", "t", "yes")
-    PROXY_URL: str = os.environ.get("PROXY_URL", "") # Format: http://user:pass@host:port
-    
-    # Target site
-    BASE_URL: str = "https://www.etsy.com"
-    SEARCH_ENDPOINT: str = "/search"
-    SUGGEST_ENDPOINT: str = "/api/v3/ajax/public/search/zero-pane-trending-searches/true"
-    TYPING_SUGGEST_ENDPOINT: str = "/suggestions_ajax.php"
-    
-    # Browser fingerprint to impersonate
-    BROWSER_FINGERPRINT: str = "chrome124"
-    
-    # Cookie refresh interval (seconds)
-    COOKIE_REFRESH_INTERVAL: int = 3600
-    
-    # Request settings
-    REQUEST_TIMEOUT: int = 30
-    MAX_RETRIES: int = 3
+**`src/pipelines/keyword_discovery_pipeline.py`**
+Demonstrates the separation of concerns. Instead of building a massive, tangled script, a pipeline orchestrates the flow of data:
+1. Calls the `Suggestions` endpoint.
+2. Feeds the output into the `Search Grid` endpoint.
+3. Takes the top listings from the Grid and feeds them into the `Single Listing` fetcher.
 
-    # Playwright Automation Settings
-    PLAYWRIGHT_HEADLESS: bool = False # Keep headful to allow Captcha observation if API fails
-    PLAYWRIGHT_TIMEOUT: int = 60000
-```
-
-### Available Fingerprints
-
-| Fingerprint | Description |
-|-------------|-------------|
-| `chrome124` | Chrome 124 on Windows |
-| `chrome125` | Chrome 125 on Windows |
-| `safari17_2_1` | Safari 17.2.1 on macOS |
-| `safari15_5` | Safari 15.5 on macOS |
-| `firefox124` | Firefox 124 |
-
----
-
-## Usage
-
-### Basic Search
-
-```python
-from config.settings import ScraperConfig
-from core.cookie_pool import PlaywrightCookiePool
-from core.session_factory import ImpersonatedSession
-from scraper.search_client import SearchClient
-from scraper.parser import SearchParser
-from services.search_service import SearchService
-
-# Initialize
-config = ScraperConfig()
-cookie_pool = PlaywrightCookiePool(config)
-session = ImpersonatedSession(config, cookie_pool)
-
-# Build components
-client = SearchClient(session, config)
-parser = SearchParser()
-service = SearchService(client, parser)
-
-# Execute search
-results = service.full_search_pipeline("your keyword", pages=2)
-
-for page in results:
-    for item in page.items:
-        print(f"{item.title} -> {item.url}")
-```
-
-### Get Suggestions Only
-
-```python
-suggestions = client.get_suggestions("partial quer")
-for s in suggestions:
-    print(s.text)
-```
-
-### Query Discovery (SEO/Research)
-
-```python
-# Discover related queries up to 2 levels deep
-discovered = service.discover_queries("seed keyword", depth=2)
-print(discovered)
-```
-
-### Custom Parsing Selectors
-
-```python
-# If the site changes layout, update selectors without touching HTTP code
-selectors = {
-    "result_container": "div.search-result-item",
-    "title": "h2.result-title",
-    "url": "a.result-link",
-    "description": "p.result-desc"
-}
-
-raw = client.search("query")
-parsed = parser.parse_search_results(raw, selector_config=selectors)
-```
-
----
-
-## Module Reference
-
-### `core/cookie_pool.py`
-
-Uses Playwright and `playwright-stealth` to launch a real browser, navigate to the target site, wait for security checks to pass, and extract session cookies.
-
-```python
-cookie_pool = PlaywrightCookiePool(config)
-cookie_pool.refresh()                    # Launches Playwright to get cookies
-cookies = cookie_pool.get_cookie_dict()  # Dict for curl_cffi
-header = cookie_pool.get_cookie_header() # Raw Cookie header string
-```
-
-### `core/session_factory.py`
-
-Builds impersonated sessions with automatic retry and cookie refresh.
-
-```python
-session = ImpersonatedSession(config, cookie_pool)
-response = session.get("https://example.com")
-session.refresh_cookies()  # Force refresh
-```
-
-### `scraper/search_client.py`
-
-Handles all HTTP operations. Stateless regarding parsing.
-
-| Method | Purpose |
-|--------|---------|
-| `get_suggestions(query)` | Autocomplete API |
-| `search(query, page)` | Main search GET |
-| `simulate_typing(query)` | Human-like keystroke simulation |
-
-### `scraper/parser.py`
-
-Pure HTML parsing. No network calls.
-
-```python
-parser = SearchParser()
-result = parser.parse_search_results(search_response)
-token = parser.extract_csrf_token(html)
-```
-
-### `services/search_service.py`
-
-High-level orchestration.
-
-| Method | Description |
-|--------|-------------|
-| `full_search_pipeline(query, pages)` | Type → Suggest → Search → Parse |
-| `quick_search(query)` | Search + parse only |
-| `discover_queries(seed, depth)` | Recursive suggestion expansion |
-
----
-
-## Cookie Pool
-
-### How It Works
-
-1. Launches a Chromium browser via Playwright (synchronizing proxy configuration with `curl_cffi`).
-2. Injects evasions using `playwright-stealth` to remove automation signatures (e.g., `navigator.webdriver`).
-3. Navigates to the target domain and evaluates the page for bot blocks.
-4. If a DataDome or reCAPTCHA challenge is detected, it automatically attempts to solve it using the CapSolver API. If CapSolver fails or is unconfigured, it gracefully falls back to waiting for manual user intervention (if headful).
-5. Extracts all cookies from the browser context and formats them for `curl_cffi`.
-6. Safely closes the browser so scraping can continue swiftly in the background.
-
-### Security Notes
-
-- The initial browser automation handles JavaScript challenges that `curl_cffi` cannot execute.
-- Once cookies are extracted, the heavy browser is closed, keeping resource usage extremely low.
-
-### Manual Cookie Refresh
-
-```python
-# Refresh on demand
-cookie_pool.refresh()
-session.refresh_cookies()
-```
-
----
-
-## Browser Impersonation
-
-### Why `curl_cffi`?
-
-Standard libraries like `requests` or `httpx` have detectable TLS/JA3 fingerprints. `curl_cffi` impersonates real browsers by:
-
-- Matching TLS cipher suites
-- Matching JA3/JA4 fingerprints
-- Matching HTTP/2 settings & headers
-- Matching TLS extensions (ALPN, SNI, etc.)
-
-### Verification
-
-Test your fingerprint at:
-- https://tls.browserleaks.com/json
-- https://www.deviceinfo.me/
-
-```python
-# Test impersonation
-response = session.get("https://tls.browserleaks.com/json")
-print(response.json())
-```
-
----
-
-## Development
-
-### Adding a New Scraper Module
-
-1. Create a new client in `scraper/` inheriting from `BaseSearchScraper`
-2. Implement `get_suggestions()`, `search()`, `simulate_typing()`
-3. Add corresponding parser methods in `scraper/parser.py`
-4. Wire into `SearchService` or create a new service
-
-### Logging
-
-```python
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-# Logs: cookie extraction, request retries, typing delays, parse results
-```
-
-### Testing
-
-```bash
-# Run with a test query
-python -c "from main import main; main()"
-
-# Test cookie extraction standalone
-python test_playwright.py
-```
-
----
-
-## Troubleshooting
-
-### "Playwright timeout or Captcha loop"
-
-- Check if your `CAPSOLVER_API_KEY` is set in the `.env` file and has sufficient balance.
-- If CapSolver is disabled, ensure `PLAYWRIGHT_HEADLESS = False` so you can manually solve challenges if DataDome blocks you.
-- Ensure `USE_PROXY` is enabled if you are hitting IP rate limits.
-
-### "401/403 Forbidden"
-
-- Refresh cookies: `cookie_pool.refresh()`
-- Check if session expired in Canary (re-login)
-- Verify `BASE_URL` and endpoints are correct
-- Try a different `BROWSER_FINGERPRINT`
-
-### "Empty results"
-
-- Inspect `response.raw_html` to see if HTML structure changed
-- Update selectors in `SearchParser.parse_search_results()`
-- Check if the site uses JavaScript rendering (may need additional handling)
-
-### Slow performance
-
-- Reduce `simulate_typing()` delays
-- Disable typing simulation for batch jobs: use `quick_search()`
-- Add connection pooling via `session.session`
-
----
-
-## License
-
-MIT License — use responsibly and in accordance with target site Terms of Service.
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
----
-
-<p align="center">
-  Built with 🛰️ to fly under the radar.
-</p>
+This architecture ensures that if Etsy changes a single endpoint, you only have to update its cURL file, and the entire pipeline continues to function perfectly.
