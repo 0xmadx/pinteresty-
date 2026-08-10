@@ -1,0 +1,5689 @@
+{
+  "metadata": {
+    "end_date": "2026-07-27",
+    "country": "US",
+    "event": "OUTBOUND_CLICK",
+    "total_categories": 383,
+    "ranked": 44
+  },
+  "ranking": [
+    {
+      "product_category": "1248",
+      "related_search_trends": [
+        "guitarra",
+        "football cards",
+        "football party",
+        "billy idol",
+        "vintage photo",
+        "evangelion",
+        "clarinet",
+        "silent",
+        "movies",
+        "the sandlot",
+        "electric guitar",
+        "tv series",
+        "sports cards",
+        "dollar",
+        "instruments",
+        "billy",
+        "bond",
+        "musical instruments",
+        "instrumentos musicales",
+        "winchester",
+        "a silent voice",
+        "playing guitar",
+        "end of evangelion",
+        "guitar",
+        "pokemon"
+      ],
+      "parent_product_categories": [],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.57,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.05,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.03,
+          "lookback": 2,
+          "percent_growth": 1.55,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1311",
+      "related_search_trends": [
+        "blonde makeup",
+        "eyelash growth",
+        "eye makeup",
+        "hair makeup",
+        "makeup routine",
+        "face makeup tips",
+        "eyebrow inspo",
+        "make up inspo",
+        "eyelashes",
+        "makeup tutorial",
+        "make up ideas",
+        "waterproof mascara",
+        "\u0645\u0643\u064a\u0627\u062c \u0639\u064a\u0648\u0646",
+        "makeup products",
+        "lash lift",
+        "makeup tips",
+        "makeup tuts",
+        "best lash serum",
+        "makeup",
+        "beauty makeup",
+        "beauty makeup tips",
+        "cut crease"
+      ],
+      "parent_product_categories": [
+        "1306",
+        "1168"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.61,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.13,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.03,
+          "lookback": 2,
+          "percent_growth": 0.89,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1408",
+      "related_search_trends": [
+        "halloween decor",
+        "halloween stuff",
+        "xmas crafts",
+        "diy halloween decorations",
+        "fall halloween",
+        "pumpkin",
+        "halloween crafts",
+        "halloween ideas",
+        "ornament ideas",
+        "halloween diy",
+        "ornament crafts",
+        "diy christmas ornaments",
+        "xmas decor"
+      ],
+      "parent_product_categories": [
+        "1249"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.14,
+          "lookback": 2,
+          "percent_growth": 0.61,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.18,
+          "lookback": 2,
+          "percent_growth": 0.41,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.16,
+          "lookback": 2,
+          "percent_growth": 0.87,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1021",
+      "related_search_trends": [
+        "backpack ideas",
+        "bag essentials",
+        "school backpack",
+        "jansport backpacks",
+        "laptop backpack",
+        "pink backpack",
+        "travel bag",
+        "backpack essentials",
+        "school bag",
+        "backpack purse",
+        "backpacks for school",
+        "sprayground backpack",
+        "mini backpack",
+        "tote",
+        "senior backpack",
+        "kids backpack",
+        "luggage",
+        "travel backpack",
+        "cute backpacks",
+        "vera bradley backpack",
+        "nike elite backpack",
+        "north face backpack",
+        "school bag essentials",
+        "sac",
+        "hello kitty backpack"
+      ],
+      "parent_product_categories": [
+        "1024"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.17,
+          "lookback": 2,
+          "percent_growth": 0.77,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.13,
+          "lookback": 2,
+          "percent_growth": 0.31,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.19,
+          "lookback": 2,
+          "percent_growth": 0.73,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1464",
+      "related_search_trends": [
+        "natural teeth whitening",
+        "veneers teeth",
+        "dentistry",
+        "electric toothbrush",
+        "teeth whitening homemade",
+        "gums",
+        "morning routine",
+        "beauty hacks",
+        "teeth whitening at home",
+        "teeth health",
+        "teeth care",
+        "braces",
+        "white teeth tips",
+        "perfect smile teeth",
+        "teeth whitening strips",
+        "dientes",
+        "yellow teeth",
+        "perfect teeth",
+        "diy teeth whitening",
+        "routine",
+        "products",
+        "hydrogen peroxide teeth",
+        "healthy teeth",
+        "tooth decay",
+        "teeth smile"
+      ],
+      "parent_product_categories": [],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.45,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0,
+          "lookback": 2,
+          "percent_growth": 0.07,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0,
+          "lookback": 2,
+          "percent_growth": 0.65,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1131",
+      "related_search_trends": [
+        "cafe curtains kitchen",
+        "curtain",
+        "cafe curtain",
+        "gold curtain rod",
+        "no drill curtain rod",
+        "diy room divider",
+        "hanging curtains",
+        "brass curtain rod",
+        "curtain designs",
+        "window coverings",
+        "wall divider",
+        "double curtain rod",
+        "kitchen curtain",
+        "room divider curtain",
+        "amazon curtains",
+        "curtain ideas",
+        "curtain rod ideas",
+        "drapery",
+        "curtain rod holders",
+        "window curtains",
+        "diy curtains",
+        "curtain rod",
+        "double curtain",
+        "floral curtains",
+        "curtains living room"
+      ],
+      "parent_product_categories": [
+        "1249",
+        "1512"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.26,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": -0.09,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.42,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1085",
+      "related_search_trends": [
+        "camping tent",
+        "camper van",
+        "camping aesthetic",
+        "camping equipment",
+        "retreat",
+        "yurt",
+        "camper ideas",
+        "camping supplies",
+        "survival kit",
+        "rv camping",
+        "festival camping",
+        "campsite",
+        "survival",
+        "campers",
+        "offroad",
+        "bed tent",
+        "sleeping bag",
+        "camping trailer",
+        "survival stuff",
+        "camping",
+        "backpacking",
+        "tent",
+        "tents camping glamping",
+        "family camping",
+        "motorhome"
+      ],
+      "parent_product_categories": [
+        "1343"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.3,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.05,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.41,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1439",
+      "related_search_trends": [
+        "fishnet stockings",
+        "black tights",
+        "alt",
+        "collant",
+        "sheer tights",
+        "alternative outfits",
+        "tights",
+        "funky tights"
+      ],
+      "parent_product_categories": [
+        "1255"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.22,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.08,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.41,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1123",
+      "related_search_trends": [
+        "cute halloween costumes",
+        "family halloween costumes",
+        "trendy halloween costumes",
+        "baby halloween costumes",
+        "halloween costume outfits",
+        "halloween costume ideas",
+        "dog costume",
+        "classy halloween costumes",
+        "halloween costume inspo",
+        "family halloween",
+        "disney costumes",
+        "mask",
+        "costumes women",
+        "dress up",
+        "costume party",
+        "halloween outfits",
+        "baby costume",
+        "costumes for women",
+        "medieval",
+        "fun costumes",
+        "cosplay ideas",
+        "costume inspo",
+        "pretty halloween costumes",
+        "ren faire",
+        "cosplay costumes"
+      ],
+      "parent_product_categories": [],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.19,
+          "lookback": 2,
+          "percent_growth": 0.24,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.23,
+          "lookback": 2,
+          "percent_growth": 0.09,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.17,
+          "lookback": 2,
+          "percent_growth": 0.37,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1316",
+      "related_search_trends": [
+        "purses",
+        "backpacks",
+        "leather shoulder bag",
+        "bag ideas",
+        "cute bags",
+        "tote",
+        "\u0441\u0443\u043c\u043a\u0438",
+        "gucci",
+        "bucket bag",
+        "tote bag",
+        "bag collection",
+        "bag inspo",
+        "mochilas",
+        "chanel",
+        "crossbody bag",
+        "laptop bag",
+        "gucci bags",
+        "pocket",
+        "fashion bags",
+        "leather messenger bag",
+        "sac",
+        "pretty bags",
+        "handbags",
+        "crochet bags",
+        "chanel bags"
+      ],
+      "parent_product_categories": [
+        "1024"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0,
+          "lookback": 2,
+          "percent_growth": 0.16,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0,
+          "lookback": 2,
+          "percent_growth": 0.07,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.35,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1193",
+      "related_search_trends": [
+        "cup",
+        "bottle art",
+        "flask",
+        "tote",
+        "lunch boxes",
+        "owala water bottle",
+        "tumbler",
+        "lunch snacks",
+        "lunch ideas",
+        "stanley tumbler",
+        "cooler",
+        "lunch box",
+        "lunch bag",
+        "school lunch",
+        "kids lunch",
+        "food ideas",
+        "cup holder",
+        "school lunches",
+        "food storage",
+        "cute water bottles",
+        "lunch box inspo",
+        "lunchbox ideas",
+        "owala bottle",
+        "bag essentials",
+        "stanley cups"
+      ],
+      "parent_product_categories": [
+        "1270"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.18,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.1,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.33,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1141",
+      "related_search_trends": [
+        "pottery inspo",
+        "serving tray",
+        "ceramic tile",
+        "ottoman tray",
+        "trinket dish",
+        "mosaic tile",
+        "wooden tray",
+        "decor ideas",
+        "ceramic tray",
+        "resin",
+        "organizer",
+        "tray decor",
+        "mosaic tray",
+        "mosaic ideas",
+        "coffee table decor",
+        "marble",
+        "tiered tray",
+        "mosaic art projects",
+        "fall decor",
+        "decor",
+        "mosaic",
+        "plates",
+        "mosaic crafts",
+        "home decor",
+        "serveware"
+      ],
+      "parent_product_categories": [
+        "1249"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.18,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.07,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.32,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1245",
+      "related_search_trends": [
+        "headboard cover",
+        "bed frame",
+        "bedroom interior",
+        "headboard ideas",
+        "dorm headboard",
+        "wooden headboard",
+        "bed headboard",
+        "dorm room ideas",
+        "dorm ideas",
+        "fabric headboard",
+        "bed design",
+        "headboard design",
+        "velvet headboard",
+        "headboard pillow",
+        "dorm bed",
+        "king headboard",
+        "dorm",
+        "bedroom ideas",
+        "bedroom furniture",
+        "bed",
+        "pillows",
+        "rattan headboard",
+        "floating headboard",
+        "king bed",
+        "bedroom design"
+      ],
+      "parent_product_categories": [
+        "1209",
+        "1048"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.24,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.04,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.04,
+          "lookback": 2,
+          "percent_growth": 0.32,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1110",
+      "related_search_trends": [
+        "coffee corner",
+        "homemade coffee drinks",
+        "coffee recipes",
+        "iced coffee recipe",
+        "coffee ideas",
+        "cappuccino",
+        "coffee station",
+        "cold coffee",
+        "coffee creamer",
+        "\u5496\u5561\u673a",
+        "coffee cups",
+        "french press coffee",
+        "coffee pot",
+        "starbucks recipes",
+        "coffee",
+        "cup",
+        "coffee at home",
+        "espresso coffee",
+        "homemade coffee",
+        "coffee recipes starbucks",
+        "a cup",
+        "coffee machine",
+        "cold coffee drinks recipes",
+        "lattes",
+        "coffee maker"
+      ],
+      "parent_product_categories": [
+        "1270",
+        "1275"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.2,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0,
+          "lookback": 2,
+          "percent_growth": -0.12,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.31,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1232",
+      "related_search_trends": [
+        "natural hair routine",
+        "hair growth",
+        "scalp",
+        "blonde",
+        "hair growing tips",
+        "curly hair tips",
+        "hair growth oil",
+        "natural hair growth",
+        "hair products",
+        "hair techniques",
+        "thinning hair",
+        "hair styles easy",
+        "natural hair care",
+        "hair stuff",
+        "hair growth tips",
+        "natural hair styles",
+        "hair care",
+        "hair oils",
+        "hair hacks",
+        "dry hair",
+        "hair tips",
+        "easy hairstyles",
+        "hair",
+        "black girls hairstyles",
+        "dry scalp"
+      ],
+      "parent_product_categories": [
+        "1222",
+        "1220"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.04,
+          "lookback": 2,
+          "percent_growth": 0.48,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.02,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.03,
+          "lookback": 2,
+          "percent_growth": 0.31,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1415",
+      "related_search_trends": [
+        "fashion shoes",
+        "shoe inspo",
+        "sandals",
+        "shoes",
+        "slippers",
+        "casual shoes",
+        "insole",
+        "\u043e\u0431\u0443\u0432\u044c",
+        "flat shoes",
+        "cute cowgirl boots",
+        "shoes heels",
+        "cool shoes",
+        "cowboy boots",
+        "zapatillas",
+        "croc charms",
+        "zapatos deportivos de moda",
+        "zapatos",
+        "dream shoes",
+        "cute shoes",
+        "tacones",
+        "shoes women",
+        "pretty shoes",
+        "girly shoes",
+        "shoe charms",
+        "shoelaces"
+      ],
+      "parent_product_categories": [],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.04,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": -0.02,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.26,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1159",
+      "related_search_trends": [
+        "documentaries",
+        "dollhouse miniatures",
+        "movies",
+        "girly movies",
+        "best movies",
+        "film posters",
+        "favorite movies",
+        "diy dollhouse",
+        "disney movies",
+        "tv series",
+        "hallmark movies",
+        "series",
+        "good movies",
+        "home plans",
+        "shows to watch",
+        "films to watch",
+        "doll house crafts",
+        "mosaic",
+        "best tv shows",
+        "peliculas",
+        "films",
+        "movie posters",
+        "mosaic diy",
+        "tv shows",
+        "dream house"
+      ],
+      "parent_product_categories": [],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.06,
+          "lookback": 2,
+          "percent_growth": 0.29,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.03,
+          "lookback": 2,
+          "percent_growth": 0.03,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.12,
+          "lookback": 2,
+          "percent_growth": 0.25,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1453",
+      "related_search_trends": [
+        "zip hoodie",
+        "patchwork hoodie ideas",
+        "oversized sweatshirt",
+        "jackets",
+        "sweat sets",
+        "sweaters",
+        "cute sweatshirts",
+        "mom shirt",
+        "sweatshirt ideas",
+        "graphic hoodie",
+        "pullover",
+        "sweats",
+        "cute hoodies",
+        "hoodie design",
+        "clothes inspo",
+        "shirt",
+        "mom sweatshirt",
+        "hoodie inspo",
+        "cropped hoodie",
+        "grandma sweatshirts",
+        "graphic sweatshirt",
+        "hoodie ideas",
+        "patchwork sweatshirt",
+        "embroidered sweatshirt",
+        "patchwork hoodie"
+      ],
+      "parent_product_categories": [
+        "1478",
+        "1104"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.37,
+          "lookback": 2,
+          "percent_growth": 0.16,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.56,
+          "lookback": 2,
+          "percent_growth": 0.01,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.37,
+          "lookback": 2,
+          "percent_growth": 0.25,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1013",
+      "related_search_trends": [
+        "shells",
+        "farmhouse kitchen",
+        "color harmony",
+        "paint palette",
+        "interior paint",
+        "seashell crafts",
+        "color scheme",
+        "seashell",
+        "house paint",
+        "paint by numbers",
+        "canvas painting",
+        "painting ideas",
+        "beach crafts",
+        "seashell art diy",
+        "colors",
+        "shell art",
+        "whole house color scheme",
+        "painting",
+        "room colors",
+        "wall colors",
+        "house color",
+        "shell crafts",
+        "color palette"
+      ],
+      "parent_product_categories": [
+        "1151"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.06,
+          "lookback": 2,
+          "percent_growth": -0.1,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.08,
+          "lookback": 2,
+          "percent_growth": -0.21,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.06,
+          "lookback": 2,
+          "percent_growth": 0.2,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1025",
+      "related_search_trends": [
+        "kitchenware",
+        "brownies",
+        "sourdough cake",
+        "baking tips",
+        "mini cakes",
+        "baked goods",
+        "cupcake",
+        "tarts",
+        "dish set",
+        "bundt cakes",
+        "sourdough recipes",
+        "baking recipes",
+        "bread recipes",
+        "homemade cakes",
+        "round cake",
+        "cake pops",
+        "cakes",
+        "breakfasts",
+        "dishes",
+        "plain cake",
+        "sourdough discard",
+        "cookware",
+        "minnie mouse treats",
+        "heart cake",
+        "baby pancakes"
+      ],
+      "parent_product_categories": [
+        "1270",
+        "1119"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0,
+          "lookback": 2,
+          "percent_growth": 0.09,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0,
+          "lookback": 2,
+          "percent_growth": -0.01,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.19,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1108",
+      "related_search_trends": [
+        "winter fashion",
+        "leather jacket",
+        "jackets for women",
+        "trench coat",
+        "varsity jacket",
+        "coat",
+        "fleece jacket",
+        "puffer jacket",
+        "carhartt",
+        "chaquetas",
+        "cropped jacket",
+        "winter coats",
+        "puffer",
+        "leather coat",
+        "bomber jacket",
+        "jacket men",
+        "suit",
+        "mens jackets",
+        "jacket",
+        "long coat",
+        "abrigos",
+        "biker jacket",
+        "quilted jacket",
+        "jean jacket",
+        "women's jacket"
+      ],
+      "parent_product_categories": [
+        "1104",
+        "1350"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.42,
+          "lookback": 2,
+          "percent_growth": 0.14,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.58,
+          "lookback": 2,
+          "percent_growth": 0.04,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.4,
+          "lookback": 2,
+          "percent_growth": 0.19,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1138",
+      "related_search_trends": [
+        "bathroom accessories",
+        "spell jars",
+        "jars",
+        "candy jar",
+        "mason jars",
+        "parfait",
+        "pottery",
+        "bathroom inspo",
+        "bath",
+        "bottle",
+        "bathroom ideas",
+        "pots",
+        "kitchen canisters",
+        "homemade pickles",
+        "mason jar crafts diy",
+        "glass bottles",
+        "mason jar crafts",
+        "vases",
+        "pickled",
+        "ceramic jar",
+        "mason jar ideas",
+        "potion bottles",
+        "glass jars",
+        "bathroom decor",
+        "owl"
+      ],
+      "parent_product_categories": [
+        "1249"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0,
+          "lookback": 2,
+          "percent_growth": 0.12,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0,
+          "lookback": 2,
+          "percent_growth": 0.06,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0,
+          "lookback": 2,
+          "percent_growth": 0.18,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1255",
+      "related_search_trends": [
+        "leg warmers",
+        "ankle socks",
+        "fishnet stockings",
+        "high socks",
+        "black tights",
+        "lace tights",
+        "socks women",
+        "collant",
+        "knitting socks",
+        "compression socks",
+        "nike socks",
+        "funky socks",
+        "sheer tights",
+        "slouch socks",
+        "fun socks",
+        "toe socks",
+        "grip socks",
+        "embroidered socks",
+        "knitted socks",
+        "thigh high socks",
+        "knee high socks",
+        "cute socks",
+        "pilates socks",
+        "boot socks",
+        "long socks"
+      ],
+      "parent_product_categories": [],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.07,
+          "lookback": 2,
+          "percent_growth": 0.07,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.13,
+          "lookback": 2,
+          "percent_growth": 0,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.07,
+          "lookback": 2,
+          "percent_growth": 0.18,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1350",
+      "related_search_trends": [
+        "winter fashion",
+        "leather jacket",
+        "jackets for women",
+        "trench coat",
+        "varsity jacket",
+        "coat",
+        "fleece jacket",
+        "puffer jacket",
+        "carhartt",
+        "chaquetas",
+        "cropped jacket",
+        "winter coats",
+        "puffer",
+        "leather coat",
+        "bomber jacket",
+        "jacket men",
+        "suit",
+        "mens jackets",
+        "jacket",
+        "long coat",
+        "abrigos",
+        "biker jacket",
+        "quilted jacket",
+        "jean jacket",
+        "women's jacket"
+      ],
+      "parent_product_categories": [
+        "1104"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.42,
+          "lookback": 2,
+          "percent_growth": 0.13,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.58,
+          "lookback": 2,
+          "percent_growth": 0.04,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.4,
+          "lookback": 2,
+          "percent_growth": 0.18,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1452",
+      "related_search_trends": [
+        "crochet clothes",
+        "tricot",
+        "outfit",
+        "cropped cardigan",
+        "knit top",
+        "knitted sweater",
+        "knit",
+        "casual outfits",
+        "knit cardigan",
+        "crocheted",
+        "yarn",
+        "striped sweater",
+        "cardigan pattern",
+        "pullover",
+        "winter outfits",
+        "crochet fashion",
+        "crochet clothing",
+        "oversized sweater",
+        "knitted",
+        "crochet tops",
+        "sweaters for women",
+        "women's sweaters",
+        "fall outfits",
+        "cropped sweater",
+        "winter fashion"
+      ],
+      "parent_product_categories": [
+        "1478",
+        "1104"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.28,
+          "lookback": 2,
+          "percent_growth": 0.14,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.42,
+          "lookback": 2,
+          "percent_growth": 0.1,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.3,
+          "lookback": 2,
+          "percent_growth": 0.18,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1064",
+      "related_search_trends": [
+        "body care",
+        "skin tips",
+        "lotion",
+        "beauty hacks",
+        "healthy skin",
+        "skin care routine",
+        "body cream",
+        "skin care",
+        "oil",
+        "hydration",
+        "body oil",
+        "glowing skin",
+        "tanning tips",
+        "glow",
+        "beauty secrets",
+        "skin types",
+        "body skin care",
+        "retinol",
+        "self tan",
+        "moisturizer",
+        "dry skin",
+        "body lotion",
+        "eos lotion",
+        "summer glow",
+        "beauty products"
+      ],
+      "parent_product_categories": [
+        "1061",
+        "1030"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.03,
+          "lookback": 2,
+          "percent_growth": 0.06,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.03,
+          "lookback": 2,
+          "percent_growth": -0.09,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.03,
+          "lookback": 2,
+          "percent_growth": 0.17,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1120",
+      "related_search_trends": [
+        "cute bags",
+        "purse essentials",
+        "vanity bag",
+        "makeup organizer",
+        "cosmetic bag",
+        "makeup pouch",
+        "travel essentials",
+        "luggage",
+        "toiletries bag",
+        "tote",
+        "pouch",
+        "makeup storage",
+        "travel makeup bag",
+        "cosmetic",
+        "gifts",
+        "cute makeup bags",
+        "small makeup bag",
+        "tote bag",
+        "in my bag",
+        "bags for women",
+        "pencil case",
+        "beach bag",
+        "quilted makeup bag",
+        "travel bag",
+        "necessaire"
+      ],
+      "parent_product_categories": [
+        "1024"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.05,
+          "lookback": 2,
+          "percent_growth": 0.12,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.05,
+          "lookback": 2,
+          "percent_growth": 0.01,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.06,
+          "lookback": 2,
+          "percent_growth": 0.17,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1226",
+      "related_search_trends": [
+        "hair accessories for women",
+        "cute claw clips",
+        "bow hair",
+        "halloween hair",
+        "hair accessories",
+        "hair bows",
+        "hair barrettes",
+        "diy hair accessories",
+        "hair jewelry",
+        "hair pins",
+        "hairdos",
+        "ponytail",
+        "hair clips",
+        "hair ties",
+        "wedding hair",
+        "accessories",
+        "flower hair",
+        "cute accessories",
+        "flower hair clips",
+        "clips",
+        "hairstyles",
+        "bows",
+        "hair claw",
+        "claw clips",
+        "hairpin"
+      ],
+      "parent_product_categories": [
+        "1221",
+        "1003",
+        "1220"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.04,
+          "lookback": 2,
+          "percent_growth": -0.04,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.07,
+          "lookback": 2,
+          "percent_growth": -0.11,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.05,
+          "lookback": 2,
+          "percent_growth": 0.17,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1102",
+      "related_search_trends": [
+        "crocs",
+        "birks",
+        "kids shoes",
+        "heel",
+        "funky shoes",
+        "birkenstock",
+        "pony hair",
+        "crocs fashion",
+        "mules",
+        "coach clogs",
+        "girly shoes",
+        "shoe inspo",
+        "clogs",
+        "shoes",
+        "fashion shoes",
+        "shoes women",
+        "birkenstock clogs",
+        "women's shoes",
+        "cute shoes",
+        "pretty shoes",
+        "loafers",
+        "flats",
+        "ugg",
+        "trendy shoes",
+        "pony"
+      ],
+      "parent_product_categories": [
+        "1416"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.07,
+          "lookback": 2,
+          "percent_growth": 0.07,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.07,
+          "lookback": 2,
+          "percent_growth": 0.03,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.07,
+          "lookback": 2,
+          "percent_growth": 0.16,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1182",
+      "related_search_trends": [
+        "xmas crafts",
+        "pottery",
+        "diy xmas gifts",
+        "perler bead art",
+        "jellyfish",
+        "perler bead crafts",
+        "perler crafts",
+        "hama beads",
+        "clay stuff",
+        "tentacles",
+        "beads",
+        "perlers",
+        "easy perler beads ideas"
+      ],
+      "parent_product_categories": [
+        "1249"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.06,
+          "lookback": 2,
+          "percent_growth": 0.04,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.09,
+          "lookback": 2,
+          "percent_growth": -0.05,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.06,
+          "lookback": 2,
+          "percent_growth": 0.16,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1069",
+      "related_search_trends": [
+        "combat boots",
+        "ugg",
+        "shoes",
+        "leather boots",
+        "platform boots",
+        "knee high boots",
+        "high heel boots",
+        "cute cowgirl boots",
+        "shoes boots",
+        "riding boots",
+        "dr martens",
+        "boots men",
+        "men's boots",
+        "black boots",
+        "womens boots",
+        "rain boots",
+        "ankle boots",
+        "brown boots",
+        "heel boots",
+        "high heel",
+        "boots women",
+        "fashion boots",
+        "knee boots",
+        "botas vaqueras",
+        "heeled boots"
+      ],
+      "parent_product_categories": [
+        "1416"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.19,
+          "lookback": 2,
+          "percent_growth": 0.09,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.27,
+          "lookback": 2,
+          "percent_growth": 0.07,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.19,
+          "lookback": 2,
+          "percent_growth": 0.15,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1162",
+      "related_search_trends": [
+        "computer",
+        "setup",
+        "macbook neo",
+        "ipad",
+        "charger",
+        "phone accessories",
+        "device",
+        "case",
+        "laptop",
+        "teclado",
+        "mechanical keyboard",
+        "kindle",
+        "phone",
+        "apple ipad",
+        "gadgets",
+        "tablet",
+        "ipad pro",
+        "electronics",
+        "controller",
+        "usb",
+        "macbook case",
+        "ipad air",
+        "cute keyboards",
+        "keycaps",
+        "kindle paperwhite"
+      ],
+      "parent_product_categories": [],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.1,
+          "lookback": 2,
+          "percent_growth": 0.06,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.1,
+          "lookback": 2,
+          "percent_growth": -0.03,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.13,
+          "lookback": 2,
+          "percent_growth": 0.14,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1432",
+      "related_search_trends": [
+        "socks women",
+        "crew socks",
+        "lace socks",
+        "slouch socks",
+        "funky socks",
+        "pilates socks",
+        "cute socks",
+        "embroidered socks",
+        "boot socks",
+        "long socks",
+        "knitted socks",
+        "fun socks",
+        "knee high socks",
+        "knitting socks",
+        "funky tights",
+        "ruffle socks",
+        "knit socks",
+        "white socks",
+        "thigh high socks",
+        "grip socks",
+        "compression socks",
+        "leg warmers",
+        "ankle socks",
+        "nike socks",
+        "tights"
+      ],
+      "parent_product_categories": [
+        "1255"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.05,
+          "lookback": 2,
+          "percent_growth": 0.07,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.11,
+          "lookback": 2,
+          "percent_growth": 0.01,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.04,
+          "lookback": 2,
+          "percent_growth": 0.14,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1114",
+      "related_search_trends": [
+        "computer",
+        "setup",
+        "cute ipad cases",
+        "ipad",
+        "keyboard",
+        "case",
+        "laptop",
+        "teclado",
+        "mechanical keyboard",
+        "kindle",
+        "monitor",
+        "apple ipad",
+        "ipad pro",
+        "electronics",
+        "cpu",
+        "usb",
+        "macbook case",
+        "cute keyboards",
+        "keycaps",
+        "ipad mini",
+        "kindle paperwhite",
+        "laptop cover",
+        "mousepad",
+        "intel",
+        "laptop case"
+      ],
+      "parent_product_categories": [
+        "1162"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.07,
+          "lookback": 2,
+          "percent_growth": 0.07,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.06,
+          "lookback": 2,
+          "percent_growth": -0.05,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.08,
+          "lookback": 2,
+          "percent_growth": 0.13,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1169",
+      "related_search_trends": [
+        "eye makeup",
+        "hair makeup",
+        "makeup routine",
+        "bratz makeup",
+        "eyeshadow palette",
+        "cool makeup",
+        "creative makeup",
+        "pretty makeup",
+        "makeup inspo",
+        "beauty makeup",
+        "face makeup",
+        "makeup tutorial",
+        "aesthetic makeup",
+        "makeup list",
+        "eyeliner",
+        "makeup inspiration",
+        "makeup tricks",
+        "beauty products",
+        "makeup products",
+        "makeup tips",
+        "liner",
+        "makeup",
+        "hair and makeup",
+        "eye makeup tutorial",
+        "beauty makeup tips"
+      ],
+      "parent_product_categories": [
+        "1306",
+        "1168"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.04,
+          "lookback": 2,
+          "percent_growth": 0.12,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.04,
+          "lookback": 2,
+          "percent_growth": 0,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.04,
+          "lookback": 2,
+          "percent_growth": 0.13,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1296",
+      "related_search_trends": [
+        "beaded lampshade",
+        "light fixtures",
+        "lamp ideas",
+        "diy lampshade",
+        "bedside lamps",
+        "pleated lampshade",
+        "standing lamp",
+        "floor lamps",
+        "lampshade makeover",
+        "rattan lamp",
+        "apartment lighting",
+        "diy lamp",
+        "living room lamp ideas",
+        "bedroom decor",
+        "antique lamp",
+        "victorian lampshades",
+        "lampshade",
+        "lighting ideas",
+        "paper lantern",
+        "bedroom",
+        "vintage lamp",
+        "diy lampshade makeover",
+        "table lamp",
+        "pendant light",
+        "oil lamps"
+      ],
+      "parent_product_categories": [],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.14,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.15,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.13,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1168",
+      "related_search_trends": [
+        "eyelashes",
+        "makeup routine",
+        "eyelash extensions",
+        "beauty hacks",
+        "face paint",
+        "creative makeup looks",
+        "eyelash",
+        "eyeshadow palette",
+        "cool makeup",
+        "creative makeup",
+        "pretty makeup",
+        "makeup inspo",
+        "beauty makeup",
+        "asian makeup tutorials",
+        "eyeshadow",
+        "crazy makeup",
+        "lash lift",
+        "makeup tutorial",
+        "eyeliner",
+        "makeup inspiration",
+        "beauty makeup tips",
+        "lash extensions",
+        "natural lashes",
+        "makeup tips",
+        "makeup products"
+      ],
+      "parent_product_categories": [
+        "1306"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.2,
+          "lookback": 2,
+          "percent_growth": 0.27,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.11,
+          "lookback": 2,
+          "percent_growth": 0.06,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.14,
+          "lookback": 2,
+          "percent_growth": 0.12,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1404",
+      "related_search_trends": [
+        "tricot",
+        "knitting ideas",
+        "crochet shawl",
+        "crochet patterns",
+        "head scarf",
+        "knitting patterns",
+        "crocheted",
+        "knit scarf",
+        "yarn",
+        "neck scarf",
+        "scarf crochet pattern",
+        "shawl",
+        "scarf as a top",
+        "knit patterns",
+        "scarf knitting patterns",
+        "scarf top",
+        "crochet scarf",
+        "shawl patterns",
+        "shawl crochet pattern",
+        "hair scarf",
+        "triangle scarf",
+        "crochet scarves",
+        "scarf pattern",
+        "knitting projects",
+        "scarf"
+      ],
+      "parent_product_categories": [
+        "1003"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.05,
+          "lookback": 2,
+          "percent_growth": 0.02,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.07,
+          "lookback": 2,
+          "percent_growth": 0.03,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.05,
+          "lookback": 2,
+          "percent_growth": 0.12,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1446",
+      "related_search_trends": [
+        "travel packing",
+        "packing tips",
+        "airport",
+        "carry on bag",
+        "pack",
+        "luggage",
+        "cruise packing",
+        "tote",
+        "travel",
+        "travel accessories",
+        "vintage suitcase",
+        "travel essentials",
+        "duffle bag",
+        "tote bag",
+        "packing tips for travel",
+        "trip",
+        "weekender bag",
+        "travel bag",
+        "cute luggage",
+        "packing essentials",
+        "vintage luggage",
+        "carry on luggage",
+        "cute suitcases",
+        "everyday bag essentials",
+        "traveling bag"
+      ],
+      "parent_product_categories": [
+        "1024"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.13,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.18,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.12,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1008",
+      "related_search_trends": [
+        "ocean",
+        "outfit ideas",
+        "turtle",
+        "bracelet de cheville",
+        "ankle bracelets",
+        "foot jewelry",
+        "bijoux",
+        "anklets for women",
+        "summer fits",
+        "outfits inspo",
+        "outfit inspiration"
+      ],
+      "parent_product_categories": [
+        "1263"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.54,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.04,
+          "lookback": 2,
+          "percent_growth": 0.62,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.01,
+          "lookback": 2,
+          "percent_growth": 0.11,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1024",
+      "related_search_trends": [
+        "purses",
+        "backpack ideas",
+        "bag essentials",
+        "school backpack",
+        "makeup bag",
+        "cute bags",
+        "tote",
+        "travel bag",
+        "luxury bags",
+        "school bag",
+        "cute purses",
+        "backpacks for school",
+        "coach bags",
+        "tote bag",
+        "bag inspo",
+        "mochilas",
+        "crossbody bag",
+        "luggage",
+        "cute backpacks",
+        "backpack",
+        "purses and bags",
+        "fashion bags",
+        "sac",
+        "clutch",
+        "designer bags"
+      ],
+      "parent_product_categories": [],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 1,
+          "lookback": 2,
+          "percent_growth": 0.1,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 1,
+          "lookback": 2,
+          "percent_growth": 0.01,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 1,
+          "lookback": 2,
+          "percent_growth": 0.11,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1265",
+      "related_search_trends": [
+        "mystery jewelry jar",
+        "bridal necklace",
+        "jewellery",
+        "beaded jewelry",
+        "jewels",
+        "gold jewelry",
+        "joyeria",
+        "beautiful jewelry",
+        "necklace",
+        "jewelry inspo",
+        "bridal jewelry",
+        "necklace set",
+        "gold jewellery design",
+        "joyas",
+        "gold jewellery",
+        "jewellery design",
+        "pendant necklace",
+        "gold necklace",
+        "fancy jewelry",
+        "jewelry design",
+        "wedding jewelry",
+        "necklace designs",
+        "dream jewelry",
+        "fancy jewellery",
+        "earrings"
+      ],
+      "parent_product_categories": [
+        "1263"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.05,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.03,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.11,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1156",
+      "related_search_trends": [
+        "glassware",
+        "tumbler cups",
+        "tea cup",
+        "gifts for coworkers",
+        "wine glass",
+        "coffee cup",
+        "bottle",
+        "ceramic coffee mug",
+        "cup holder",
+        "coffee",
+        "stanley cups",
+        "tumbler",
+        "glass cups",
+        "water bottle",
+        "tasse",
+        "pottery mugs",
+        "pottery",
+        "coffee mug",
+        "mugs",
+        "owala water bottle",
+        "cute water bottles",
+        "ceramic mug"
+      ],
+      "parent_product_categories": [
+        "1270"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.25,
+          "lookback": 2,
+          "percent_growth": 0.06,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.27,
+          "lookback": 2,
+          "percent_growth": -0.02,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.29,
+          "lookback": 2,
+          "percent_growth": 0.1,
+          "total": 0
+        }
+      }
+    },
+    {
+      "product_category": "1284",
+      "related_search_trends": [
+        "beaded lampshade",
+        "lamp ideas",
+        "diy lampshade",
+        "bedside lamps",
+        "pleated lampshade",
+        "glass lamp",
+        "standing lamp",
+        "lighting ideas",
+        "lampshade makeover",
+        "rattan lamp",
+        "apartment lighting",
+        "diy lamp",
+        "pendant light",
+        "living room lamp ideas",
+        "antique lamp",
+        "victorian lampshades",
+        "lampshade",
+        "paper lantern",
+        "ceiling light",
+        "vintage lamp",
+        "diy lampshade makeover",
+        "table lamp",
+        "sconce",
+        "lamparas",
+        "painted lampshade"
+      ],
+      "parent_product_categories": [
+        "1296"
+      ],
+      "summary": {
+        "engagement": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.12,
+          "total": 0
+        },
+        "saves": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.15,
+          "total": 0
+        },
+        "outbound_clicks": {
+          "percent_relative_volume": 0.02,
+          "lookback": 2,
+          "percent_growth": 0.1,
+          "total": 0
+        }
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 89
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 82
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 84
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 78
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 81
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 87
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 99
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 92
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 95
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 79
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 78
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 79
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 74
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 71
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 66
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 71
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 68
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 66
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 69
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 72
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 76
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 78
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 90
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 93
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        }
+      ],
+      "term": "1141",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 93
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 86
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 82
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 78
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 75
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 75
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 75
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 72
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 73
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 86
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 86
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 91
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 87
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 92
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 86
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 82
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 80
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 78
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 80
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 76
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 84
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 86
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 94
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 94
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        }
+      ],
+      "term": "1013",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 87
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 76
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 78
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 74
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 80
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 75
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 80
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 80
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 78
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 86
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 74
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 75
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 81
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 90
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 78
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 62
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 61
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 61
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 60
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 63
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 73
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 74
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 89
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 90
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        }
+      ],
+      "term": "1123",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 57
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 88
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 83
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 42
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 41
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 48
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 61
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 66
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 83
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 50
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 46
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 45
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 38
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 33
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 39
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 36
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 35
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 38
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 50
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 33
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 32
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 64
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 72
+        }
+      ],
+      "term": "1085",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 97
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 93
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 91
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 92
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 82
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 90
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 83
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 83
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 95
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 89
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 92
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 75
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 67
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 63
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 50
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 54
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 60
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 58
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 60
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 64
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 66
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 67
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 73
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 80
+        }
+      ],
+      "term": "1025",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 64
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 61
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 48
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 60
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 62
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 63
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 54
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 59
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 54
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 63
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 64
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 72
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 70
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 76
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 74
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 60
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 52
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 51
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 52
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 58
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 61
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 69
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        }
+      ],
+      "term": "1316",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 50
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 66
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 71
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 73
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 72
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 62
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 61
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 78
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 70
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 59
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 54
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 49
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 47
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 35
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 42
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 45
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 48
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 52
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 57
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 60
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 59
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 63
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 70
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 73
+        }
+      ],
+      "term": "1415",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 78
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 70
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 70
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 93
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 89
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 97
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 85
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 73
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 59
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 44
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 38
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 34
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 26
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 28
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 26
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 25
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 31
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 28
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 22
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 22
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 20
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 27
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 42
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 48
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 48
+        }
+      ],
+      "term": "1464",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 77
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 52
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 60
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 67
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 61
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 80
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 85
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 82
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 86
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 92
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 75
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 72
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 69
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 83
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 87
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 49
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 44
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 43
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 62
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 70
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 80
+        }
+      ],
+      "term": "1232",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 18
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 25
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 19
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 21
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 18
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 20
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 22
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 23
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 25
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 27
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 21
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 25
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 41
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 93
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 86
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 37
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 28
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 28
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 29
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 24
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 35
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 40
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 39
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 40
+        }
+      ],
+      "term": "1193",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 91
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 79
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 82
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 80
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 71
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 66
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 64
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 62
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 61
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 51
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 55
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 55
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 54
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 55
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 52
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 50
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 50
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 51
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 57
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 64
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 62
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 71
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 69
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 70
+        }
+      ],
+      "term": "1453",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 70
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 63
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 58
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 53
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 50
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 51
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 44
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 43
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 43
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 44
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 31
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 32
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 31
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 33
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 36
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 38
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 40
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 40
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 40
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 42
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 51
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 54
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 77
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 92
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        }
+      ],
+      "term": "1408",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 68
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 88
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 93
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 92
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 91
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 66
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 60
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 52
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 53
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 44
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 43
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 36
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 33
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 43
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 36
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 31
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 28
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 26
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 24
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 23
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 36
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 38
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 44
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 77
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        }
+      ],
+      "term": "1248",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 63
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 71
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 64
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 48
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 40
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 45
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 51
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 53
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 50
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 49
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 48
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 49
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 60
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 57
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 59
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 49
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 48
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 43
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 52
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 77
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 64
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 73
+        }
+      ],
+      "term": "1110",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 33
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 49
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 52
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 34
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 46
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 47
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 54
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 57
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 54
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 51
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 68
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 81
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 59
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 46
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 47
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 48
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 44
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 21
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 42
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 39
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 33
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 33
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 29
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 45
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 62
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        }
+      ],
+      "term": "1311",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 99
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 96
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 97
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 76
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 60
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 57
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 74
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 64
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 67
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 53
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 46
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 37
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 29
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 33
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 42
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 55
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 44
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 47
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 64
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 53
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 71
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 73
+        }
+      ],
+      "term": "1159",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 86
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 72
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 71
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 75
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 62
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 61
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 55
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 53
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 60
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 59
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 80
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 48
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 58
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 72
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 58
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 48
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 55
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 47
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 62
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 75
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 61
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 75
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 92
+        }
+      ],
+      "term": "1439",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 47
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 49
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 45
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 46
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 46
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 44
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 46
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 47
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 51
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 58
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 64
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 57
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 51
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 53
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 38
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 38
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 44
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 47
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 48
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 54
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 63
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 68
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 86
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 99
+        }
+      ],
+      "term": "1021",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 68
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 59
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 62
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 67
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 65
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 57
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 59
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 60
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 57
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 63
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 62
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 62
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 58
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 61
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 63
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 66
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 69
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 66
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 68
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 70
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 83
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 82
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 99
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 95
+        }
+      ],
+      "term": "1245",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    },
+    {
+      "daily_values": [
+        {
+          "date": "2026-02-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 49
+        },
+        {
+          "date": "2026-02-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 53
+        },
+        {
+          "date": "2026-02-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-02-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 57
+        },
+        {
+          "date": "2026-03-02",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 68
+        },
+        {
+          "date": "2026-03-09",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 73
+        },
+        {
+          "date": "2026-03-16",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 63
+        },
+        {
+          "date": "2026-03-23",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 61
+        },
+        {
+          "date": "2026-03-30",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 67
+        },
+        {
+          "date": "2026-04-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 55
+        },
+        {
+          "date": "2026-04-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 46
+        },
+        {
+          "date": "2026-04-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 49
+        },
+        {
+          "date": "2026-04-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-05-04",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 55
+        },
+        {
+          "date": "2026-05-11",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 56
+        },
+        {
+          "date": "2026-05-18",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 55
+        },
+        {
+          "date": "2026-05-25",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 63
+        },
+        {
+          "date": "2026-06-01",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 69
+        },
+        {
+          "date": "2026-06-08",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 64
+        },
+        {
+          "date": "2026-06-15",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 68
+        },
+        {
+          "date": "2026-06-22",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 67
+        },
+        {
+          "date": "2026-06-29",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 79
+        },
+        {
+          "date": "2026-07-06",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 93
+        },
+        {
+          "date": "2026-07-13",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 99
+        },
+        {
+          "date": "2026-07-20",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        },
+        {
+          "date": "2026-07-27",
+          "normalized_predicted_upper_bound": null,
+          "normalized_predicted_lower_bound": null,
+          "count": 100
+        }
+      ],
+      "term": "1131",
+      "growth_rates": {
+        "mom_change": null,
+        "yoy_change": null,
+        "wow_change": null
+      }
+    }
+  ],
+  "etsy_competitors": {
+    "1248": [
+      {
+        "pin_id": "4610137999946744064",
+        "merchant_name": "Etsy",
+        "title": "1953 or 1963 2-Dollar Bill United States Legal Tender STAR Note Red Seal Nice Condition FREE SHIPPING two",
+        "images": {
+          "75x75": {
+            "url": "https://i.pinimg.com/75x75/6f/4e/77/6f4e771ebdb6854e1befb48d42f3a295.jpg",
+            "width": 75,
+            "height": 75
+          },
+          "236x": {
+            "url": "https://i.pinimg.com/236x/6f/4e/77/6f4e771ebdb6854e1befb48d42f3a295.jpg",
+            "width": 236,
+            "height": 295
+          },
+          "345x": {
+            "url": "https://i.pinimg.com/345x/6f/4e/77/6f4e771ebdb6854e1befb48d42f3a295.jpg",
+            "width": 345,
+            "height": 432
+          },
+          "474x": {
+            "url": "https://i.pinimg.com/474x/6f/4e/77/6f4e771ebdb6854e1befb48d42f3a295.jpg",
+            "width": 474,
+            "height": 593
+          },
+          "564x": {
+            "url": "https://i.pinimg.com/564x/6f/4e/77/6f4e771ebdb6854e1befb48d42f3a295.jpg",
+            "width": 564,
+            "height": 706
+          },
+          "736x": {
+            "url": "https://i.pinimg.com/736x/6f/4e/77/6f4e771ebdb6854e1befb48d42f3a295.jpg",
+            "width": 736,
+            "height": 921
+          },
+          "1200x": {
+            "url": "https://i.pinimg.com/1200x/6f/4e/77/6f4e771ebdb6854e1befb48d42f3a295.jpg",
+            "width": 1200,
+            "height": 1503
+          }
+        }
+      },
+      {
+        "pin_id": "4593319858654254464",
+        "merchant_name": "Etsy",
+        "title": "Personalized Victorian Style Brass Steam Engine Handle Walking Stick - Collectible Cane, Luxury Steampunk Gift",
+        "images": {
+          "75x75": {
+            "url": "https://i.pinimg.com/75x75/af/ad/98/afad984f6bbfc01339e8adbe0d623a40.jpg",
+            "width": 75,
+            "height": 75
+          },
+          "236x": {
+            "url": "https://i.pinimg.com/236x/af/ad/98/afad984f6bbfc01339e8adbe0d623a40.jpg",
+            "width": 236,
+            "height": 467
+          },
+          "345x": {
+            "url": "https://i.pinimg.com/345x/af/ad/98/afad984f6bbfc01339e8adbe0d623a40.jpg",
+            "width": 345,
+            "height": 683
+          },
+          "474x": {
+            "url": "https://i.pinimg.com/474x/af/ad/98/afad984f6bbfc01339e8adbe0d623a40.jpg",
+            "width": 474,
+            "height": 939
+          },
+          "564x": {
+            "url": "https://i.pinimg.com/564x/af/ad/98/afad984f6bbfc01339e8adbe0d623a40.jpg",
+            "width": 564,
+            "height": 1117
+          },
+          "736x": {
+            "url": "https://i.pinimg.com/736x/af/ad/98/afad984f6bbfc01339e8adbe0d623a40.jpg",
+            "width": 736,
+            "height": 1458
+          },
+          "1200x": {
+            "url": "https://i.pinimg.com/1200x/af/ad/98/afad984f6bbfc01339e8adbe0d623a40.jpg",
+            "width": 1200,
+            "height": 2377
+          }
+        }
+      }
+    ],
+    "1311": [],
+    "1408": [],
+    "1021": [],
+    "1464": []
+  }
+}

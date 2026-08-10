@@ -3,3 +3,7 @@ __pycache__/
 .env
 *.db
 *.sqlite3
+
+pinterest_cookies.json
+etsy_datadome.txt
+pinterest_test.html

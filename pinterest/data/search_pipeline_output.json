@@ -1,0 +1,7070 @@
+{
+  "metadata": {
+    "preset": "growing",
+    "end_date": "2026-07-27",
+    "country": "US",
+    "top_terms": [
+      "animal katseye",
+      "intern animal hospital fanart",
+      "aespa kiss n tell",
+      "agamemnon the odyssey",
+      "jimothy"
+    ]
+  },
+  "discovery": [
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 50,
+        "value": 60
+      },
+      "seasonality_score": 0.32719162,
+      "normalizedCount": 15,
+      "yoy_change": {
+        "index": 49,
+        "value": 100.01
+      },
+      "term": "animal katseye",
+      "mom_change": {
+        "index": 50,
+        "value": 100.01
+      },
+      "searchCount": 15,
+      "reverseRank": 50
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 3,
+        "value": -0.07
+      },
+      "seasonality_score": 0.31584027,
+      "normalizedCount": 9,
+      "yoy_change": {
+        "index": 47,
+        "value": 100.01
+      },
+      "term": "intern animal hospital fanart",
+      "mom_change": {
+        "index": 49,
+        "value": 100.01
+      },
+      "searchCount": 9,
+      "reverseRank": 49
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 46,
+        "value": 10
+      },
+      "seasonality_score": 0.3249959,
+      "normalizedCount": 6,
+      "yoy_change": {
+        "index": 40,
+        "value": 100.01
+      },
+      "term": "aespa kiss n tell",
+      "mom_change": {
+        "index": 48,
+        "value": 100.01
+      },
+      "searchCount": 6,
+      "reverseRank": 48
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 30,
+        "value": 2
+      },
+      "seasonality_score": 0.32559794,
+      "normalizedCount": 8,
+      "yoy_change": {
+        "index": 46,
+        "value": 100.01
+      },
+      "term": "agamemnon the odyssey",
+      "mom_change": {
+        "index": 47,
+        "value": 100.01
+      },
+      "searchCount": 8,
+      "reverseRank": 47
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 36,
+        "value": 3
+      },
+      "seasonality_score": 0.32644367,
+      "normalizedCount": 19,
+      "yoy_change": {
+        "index": 31,
+        "value": 100.01
+      },
+      "term": "jimothy",
+      "mom_change": {
+        "index": 46,
+        "value": 100.01
+      },
+      "searchCount": 19,
+      "reverseRank": 46
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 11,
+        "value": 0.2
+      },
+      "seasonality_score": 0.31403622,
+      "normalizedCount": 5,
+      "yoy_change": {
+        "index": 37,
+        "value": 100.01
+      },
+      "term": "barney animal hospital fanart",
+      "mom_change": {
+        "index": 45,
+        "value": 100.01
+      },
+      "searchCount": 5,
+      "reverseRank": 45
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 29,
+        "value": 2
+      },
+      "seasonality_score": 0.32057086,
+      "normalizedCount": 6,
+      "yoy_change": {
+        "index": 38,
+        "value": 100.01
+      },
+      "term": "august nails ideas 2026",
+      "mom_change": {
+        "index": 44,
+        "value": 100.01
+      },
+      "searchCount": 6,
+      "reverseRank": 44
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 48,
+        "value": 35
+      },
+      "seasonality_score": 0.3272573,
+      "normalizedCount": 12,
+      "yoy_change": {
+        "index": 29,
+        "value": 100.01
+      },
+      "term": "katseye animal",
+      "mom_change": {
+        "index": 43,
+        "value": 100.01
+      },
+      "searchCount": 12,
+      "reverseRank": 43
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 45,
+        "value": 9
+      },
+      "seasonality_score": 0.32688236,
+      "normalizedCount": 100,
+      "yoy_change": {
+        "index": 50,
+        "value": 100.01
+      },
+      "term": "1000 little things",
+      "mom_change": {
+        "index": 42,
+        "value": 100.01
+      },
+      "searchCount": 100,
+      "reverseRank": 42
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 2,
+        "value": -0.07
+      },
+      "seasonality_score": 0.31432605,
+      "normalizedCount": 5,
+      "yoy_change": {
+        "index": 21,
+        "value": 40
+      },
+      "term": "y2k shoot ideas",
+      "mom_change": {
+        "index": 41,
+        "value": 75
+      },
+      "searchCount": 5,
+      "reverseRank": 41
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 41,
+        "value": 5
+      },
+      "seasonality_score": 0.87038505,
+      "normalizedCount": 8,
+      "yoy_change": {
+        "index": 7,
+        "value": 0.4
+      },
+      "term": "cute august nails",
+      "mom_change": {
+        "index": 40,
+        "value": 75
+      },
+      "searchCount": 8,
+      "reverseRank": 40
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 18,
+        "value": 0.5
+      },
+      "seasonality_score": 0.9701387,
+      "normalizedCount": 70,
+      "yoy_change": {
+        "index": 6,
+        "value": -0.01
+      },
+      "term": "august nails ideas",
+      "mom_change": {
+        "index": 39,
+        "value": 60
+      },
+      "searchCount": 70,
+      "reverseRank": 39
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 14,
+        "value": 0.3
+      },
+      "seasonality_score": 0.31658056,
+      "normalizedCount": 6,
+      "yoy_change": {
+        "index": 41,
+        "value": 100.01
+      },
+      "term": "back to school shoes 2026-2027",
+      "mom_change": {
+        "index": 38,
+        "value": 55
+      },
+      "searchCount": 6,
+      "reverseRank": 38
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 4,
+        "value": -0.06
+      },
+      "seasonality_score": 0.31396627,
+      "normalizedCount": 77,
+      "yoy_change": {
+        "index": 35,
+        "value": 100.01
+      },
+      "term": "surfside nails",
+      "mom_change": {
+        "index": 37,
+        "value": 55
+      },
+      "searchCount": 77,
+      "reverseRank": 37
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 28,
+        "value": 1
+      },
+      "seasonality_score": 0.3129199,
+      "normalizedCount": 18,
+      "yoy_change": {
+        "index": 17,
+        "value": 10
+      },
+      "term": "agamemnon",
+      "mom_change": {
+        "index": 36,
+        "value": 55
+      },
+      "searchCount": 18,
+      "reverseRank": 36
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 37,
+        "value": 4
+      },
+      "seasonality_score": 0.702647,
+      "normalizedCount": 12,
+      "yoy_change": {
+        "index": 5,
+        "value": -0.08
+      },
+      "term": "late summer nails",
+      "mom_change": {
+        "index": 35,
+        "value": 50
+      },
+      "searchCount": 12,
+      "reverseRank": 35
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 17,
+        "value": 0.5
+      },
+      "seasonality_score": 0.31326556,
+      "normalizedCount": 6,
+      "yoy_change": {
+        "index": 43,
+        "value": 100.01
+      },
+      "term": "one wish willows",
+      "mom_change": {
+        "index": 34,
+        "value": 40
+      },
+      "searchCount": 6,
+      "reverseRank": 34
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 39,
+        "value": 4
+      },
+      "seasonality_score": 0.32511613,
+      "normalizedCount": 6,
+      "yoy_change": {
+        "index": 42,
+        "value": 100.01
+      },
+      "term": "haskell and burp god",
+      "mom_change": {
+        "index": 33,
+        "value": 40
+      },
+      "searchCount": 6,
+      "reverseRank": 33
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 38,
+        "value": 4
+      },
+      "seasonality_score": 0.5903479,
+      "normalizedCount": 10,
+      "yoy_change": {
+        "index": 9,
+        "value": 0.4
+      },
+      "term": "august nail inspo",
+      "mom_change": {
+        "index": 32,
+        "value": 35
+      },
+      "searchCount": 10,
+      "reverseRank": 32
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 21,
+        "value": 0.7
+      },
+      "seasonality_score": 0.320588,
+      "normalizedCount": 7,
+      "yoy_change": {
+        "index": 44,
+        "value": 100.01
+      },
+      "term": "back to school outfits 2026-2027",
+      "mom_change": {
+        "index": 31,
+        "value": 35
+      },
+      "searchCount": 7,
+      "reverseRank": 31
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 40,
+        "value": 4
+      },
+      "seasonality_score": 0.70874494,
+      "normalizedCount": 11,
+      "yoy_change": {
+        "index": 14,
+        "value": 2
+      },
+      "term": "august nail ideas",
+      "mom_change": {
+        "index": 30,
+        "value": 35
+      },
+      "searchCount": 11,
+      "reverseRank": 30
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 31,
+        "value": 2
+      },
+      "seasonality_score": 0.9311712,
+      "normalizedCount": 5,
+      "yoy_change": {
+        "index": 3,
+        "value": -0.3
+      },
+      "term": "august nail colors",
+      "mom_change": {
+        "index": 29,
+        "value": 35
+      },
+      "searchCount": 5,
+      "reverseRank": 29
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 49,
+        "value": 35
+      },
+      "seasonality_score": 0.32690743,
+      "normalizedCount": 20,
+      "yoy_change": {
+        "index": 33,
+        "value": 100.01
+      },
+      "term": "find similar",
+      "mom_change": {
+        "index": 28,
+        "value": 35
+      },
+      "searchCount": 20,
+      "reverseRank": 28
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 20,
+        "value": 0.6
+      },
+      "seasonality_score": 0.32026654,
+      "normalizedCount": 5,
+      "yoy_change": {
+        "index": 20,
+        "value": 30
+      },
+      "term": "the odyssey wallpaper",
+      "mom_change": {
+        "index": 27,
+        "value": 30
+      },
+      "searchCount": 5,
+      "reverseRank": 27
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 1,
+        "value": -0.1
+      },
+      "seasonality_score": 0.31212294,
+      "normalizedCount": 5,
+      "yoy_change": {
+        "index": 28,
+        "value": 100.01
+      },
+      "term": "secret agent pfp",
+      "mom_change": {
+        "index": 26,
+        "value": 30
+      },
+      "searchCount": 5,
+      "reverseRank": 26
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 42,
+        "value": 7
+      },
+      "seasonality_score": 0.32805547,
+      "normalizedCount": 7,
+      "yoy_change": {
+        "index": 23,
+        "value": 45
+      },
+      "term": "just little things",
+      "mom_change": {
+        "index": 25,
+        "value": 30
+      },
+      "searchCount": 7,
+      "reverseRank": 25
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 23,
+        "value": 0.8
+      },
+      "seasonality_score": 0.3249955,
+      "normalizedCount": 13,
+      "yoy_change": {
+        "index": 25,
+        "value": 65
+      },
+      "term": "the odyssey movie",
+      "mom_change": {
+        "index": 24,
+        "value": 30
+      },
+      "searchCount": 13,
+      "reverseRank": 24
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 24,
+        "value": 0.8
+      },
+      "seasonality_score": 0.3470546,
+      "normalizedCount": 11,
+      "yoy_change": {
+        "index": 16,
+        "value": 8
+      },
+      "term": "#summernails",
+      "mom_change": {
+        "index": 23,
+        "value": 30
+      },
+      "searchCount": 11,
+      "reverseRank": 23
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 13,
+        "value": 0.2
+      },
+      "seasonality_score": 0.31474972,
+      "normalizedCount": 20,
+      "yoy_change": {
+        "index": 24,
+        "value": 65
+      },
+      "term": "random things to bedazzle",
+      "mom_change": {
+        "index": 22,
+        "value": 30
+      },
+      "searchCount": 20,
+      "reverseRank": 22
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 43,
+        "value": 8
+      },
+      "seasonality_score": 0.4794438,
+      "normalizedCount": 6,
+      "yoy_change": {
+        "index": 10,
+        "value": 0.6
+      },
+      "term": "july core",
+      "mom_change": {
+        "index": 21,
+        "value": 25
+      },
+      "searchCount": 6,
+      "reverseRank": 21
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 33,
+        "value": 3
+      },
+      "seasonality_score": 0.76939285,
+      "normalizedCount": 11,
+      "yoy_change": {
+        "index": 11,
+        "value": 1
+      },
+      "term": "nails for august",
+      "mom_change": {
+        "index": 20,
+        "value": 25
+      },
+      "searchCount": 11,
+      "reverseRank": 20
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 34,
+        "value": 3
+      },
+      "seasonality_score": 0.63866377,
+      "normalizedCount": 4,
+      "yoy_change": {
+        "index": 2,
+        "value": -0.6
+      },
+      "term": "leo season nails",
+      "mom_change": {
+        "index": 19,
+        "value": 25
+      },
+      "searchCount": 4,
+      "reverseRank": 19
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 6,
+        "value": -0.02
+      },
+      "seasonality_score": 0.3154361,
+      "normalizedCount": 24,
+      "yoy_change": {
+        "index": 19,
+        "value": 15
+      },
+      "term": "intern",
+      "mom_change": {
+        "index": 18,
+        "value": 25
+      },
+      "searchCount": 24,
+      "reverseRank": 18
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 47,
+        "value": 10
+      },
+      "seasonality_score": 0.49182287,
+      "normalizedCount": 8,
+      "yoy_change": {
+        "index": 8,
+        "value": 0.4
+      },
+      "term": "shark week snacks",
+      "mom_change": {
+        "index": 17,
+        "value": 25
+      },
+      "searchCount": 8,
+      "reverseRank": 17
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 15,
+        "value": 0.4
+      },
+      "seasonality_score": 0.33332053,
+      "normalizedCount": 5,
+      "yoy_change": {
+        "index": 18,
+        "value": 10
+      },
+      "term": "fulani braids front design",
+      "mom_change": {
+        "index": 16,
+        "value": 25
+      },
+      "searchCount": 5,
+      "reverseRank": 16
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 35,
+        "value": 3
+      },
+      "seasonality_score": 0.95720184,
+      "normalizedCount": 22,
+      "yoy_change": {
+        "index": 13,
+        "value": 2
+      },
+      "term": "august calendar ideas",
+      "mom_change": {
+        "index": 15,
+        "value": 20
+      },
+      "searchCount": 22,
+      "reverseRank": 15
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 12,
+        "value": 0.2
+      },
+      "seasonality_score": 0.3142589,
+      "normalizedCount": 12,
+      "yoy_change": {
+        "index": 30,
+        "value": 100.01
+      },
+      "term": "blue deltarune",
+      "mom_change": {
+        "index": 14,
+        "value": 20
+      },
+      "searchCount": 12,
+      "reverseRank": 14
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 19,
+        "value": 0.6
+      },
+      "seasonality_score": 0.31472307,
+      "normalizedCount": 14,
+      "yoy_change": {
+        "index": 48,
+        "value": 100.01
+      },
+      "term": "twins at the carousel",
+      "mom_change": {
+        "index": 13,
+        "value": 20
+      },
+      "searchCount": 14,
+      "reverseRank": 13
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 5,
+        "value": -0.03
+      },
+      "seasonality_score": 0.31599188,
+      "normalizedCount": 6,
+      "yoy_change": {
+        "index": 39,
+        "value": 100.01
+      },
+      "term": "sparks of tomorrow",
+      "mom_change": {
+        "index": 12,
+        "value": 20
+      },
+      "searchCount": 6,
+      "reverseRank": 12
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 22,
+        "value": 0.7
+      },
+      "seasonality_score": 0.3234278,
+      "normalizedCount": 8,
+      "yoy_change": {
+        "index": 26,
+        "value": 90
+      },
+      "term": "hazel hook",
+      "mom_change": {
+        "index": 11,
+        "value": 15
+      },
+      "searchCount": 8,
+      "reverseRank": 11
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 32,
+        "value": 3
+      },
+      "seasonality_score": 0.6351635,
+      "normalizedCount": 10,
+      "yoy_change": {
+        "index": 12,
+        "value": 1
+      },
+      "term": "lollapalooza nails",
+      "mom_change": {
+        "index": 10,
+        "value": 15
+      },
+      "searchCount": 10,
+      "reverseRank": 10
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 7,
+        "value": 0
+      },
+      "seasonality_score": 0.314709,
+      "normalizedCount": 18,
+      "yoy_change": {
+        "index": 32,
+        "value": 100.01
+      },
+      "term": "pink deltarune",
+      "mom_change": {
+        "index": 9,
+        "value": 15
+      },
+      "searchCount": 18,
+      "reverseRank": 9
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 16,
+        "value": 0.4
+      },
+      "seasonality_score": 0.32501635,
+      "normalizedCount": 7,
+      "yoy_change": {
+        "index": 22,
+        "value": 40
+      },
+      "term": "palworld base ideas",
+      "mom_change": {
+        "index": 8,
+        "value": 15
+      },
+      "searchCount": 7,
+      "reverseRank": 8
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 9,
+        "value": 0
+      },
+      "seasonality_score": 0.3141463,
+      "normalizedCount": 8,
+      "yoy_change": {
+        "index": 45,
+        "value": 100.01
+      },
+      "term": "blue and yellow deltarune",
+      "mom_change": {
+        "index": 7,
+        "value": 15
+      },
+      "searchCount": 8,
+      "reverseRank": 7
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 8,
+        "value": 0
+      },
+      "seasonality_score": 0.34122583,
+      "normalizedCount": 18,
+      "yoy_change": {
+        "index": 1,
+        "value": -0.6
+      },
+      "term": "fye fits",
+      "mom_change": {
+        "index": 6,
+        "value": 15
+      },
+      "searchCount": 18,
+      "reverseRank": 6
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 26,
+        "value": 1
+      },
+      "seasonality_score": 0.3173841,
+      "normalizedCount": 20,
+      "yoy_change": {
+        "index": 36,
+        "value": 100.01
+      },
+      "term": "back to school bulliten board idea",
+      "mom_change": {
+        "index": 5,
+        "value": 15
+      },
+      "searchCount": 20,
+      "reverseRank": 5
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 25,
+        "value": 1
+      },
+      "seasonality_score": 0.32328388,
+      "normalizedCount": 25,
+      "yoy_change": {
+        "index": 34,
+        "value": 100.01
+      },
+      "term": "max hatter",
+      "mom_change": {
+        "index": 4,
+        "value": 15
+      },
+      "searchCount": 25,
+      "reverseRank": 4
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 10,
+        "value": 0.09
+      },
+      "seasonality_score": 0.3348581,
+      "normalizedCount": 9,
+      "yoy_change": {
+        "index": 15,
+        "value": 8
+      },
+      "term": "palworld base",
+      "mom_change": {
+        "index": 3,
+        "value": 15
+      },
+      "searchCount": 9,
+      "reverseRank": 3
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 27,
+        "value": 1
+      },
+      "seasonality_score": 0.32134932,
+      "normalizedCount": 7,
+      "yoy_change": {
+        "index": 27,
+        "value": 95
+      },
+      "term": "brendon tremblay",
+      "mom_change": {
+        "index": 2,
+        "value": 15
+      },
+      "searchCount": 7,
+      "reverseRank": 2
+    },
+    {
+      "affinity": null,
+      "wow_change": {
+        "index": 44,
+        "value": 8
+      },
+      "seasonality_score": 0.94513,
+      "normalizedCount": 12,
+      "yoy_change": {
+        "index": 4,
+        "value": -0.1
+      },
+      "term": "leo season",
+      "mom_change": {
+        "index": 1,
+        "value": 15
+      },
+      "searchCount": 12,
+      "reverseRank": 1
+    }
+  ],
+  "metrics": [
+    {
+      "growth_rates": {
+        "wow_change": 60,
+        "yoy_change": null,
+        "mom_change": null
+      },
+      "term": "animal katseye",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-29",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-07-06",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-07-13",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-07-20",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": -0.07,
+        "yoy_change": null,
+        "mom_change": 100.01
+      },
+      "term": "intern animal hospital fanart",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-29",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 33,
+          "date": "2026-07-06",
+          "normalizedCount": 33,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 92,
+          "date": "2026-07-13",
+          "normalizedCount": 92,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-20",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 92,
+          "date": "2026-07-27",
+          "normalizedCount": 92,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 10,
+        "yoy_change": null,
+        "mom_change": 100.01
+      },
+      "term": "aespa kiss n tell",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-29",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 7,
+          "date": "2026-07-06",
+          "normalizedCount": 7,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 5,
+          "date": "2026-07-13",
+          "normalizedCount": 5,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 9,
+          "date": "2026-07-20",
+          "normalizedCount": 9,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 2,
+        "yoy_change": null,
+        "mom_change": 100.01
+      },
+      "term": "agamemnon the odyssey",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-29",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-07-06",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-07-13",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 31,
+          "date": "2026-07-20",
+          "normalizedCount": 31,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 3,
+        "yoy_change": null,
+        "mom_change": 100.01
+      },
+      "term": "jimothy",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-29",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-07-06",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-07-13",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 23,
+          "date": "2026-07-20",
+          "normalizedCount": 23,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.2,
+        "yoy_change": null,
+        "mom_change": 100.01
+      },
+      "term": "barney animal hospital fanart",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-29",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 41,
+          "date": "2026-07-06",
+          "normalizedCount": 41,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 43,
+          "date": "2026-07-13",
+          "normalizedCount": 43,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 86,
+          "date": "2026-07-20",
+          "normalizedCount": 86,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 2,
+        "yoy_change": null,
+        "mom_change": 100.01
+      },
+      "term": "august nails ideas 2026",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-29",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 6,
+          "date": "2026-07-06",
+          "normalizedCount": 6,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 19,
+          "date": "2026-07-13",
+          "normalizedCount": 19,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 36,
+          "date": "2026-07-20",
+          "normalizedCount": 36,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 35,
+        "yoy_change": null,
+        "mom_change": 100.01
+      },
+      "term": "katseye animal",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-29",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-07-06",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-07-13",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-07-20",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 9,
+        "yoy_change": null,
+        "mom_change": 100.01
+      },
+      "term": "1000 little things",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-29",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-07-06",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-07-13",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 10,
+          "date": "2026-07-20",
+          "normalizedCount": 10,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": -0.07,
+        "yoy_change": null,
+        "mom_change": 75
+      },
+      "term": "y2k shoot ideas",
+      "counts": [
+        {
+          "count": 1,
+          "date": "2026-05-04",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-11",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-18",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-25",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-29",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 55,
+          "date": "2026-07-06",
+          "normalizedCount": 55,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 95,
+          "date": "2026-07-13",
+          "normalizedCount": 95,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-20",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 92,
+          "date": "2026-07-27",
+          "normalizedCount": 92,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 5,
+        "yoy_change": null,
+        "mom_change": 65
+      },
+      "term": "cute august nails",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-29",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-07-06",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 5,
+          "date": "2026-07-13",
+          "normalizedCount": 5,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 18,
+          "date": "2026-07-20",
+          "normalizedCount": 18,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": true,
+      "hasPrediction": true
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.5,
+        "yoy_change": null,
+        "mom_change": 55
+      },
+      "term": "august nails ideas",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-29",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-07-06",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 13,
+          "date": "2026-07-13",
+          "normalizedCount": 13,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 67,
+          "date": "2026-07-20",
+          "normalizedCount": 67,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": true,
+      "hasPrediction": true
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.3,
+        "yoy_change": null,
+        "mom_change": 50
+      },
+      "term": "back to school shoes 2026-2027",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-22",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-29",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 13,
+          "date": "2026-07-06",
+          "normalizedCount": 13,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 42,
+          "date": "2026-07-13",
+          "normalizedCount": 42,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 78,
+          "date": "2026-07-20",
+          "normalizedCount": 78,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": -0.06,
+        "yoy_change": null,
+        "mom_change": 40
+      },
+      "term": "surfside nails",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-22",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-06-29",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 52,
+          "date": "2026-07-06",
+          "normalizedCount": 52,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 89,
+          "date": "2026-07-13",
+          "normalizedCount": 89,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-20",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 93,
+          "date": "2026-07-27",
+          "normalizedCount": 93,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 1,
+        "yoy_change": null,
+        "mom_change": 55
+      },
+      "term": "agamemnon",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-11",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-29",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-07-06",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-07-13",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 41,
+          "date": "2026-07-20",
+          "normalizedCount": 41,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 4,
+        "yoy_change": null,
+        "mom_change": 45
+      },
+      "term": "late summer nails",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-29",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 5,
+          "date": "2026-07-06",
+          "normalizedCount": 5,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 12,
+          "date": "2026-07-13",
+          "normalizedCount": 12,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 21,
+          "date": "2026-07-20",
+          "normalizedCount": 21,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.5,
+        "yoy_change": null,
+        "mom_change": 15
+      },
+      "term": "one wish willows",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 16,
+          "date": "2026-06-29",
+          "normalizedCount": 16,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 47,
+          "date": "2026-07-06",
+          "normalizedCount": 47,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 63,
+          "date": "2026-07-13",
+          "normalizedCount": 63,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 68,
+          "date": "2026-07-20",
+          "normalizedCount": 68,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 4,
+        "yoy_change": null,
+        "mom_change": 35
+      },
+      "term": "haskell and burp god",
+      "counts": [
+        {
+          "count": 1,
+          "date": "2026-05-04",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-11",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-29",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-07-06",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-07-13",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 19,
+          "date": "2026-07-20",
+          "normalizedCount": 19,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 4,
+        "yoy_change": null,
+        "mom_change": 30
+      },
+      "term": "august nail inspo",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-29",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 6,
+          "date": "2026-07-06",
+          "normalizedCount": 6,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 11,
+          "date": "2026-07-13",
+          "normalizedCount": 11,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 20,
+          "date": "2026-07-20",
+          "normalizedCount": 20,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.7,
+        "yoy_change": null,
+        "mom_change": 30
+      },
+      "term": "back to school outfits 2026-2027",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-22",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-29",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-07-06",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 11,
+          "date": "2026-07-13",
+          "normalizedCount": 11,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 60,
+          "date": "2026-07-20",
+          "normalizedCount": 60,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 4,
+        "yoy_change": null,
+        "mom_change": 30
+      },
+      "term": "august nail ideas",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-29",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 5,
+          "date": "2026-07-06",
+          "normalizedCount": 5,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 9,
+          "date": "2026-07-13",
+          "normalizedCount": 9,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 19,
+          "date": "2026-07-20",
+          "normalizedCount": 19,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 2,
+        "yoy_change": null,
+        "mom_change": 35
+      },
+      "term": "august nail colors",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-29",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 5,
+          "date": "2026-07-06",
+          "normalizedCount": 5,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 16,
+          "date": "2026-07-13",
+          "normalizedCount": 16,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 29,
+          "date": "2026-07-20",
+          "normalizedCount": 29,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": true,
+      "hasPrediction": true
+    },
+    {
+      "growth_rates": {
+        "wow_change": 35,
+        "yoy_change": null,
+        "mom_change": 30
+      },
+      "term": "find similar",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-29",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-07-06",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-07-13",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-07-20",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.6,
+        "yoy_change": null,
+        "mom_change": 30
+      },
+      "term": "the odyssey wallpaper",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-11",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-18",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-08",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-22",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-29",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-07-06",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-07-13",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 61,
+          "date": "2026-07-20",
+          "normalizedCount": 61,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": -0.1,
+        "yoy_change": null,
+        "mom_change": 15
+      },
+      "term": "secret agent pfp",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-11",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 24,
+          "date": "2026-06-29",
+          "normalizedCount": 24,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 82,
+          "date": "2026-07-06",
+          "normalizedCount": 82,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-13",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 97,
+          "date": "2026-07-20",
+          "normalizedCount": 97,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 87,
+          "date": "2026-07-27",
+          "normalizedCount": 87,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 7,
+        "yoy_change": null,
+        "mom_change": 35
+      },
+      "term": "just little things",
+      "counts": [
+        {
+          "count": 1,
+          "date": "2026-05-04",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-05-11",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-18",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-29",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-07-06",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-07-13",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 12,
+          "date": "2026-07-20",
+          "normalizedCount": 12,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.8,
+        "yoy_change": null,
+        "mom_change": 30
+      },
+      "term": "the odyssey movie",
+      "counts": [
+        {
+          "count": 1,
+          "date": "2026-05-04",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-11",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-18",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-08",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-29",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-07-06",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-07-13",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 57,
+          "date": "2026-07-20",
+          "normalizedCount": 57,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.8,
+        "yoy_change": null,
+        "mom_change": 20
+      },
+      "term": "#summernails",
+      "counts": [
+        {
+          "count": 1,
+          "date": "2026-05-04",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-11",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-18",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-25",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 6,
+          "date": "2026-06-29",
+          "normalizedCount": 6,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 12,
+          "date": "2026-07-06",
+          "normalizedCount": 12,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 20,
+          "date": "2026-07-13",
+          "normalizedCount": 20,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 57,
+          "date": "2026-07-20",
+          "normalizedCount": 57,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.2,
+        "yoy_change": null,
+        "mom_change": 25
+      },
+      "term": "random things to bedazzle",
+      "counts": [
+        {
+          "count": 2,
+          "date": "2026-05-04",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-11",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-18",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-25",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-01",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-08",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-06-15",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-22",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-06-29",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 68,
+          "date": "2026-07-06",
+          "normalizedCount": 68,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 79,
+          "date": "2026-07-13",
+          "normalizedCount": 79,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 82,
+          "date": "2026-07-20",
+          "normalizedCount": 82,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 8,
+        "yoy_change": null,
+        "mom_change": 25
+      },
+      "term": "july core",
+      "counts": [
+        {
+          "count": 1,
+          "date": "2026-05-04",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-18",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-29",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 33,
+          "date": "2026-07-06",
+          "normalizedCount": 33,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-07-13",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 12,
+          "date": "2026-07-20",
+          "normalizedCount": 12,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 3,
+        "yoy_change": null,
+        "mom_change": 25
+      },
+      "term": "nails for august",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-29",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 7,
+          "date": "2026-07-06",
+          "normalizedCount": 7,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 15,
+          "date": "2026-07-13",
+          "normalizedCount": 15,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 26,
+          "date": "2026-07-20",
+          "normalizedCount": 26,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 3,
+        "yoy_change": null,
+        "mom_change": 20
+      },
+      "term": "leo season nails",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-29",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-07-06",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 7,
+          "date": "2026-07-13",
+          "normalizedCount": 7,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 24,
+          "date": "2026-07-20",
+          "normalizedCount": 24,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": -0.02,
+        "yoy_change": null,
+        "mom_change": 20
+      },
+      "term": "intern",
+      "counts": [
+        {
+          "count": 2,
+          "date": "2026-05-04",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-11",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-18",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-25",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-01",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-08",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-15",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-22",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 8,
+          "date": "2026-06-29",
+          "normalizedCount": 8,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 47,
+          "date": "2026-07-06",
+          "normalizedCount": 47,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 94,
+          "date": "2026-07-13",
+          "normalizedCount": 94,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-20",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 97,
+          "date": "2026-07-27",
+          "normalizedCount": 97,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 10,
+        "yoy_change": null,
+        "mom_change": 20
+      },
+      "term": "shark week snacks",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-11",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-18",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-29",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-07-06",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-07-13",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 8,
+          "date": "2026-07-20",
+          "normalizedCount": 8,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.4,
+        "yoy_change": null,
+        "mom_change": 25
+      },
+      "term": "fulani braids front design",
+      "counts": [
+        {
+          "count": 2,
+          "date": "2026-05-04",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-05-11",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-18",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-25",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-01",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-06-08",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-06-15",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-22",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-29",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 91,
+          "date": "2026-07-06",
+          "normalizedCount": 91,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 36,
+          "date": "2026-07-13",
+          "normalizedCount": 36,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 73,
+          "date": "2026-07-20",
+          "normalizedCount": 73,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 3,
+        "yoy_change": null,
+        "mom_change": 20
+      },
+      "term": "august calendar ideas",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-18",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-29",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 7,
+          "date": "2026-07-06",
+          "normalizedCount": 7,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 10,
+          "date": "2026-07-13",
+          "normalizedCount": 10,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 24,
+          "date": "2026-07-20",
+          "normalizedCount": 24,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": true,
+      "hasPrediction": true
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.2,
+        "yoy_change": null,
+        "mom_change": 8
+      },
+      "term": "blue deltarune",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 31,
+          "date": "2026-06-29",
+          "normalizedCount": 31,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 49,
+          "date": "2026-07-06",
+          "normalizedCount": 49,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 72,
+          "date": "2026-07-13",
+          "normalizedCount": 72,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 83,
+          "date": "2026-07-20",
+          "normalizedCount": 83,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.6,
+        "yoy_change": null,
+        "mom_change": 8
+      },
+      "term": "twins at the carousel",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-22",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 27,
+          "date": "2026-06-29",
+          "normalizedCount": 27,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 33,
+          "date": "2026-07-06",
+          "normalizedCount": 33,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 61,
+          "date": "2026-07-13",
+          "normalizedCount": 61,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 64,
+          "date": "2026-07-20",
+          "normalizedCount": 64,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": -0.03,
+        "yoy_change": null,
+        "mom_change": 30
+      },
+      "term": "sparks of tomorrow",
+      "counts": [
+        {
+          "count": 1,
+          "date": "2026-05-04",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-11",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-18",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 9,
+          "date": "2026-06-01",
+          "normalizedCount": 9,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-08",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-15",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-22",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-29",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 16,
+          "date": "2026-07-06",
+          "normalizedCount": 16,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 94,
+          "date": "2026-07-13",
+          "normalizedCount": 94,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-20",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 97,
+          "date": "2026-07-27",
+          "normalizedCount": 97,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.7,
+        "yoy_change": null,
+        "mom_change": 15
+      },
+      "term": "hazel hook",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-18",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-15",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-06-22",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 6,
+          "date": "2026-06-29",
+          "normalizedCount": 6,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 6,
+          "date": "2026-07-06",
+          "normalizedCount": 6,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 8,
+          "date": "2026-07-13",
+          "normalizedCount": 8,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 58,
+          "date": "2026-07-20",
+          "normalizedCount": 58,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 3,
+        "yoy_change": null,
+        "mom_change": 15
+      },
+      "term": "lollapalooza nails",
+      "counts": [
+        {
+          "count": 1,
+          "date": "2026-05-04",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-11",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-18",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-25",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-15",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-22",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-06-29",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 8,
+          "date": "2026-07-06",
+          "normalizedCount": 8,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 13,
+          "date": "2026-07-13",
+          "normalizedCount": 13,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 26,
+          "date": "2026-07-20",
+          "normalizedCount": 26,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0,
+        "yoy_change": null,
+        "mom_change": 7
+      },
+      "term": "pink deltarune",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 48,
+          "date": "2026-06-29",
+          "normalizedCount": 48,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 82,
+          "date": "2026-07-06",
+          "normalizedCount": 82,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-13",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 94,
+          "date": "2026-07-20",
+          "normalizedCount": 94,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 94,
+          "date": "2026-07-27",
+          "normalizedCount": 94,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.4,
+        "yoy_change": null,
+        "mom_change": 15
+      },
+      "term": "palworld base ideas",
+      "counts": [
+        {
+          "count": 3,
+          "date": "2026-05-04",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-11",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-05-18",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-25",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-06-08",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-06-15",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-22",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-06-29",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-07-06",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 28,
+          "date": "2026-07-13",
+          "normalizedCount": 28,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 72,
+          "date": "2026-07-20",
+          "normalizedCount": 72,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0,
+        "yoy_change": null,
+        "mom_change": 8
+      },
+      "term": "blue and yellow deltarune",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-15",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-22",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 37,
+          "date": "2026-06-29",
+          "normalizedCount": 37,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 55,
+          "date": "2026-07-06",
+          "normalizedCount": 55,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 75,
+          "date": "2026-07-13",
+          "normalizedCount": 75,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-20",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0,
+        "yoy_change": null,
+        "mom_change": 10
+      },
+      "term": "fye fits",
+      "counts": [
+        {
+          "count": 5,
+          "date": "2026-05-04",
+          "normalizedCount": 5,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-05-11",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-05-18",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-05-25",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-15",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-06-22",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 25,
+          "date": "2026-06-29",
+          "normalizedCount": 25,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 53,
+          "date": "2026-07-06",
+          "normalizedCount": 53,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 88,
+          "date": "2026-07-13",
+          "normalizedCount": 88,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-20",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 1,
+        "yoy_change": null,
+        "mom_change": 15
+      },
+      "term": "back to school bulliten board idea",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-08",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-15",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-22",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 5,
+          "date": "2026-06-29",
+          "normalizedCount": 5,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 11,
+          "date": "2026-07-06",
+          "normalizedCount": 11,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 29,
+          "date": "2026-07-13",
+          "normalizedCount": 29,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 47,
+          "date": "2026-07-20",
+          "normalizedCount": 47,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 1,
+        "yoy_change": null,
+        "mom_change": 15
+      },
+      "term": "max hatter",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-11",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-25",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-01",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-06-08",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-15",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 5,
+          "date": "2026-06-22",
+          "normalizedCount": 5,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 5,
+          "date": "2026-06-29",
+          "normalizedCount": 5,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-07-06",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 7,
+          "date": "2026-07-13",
+          "normalizedCount": 7,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 51,
+          "date": "2026-07-20",
+          "normalizedCount": 51,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 0.09,
+        "yoy_change": null,
+        "mom_change": 15
+      },
+      "term": "palworld base",
+      "counts": [
+        {
+          "count": 2,
+          "date": "2026-05-04",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-11",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-18",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-25",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-01",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-08",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-15",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-06-22",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 5,
+          "date": "2026-06-29",
+          "normalizedCount": 5,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 4,
+          "date": "2026-07-06",
+          "normalizedCount": 4,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 31,
+          "date": "2026-07-13",
+          "normalizedCount": 31,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 91,
+          "date": "2026-07-20",
+          "normalizedCount": 91,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 1,
+        "yoy_change": null,
+        "mom_change": 15
+      },
+      "term": "brendon tremblay",
+      "counts": [
+        {
+          "count": 2,
+          "date": "2026-05-04",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-11",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-05-18",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-08",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-15",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 5,
+          "date": "2026-06-22",
+          "normalizedCount": 5,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-29",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 5,
+          "date": "2026-07-06",
+          "normalizedCount": 5,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 6,
+          "date": "2026-07-13",
+          "normalizedCount": 6,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 44,
+          "date": "2026-07-20",
+          "normalizedCount": 44,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": false,
+      "hasPrediction": false
+    },
+    {
+      "growth_rates": {
+        "wow_change": 8,
+        "yoy_change": null,
+        "mom_change": 15
+      },
+      "term": "leo season",
+      "counts": [
+        {
+          "count": 0,
+          "date": "2026-05-04",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-11",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 0,
+          "date": "2026-05-18",
+          "normalizedCount": 0,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-05-25",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 1,
+          "date": "2026-06-01",
+          "normalizedCount": 1,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-08",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-15",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 2,
+          "date": "2026-06-22",
+          "normalizedCount": 2,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 3,
+          "date": "2026-06-29",
+          "normalizedCount": 3,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 6,
+          "date": "2026-07-06",
+          "normalizedCount": 6,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 6,
+          "date": "2026-07-13",
+          "normalizedCount": 6,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 11,
+          "date": "2026-07-20",
+          "normalizedCount": 11,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        },
+        {
+          "count": 100,
+          "date": "2026-07-27",
+          "normalizedCount": 100,
+          "predictedUpperBoundNormalizedCount": null,
+          "predictedLowerBoundNormalizedCount": null
+        }
+      ],
+      "has_prediction": true,
+      "hasPrediction": true
+    }
+  ],
+  "demographics": {
+    "term_distributions": {
+      "animal katseye": {
+        "gender_distribution": {
+          "male": 0.1,
+          "female": 0.84,
+          "unspecified": 0.06
+        },
+        "age_distribution": {
+          "18-24": 0.4,
+          "25-34": 0.34,
+          "35-44": 0.17,
+          "45-49": 0.05,
+          "50-54": 0.04,
+          "55-64": 0.04,
+          "65+": 0.04
+        }
+      }
+    }
+  },
+  "expansion_prefix": [
+    {
+      "term": "animal katseye",
+      "counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        100
+      ]
+    },
+    {
+      "term": "katseye animal",
+      "counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        100
+      ]
+    },
+    {
+      "term": "animal hospital",
+      "counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        9,
+        74,
+        100,
+        92,
+        75,
+        59
+      ]
+    },
+    {
+      "term": "katseye",
+      "counts": [
+        51,
+        60,
+        50,
+        65,
+        70,
+        62,
+        66,
+        62,
+        58,
+        54,
+        56,
+        51,
+        43,
+        39,
+        49,
+        57,
+        59,
+        71,
+        59,
+        58,
+        60,
+        78,
+        84,
+        74,
+        69,
+        65,
+        76,
+        75,
+        66,
+        68,
+        62,
+        53,
+        55,
+        62,
+        59,
+        65,
+        88,
+        96,
+        88,
+        75,
+        66,
+        68,
+        74,
+        80,
+        81,
+        88,
+        85,
+        84,
+        81,
+        83,
+        87,
+        100
+      ]
+    },
+    {
+      "term": "animal hospital roblox game",
+      "counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        6,
+        62,
+        100,
+        51,
+        23,
+        11
+      ]
+    },
+    {
+      "term": "animal hospital anomaly",
+      "counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        25,
+        66,
+        100,
+        90,
+        81,
+        62
+      ]
+    },
+    {
+      "term": "secret agent animal hospital",
+      "counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        27,
+        100,
+        95,
+        70,
+        42
+      ]
+    },
+    {
+      "term": "animal hospital roblox",
+      "counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        12,
+        82,
+        100,
+        22,
+        9,
+        6
+      ]
+    },
+    {
+      "term": "daniela katseye",
+      "counts": [
+        49,
+        56,
+        47,
+        66,
+        69,
+        58,
+        72,
+        62,
+        59,
+        57,
+        63,
+        57,
+        30,
+        30,
+        39,
+        42,
+        43,
+        50,
+        50,
+        61,
+        62,
+        79,
+        82,
+        60,
+        50,
+        45,
+        49,
+        51,
+        46,
+        57,
+        55,
+        51,
+        53,
+        58,
+        53,
+        57,
+        72,
+        79,
+        82,
+        66,
+        60,
+        57,
+        63,
+        76,
+        78,
+        86,
+        82,
+        76,
+        100,
+        73,
+        73,
+        74
+      ]
+    },
+    {
+      "term": "manon katseye",
+      "counts": [
+        54,
+        61,
+        51,
+        73,
+        77,
+        60,
+        65,
+        59,
+        55,
+        53,
+        53,
+        47,
+        32,
+        29,
+        35,
+        40,
+        40,
+        49,
+        47,
+        51,
+        52,
+        65,
+        66,
+        58,
+        49,
+        50,
+        59,
+        59,
+        51,
+        94,
+        98,
+        62,
+        64,
+        63,
+        61,
+        77,
+        100,
+        98,
+        95,
+        75,
+        64,
+        59,
+        67,
+        82,
+        80,
+        77,
+        77,
+        100,
+        70,
+        65,
+        69,
+        68
+      ]
+    }
+  ],
+  "expansion_related": [
+    {
+      "term": "katseye animal",
+      "counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        100
+      ],
+      "hasPrediction": false
+    },
+    {
+      "term": "katseye animal song",
+      "counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        100
+      ],
+      "hasPrediction": false
+    },
+    {
+      "term": "animal katseye song",
+      "counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        100
+      ],
+      "hasPrediction": false
+    },
+    {
+      "term": "silly cat",
+      "counts": [
+        100,
+        99,
+        96,
+        90,
+        90,
+        86,
+        84,
+        82,
+        84,
+        83,
+        80,
+        76,
+        71,
+        70,
+        65,
+        79,
+        75,
+        68,
+        64,
+        71,
+        80,
+        69,
+        70,
+        61,
+        71,
+        73,
+        78,
+        74,
+        69,
+        78,
+        82,
+        79,
+        79,
+        71,
+        72,
+        74,
+        67,
+        70,
+        67,
+        63,
+        66,
+        69,
+        70,
+        70,
+        66,
+        66,
+        63,
+        63,
+        62,
+        64,
+        62,
+        61,
+        55,
+        56,
+        69,
+        69,
+        66,
+        63,
+        64,
+        65,
+        66,
+        65,
+        63,
+        60,
+        57,
+        56
+      ],
+      "hasPrediction": true
+    },
+    {
+      "term": "cat drooling",
+      "counts": [
+        3,
+        2,
+        2,
+        2,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        1,
+        1,
+        2,
+        2,
+        1,
+        1,
+        2,
+        1,
+        2,
+        2,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        2,
+        2,
+        3,
+        2,
+        4,
+        7,
+        12,
+        16,
+        23,
+        44,
+        75,
+        100,
+        94,
+        81,
+        68,
+        63,
+        58,
+        50
+      ],
+      "hasPrediction": false
+    }
+  ]
+}

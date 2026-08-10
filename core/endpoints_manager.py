@@ -4,7 +4,7 @@ import shlex
 from typing import Dict, Any
 
 class EndpointManager:
-    def __init__(self, registry_path: str = "inputs/registry.json"):
+    def __init__(self, registry_path: str = "etsy/api/private/registry.json"):
         self.registry_path = registry_path
         self.endpoints = self._load_registry()
 

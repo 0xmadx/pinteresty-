@@ -1,13 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "Etsy DataDome Syncer",
-  "version": "1.0.0",
-  "description": "Automatically syncs the DataDome cookie to the local Python scraper backend to bypass protections.",
+  "name": "Scraper Cookie Syncer",
+  "version": "1.1.0",
+  "description": "Automatically syncs cookies for Etsy and Pinterest to the local Python scraper backend.",
   "permissions": [
-    "cookies"
+    "cookies",
+    "alarms",
+    "tabs"
   ],
   "host_permissions": [
-    "*://*.etsy.com/*"
+    "*://*.etsy.com/*",
+    "*://*.pinterest.com/*"
   ],
   "background": {
     "service_worker": "background.js"

@@ -1,0 +1,270 @@
+{
+  "ordered_values": [
+    {
+      "summary": {
+        "outbound_clicks": {
+          "percent_growth": 0.18,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 1
+        },
+        "saves": {
+          "percent_growth": 0.03,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 0.99
+        },
+        "engagement": {
+          "percent_growth": 0.12,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 0.99
+        }
+      },
+      "parent_product_categories": [
+        "1104",
+        "1350"
+      ],
+      "related_search_trends": [
+        "winter fashion",
+        "leather jacket",
+        "jackets for women",
+        "wool coat",
+        "trench coat",
+        "varsity jacket",
+        "jean jacket",
+        "coat",
+        "fleece jacket",
+        "puffer jacket",
+        "carhartt",
+        "chaquetas",
+        "cropped jacket",
+        "winter coats",
+        "puffer",
+        "bomber jacket",
+        "jacket men",
+        "suit",
+        "mens jackets",
+        "jacket",
+        "long coat",
+        "biker jacket",
+        "quilted jacket",
+        "leather coat",
+        "women's jacket"
+      ],
+      "product_category": "1108"
+    },
+    {
+      "summary": {
+        "outbound_clicks": {
+          "percent_growth": 0.18,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 1
+        },
+        "saves": {
+          "percent_growth": 0.03,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 1
+        },
+        "engagement": {
+          "percent_growth": 0.12,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 1
+        }
+      },
+      "parent_product_categories": [
+        "1104"
+      ],
+      "related_search_trends": [
+        "winter fashion",
+        "leather jacket",
+        "jackets for women",
+        "wool coat",
+        "trench coat",
+        "varsity jacket",
+        "jean jacket",
+        "coat",
+        "fleece jacket",
+        "puffer jacket",
+        "carhartt",
+        "chaquetas",
+        "cropped jacket",
+        "winter coats",
+        "puffer",
+        "bomber jacket",
+        "jacket men",
+        "suit",
+        "mens jackets",
+        "jacket",
+        "long coat",
+        "biker jacket",
+        "quilted jacket",
+        "leather coat",
+        "women's jacket"
+      ],
+      "product_category": "1350"
+    },
+    {
+      "summary": {
+        "outbound_clicks": {
+          "percent_growth": 0.23,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 0.84
+        },
+        "saves": {
+          "percent_growth": 0.03,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 0.88
+        },
+        "engagement": {
+          "percent_growth": 0.16,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 0.82
+        }
+      },
+      "parent_product_categories": [
+        "1478",
+        "1104"
+      ],
+      "related_search_trends": [
+        "zip hoodie",
+        "hoodie ideas",
+        "patchwork hoodie ideas",
+        "oversized sweatshirt",
+        "jackets",
+        "clothes inspo",
+        "sweat sets",
+        "sweaters",
+        "cute sweatshirts",
+        "mom shirt",
+        "sweatshirt ideas",
+        "graphic hoodie",
+        "pullover",
+        "sweats",
+        "cute hoodies",
+        "hoodie design",
+        "shirt",
+        "mom sweatshirt",
+        "hoodie inspo",
+        "cropped hoodie",
+        "grandma sweatshirts",
+        "graphic sweatshirt",
+        "patchwork sweatshirt",
+        "embroidered sweatshirt",
+        "patchwork hoodie"
+      ],
+      "product_category": "1453"
+    },
+    {
+      "summary": {
+        "outbound_clicks": {
+          "percent_growth": 0.16,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 0.74
+        },
+        "saves": {
+          "percent_growth": 0.1,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 0.73
+        },
+        "engagement": {
+          "percent_growth": 0.14,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 0.68
+        }
+      },
+      "parent_product_categories": [
+        "1478",
+        "1104"
+      ],
+      "related_search_trends": [
+        "crochet clothes",
+        "tricot",
+        "outfit",
+        "cropped cardigan",
+        "knitted sweater",
+        "knit",
+        "casual outfits",
+        "knit cardigan",
+        "crocheted",
+        "yarn",
+        "cardigan pattern",
+        "pullover",
+        "winter outfits",
+        "crochet fashion",
+        "crochet clothing",
+        "oversized sweater",
+        "knitted",
+        "crochet tops",
+        "sweaters for women",
+        "knit top",
+        "women's sweaters",
+        "striped sweater",
+        "winter fashion",
+        "cropped sweater",
+        "cardigan sweater"
+      ],
+      "product_category": "1452"
+    },
+    {
+      "summary": {
+        "outbound_clicks": {
+          "percent_growth": 0.1,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 0.73
+        },
+        "saves": {
+          "percent_growth": -0.03,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 0.46
+        },
+        "engagement": {
+          "percent_growth": 0.05,
+          "total": 0,
+          "lookback": 2,
+          "percent_relative_volume": 0.59
+        }
+      },
+      "parent_product_categories": [
+        "1270"
+      ],
+      "related_search_trends": [
+        "glassware",
+        "tumbler cups",
+        "tea cup",
+        "pottery",
+        "wine glass",
+        "coffee cup",
+        "bottle",
+        "ceramic coffee mug",
+        "cup holder",
+        "coffee",
+        "stanley cups",
+        "tumbler",
+        "glass cups",
+        "water bottle",
+        "tasse",
+        "gifts for coworkers",
+        "pottery mugs",
+        "coffee mug",
+        "mugs",
+        "owala water bottle",
+        "cute water bottles",
+        "ceramic mug"
+      ],
+      "product_category": "1156"
+    }
+  ],
+  "total_num_product_categories": 39
+}
