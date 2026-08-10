@@ -1,9 +1,10 @@
 # Pinterest Trends — endpoint teardown, graph model, and build plan
 
-Third pillar alongside [`private/endpoints/overviews.md`](../../private/endpoints/overviews.md) (metered Etsy
-demand) and [`public/endpoints/public_endpoints.md`](../../public/endpoints/public_endpoints.md) (free Etsy
+Third pillar alongside [`etsy_api_private.md`](../../docs/etsy_api_private.md) (metered Etsy
+demand) and [`etsy_api_public.md`](../../docs/etsy_api_public.md) (free Etsy
 supply). Everything below is extracted from the 8 DevTools captures in this folder — 257 Pinterest request
-URLs, all on a single host — cross-checked against the three pipeline outputs in `pinterest/data/`.
+URLs, all on a single host — cross-checked against the three pipeline outputs in `pinterest/data/` and
+[`etsy/engines/ssr_graph_pipeline.py`](../../etsy/engines/ssr_graph_pipeline.py).
 
 **The one-line summary:** Pinterest gives *momentum and seasonality with no quota*; Etsy gives *absolute
 volume, supply and conversion with 15 analyses per period*. Pinterest is the funnel that decides where those
@@ -336,7 +337,7 @@ The four divergences from the Etsy pillars this section used to describe are now
    inverted `dict(cursor.fetchone()) if cursor.fetchone() else None` bug fixed. Migration preserved the
    pre-existing Etsy nodes and frontier rows and backfilled them `source='etsy'`.
 3. **`pinterest/pipelines/pin_graph_pipeline.py`** — BFS on the same `push_frontier`/`pop_frontier`
-   contract as [`ssr_graph_pipeline.py`](../../private/pipelines/ssr_graph_pipeline.py): seed from
+   contract as [`ssr_graph_pipeline.py`](../../etsy/engines/ssr_graph_pipeline.py): seed from
    `top_trends()`, expand via `related_terms` + `prefix_match`, batch `/metrics/` at 50 terms/call rather
    than per-term. Because there's no quota the crawl runs far wider than Etsy's — depth 2+ against Etsy's
    depth 1. Verified live: 17 nodes, 153 edges (99 prefix / 54 related), 241 frontier queued.

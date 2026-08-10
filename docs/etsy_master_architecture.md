@@ -14,7 +14,7 @@ The goal of this system is to mathematically remove all guesswork from e-commerc
 ## 2. Core Infrastructure (The Engines)
 
 ### The Private Demand Engine
-* **Where:** `etsy/api/private/` and `core/spider.py`
+* **Where:** `etsy/api/private/` and `etsy/engines/private_recursive_spider.py`
 * **What:** Bypasses UI limitations to access Etsy's hidden backend APIs (`chart-series-data`, `results-data`).
 
 ### The Core Infrastructure
@@ -56,7 +56,7 @@ The goal of this system is to mathematically remove all guesswork from e-commerc
   * **Where:** `etsy/analytics/shop_analytics.py`
   * **What:** Extracts total sales, reviews, and age of a competitor's shop.
 * **[W3.5] Daily Tracker Pipeline:** 
-  * **Where:** `etsy/analytics/daily_tracker.py` & `etsy/data/tracking_data.json`
+  * **Where:** `etsy/analytics/daily_tracker.py` & `etsy/analytics/tracking_data.json`
   * **How (The Math):** By scraping a shop's Total Sales today and comparing it to yesterday, it calculates the **Daily Sales Delta** (exact items sold in 24 hours), completely bypassing lifetime estimates.
 * **[W3.6] The Ratio Estimator:** 
   * **Where:** `etsy/analytics/ratio_estimator.py`

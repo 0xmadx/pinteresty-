@@ -1,7 +1,7 @@
 # Pure Pinterest — eight standalone products
 
-`trends.pinterest.com` treated as its own data source. Nothing here imports from `public/`,
-`private/` or `core/`, and nothing produces an Etsy-shaped record — contrast with
+`trends.pinterest.com` treated as its own data source. Nothing here imports from `etsy/api/public/`,
+`etsy/api/private/` or `core/`, and nothing produces an Etsy-shaped record — contrast with
 [`../pipelines/`](../pipelines/README.md), which is the Etsy-facing pillar. Every claim below is
 pinned by [`../tests/test_products.py`](../tests/test_products.py) (54 live checks); the full
 write-up with measured numbers lives in [README §9](../README.md#9-pure-pinterest--the-eight-standalone-products) —

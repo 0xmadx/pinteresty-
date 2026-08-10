@@ -16,7 +16,7 @@ One page to orient from. Everything in `pinterest/` reads live data from
    (README §7)                                   (README §9)
 ```
 
-Nothing in `products/` imports from `public/`, `private/` or `core/`. Nothing in `pipelines/`
+Nothing in `products/` imports from `etsy/api/public/`, `etsy/api/private/` or `core/`. Nothing in `pipelines/`
 exists without the Etsy side — it's the free BFS crawler that decides where Etsy's metered quota
 gets spent. Both sides share the same client, cache, series store and local-math layer.
 
@@ -59,7 +59,7 @@ pinterest/
 │   └── cli.py                  one entry point for all eight
 ├── tests/                 live verification — nothing here is asserted from memory
 ├── data/                  cache/, series.db, history.db, and every pipeline's JSON dump
-└── core/ (outside this tree: client.py, cookie_server.py, extract_cookie.py — cookie sync)
+└── core/ (outside this tree: cookie_server.py — cookie sync)
 ```
 
 ## Verification

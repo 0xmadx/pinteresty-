@@ -50,7 +50,7 @@ Output: `data/spotlight_pipeline_output.json` — `{<label>: [5 topics each]}`.
 ## [`pin_graph_pipeline.py`](pin_graph_pipeline.py) — the BFS crawler
 
 The free, wide funnel that decides where Etsy's metered quota gets spent. Mirrors
-[`private/pipelines/ssr_graph_pipeline.py`](../../private/pipelines/ssr_graph_pipeline.py) and
+[`etsy/engines/ssr_graph_pipeline.py`](../../etsy/engines/ssr_graph_pipeline.py) and
 shares its [`GraphDB`](../../core/graph_db.py) frontier contract, but runs far deeper — Etsy
 costs a quota unit per node, Pinterest costs nothing.
 

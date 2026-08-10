@@ -637,8 +637,8 @@ Ordered by what unblocks the most:
 
 Everything above treats Pinterest as the free funnel that decides where Etsy quota gets spent.
 This section is the other reading: `trends.pinterest.com` as its own data source, with nothing
-routed back to Etsy. The code lives in [`products/`](products/) — no import from `public/`,
-`private/` or `core/`, and no Etsy-shaped record anywhere in it.
+routed back to Etsy. The code lives in [`products/`](products/) — no import from `etsy/api/public/`,
+`etsy/api/private/` or `core/`, and no Etsy-shaped record anywhere in it.
 
 ```bash
 .venv/Scripts/python.exe pinterest/products/cli.py            # list all eight
