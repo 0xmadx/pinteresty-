@@ -7,3 +7,9 @@ __pycache__/
 pinterest_cookies.json
 etsy_datadome.txt
 pinterest_test.html
+
+# Windows NTFS is case-insensitive, so `.claude/skills/` and `.claude/Skills/` are ONE
+# directory here — but git is case-sensitive and would happily commit both spellings.
+# On a Linux/macOS checkout that becomes two real directories which then drift apart.
+# Track the lowercase spelling only.
+.claude/Skills/
