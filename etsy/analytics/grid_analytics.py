@@ -11,6 +11,7 @@ from etsy.api.public.listing_api import get_listing_data
 from etsy.api.public.reviews_api import get_recent_reviews
 from core.database import MarketDatabase
 from etsy.analytics.derivations import estimate_sales, estimate_views
+from etsy.analytics.survivorship import describe, survivor_bound
 from core import runlog
 from core.runlog import logged_stage
 
@@ -68,6 +69,17 @@ class GridAnalyticsPipeline:
             
         cards = grid_data['cards'][:self.max_listings]
         print(f"[+] Extracted top {len(cards)} listings.")
+
+        # SURVIVORSHIP (B-01): name the denominator before reporting anything about
+        # this niche. Computed over the FULL card set rather than the truncated
+        # max_listings slice — a smaller sample would weaken the bound for no reason.
+        # Every number printed below this line describes listings that ranked; the ones
+        # that failed are in no SERP and cannot be recovered.
+        self.survivors = survivor_bound(grid_data['cards'],
+                                        total_supply=grid_data.get('total_results'))
+        print(f"[+] {describe(self.survivors)}")
+        if self.survivors.verdict == "graveyard":
+            print(f"    [!] {self.survivors.note}")
         
         # Extract unique shops
         unique_shops = set()
@@ -220,9 +232,28 @@ class GridAnalyticsPipeline:
             })
             
         # Save Phase 4 Final State
+        #
+        # The survivor bound travels WITH the listings rather than beside them. A reader
+        # (or a UI) that has the rows but not the denominator will read "these listings
+        # average 400 sales" as a fact about the niche, which is the B-01 error restated.
         report_path = os.path.join(self.seo_cache, f"grid_report_{self.query_slug}.json")
+        payload = {
+            "query": self.query,
+            "survivorship": {
+                "verdict": self.survivors.verdict,
+                "reviewed_share": self.survivors.reviewed_share,
+                "sample_size": self.survivors.sample_size,
+                "unparsed": self.survivors.unparsed,
+                "total_supply": self.survivors.total_supply,
+                "coverage": self.survivors.coverage,
+                "is_upper_bound": self.survivors.is_upper_bound,
+                "note": self.survivors.note,
+                "plain": describe(self.survivors),
+            },
+            "listings": results,
+        }
         with open(report_path, "w", encoding="utf-8") as f:
-            json.dump(results, f, indent=4)
+            json.dump(payload, f, indent=4)
         print(f"[+] Final Report cached to: {report_path}")
         
         # Save to Master Database. Appends one observation per listing, with provenance.
