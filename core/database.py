@@ -72,6 +72,9 @@ class MarketDatabase:
     def upsert_keyword(self, keyword, volume, competition, cvr, price_low, price_high):
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # ⚠️ TEMPORAL BUG: this upsert overwrites history. See DECISION_LOG.md.
+            # Fix: make append-only with collected_at as part of the primary key.
+            # Do not build on this until the fix is applied — LEARN backtest depends on it.
             cursor.execute('''
                 INSERT INTO keywords (keyword, search_volume, competition, query_cvr, median_price_low, median_price_high)
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -107,6 +110,9 @@ class MarketDatabase:
         """Used by analytics to save financial metrics & live demand signals"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # ⚠️ TEMPORAL BUG: this upsert overwrites history. See DECISION_LOG.md.
+            # Fix: make append-only with collected_at as part of the primary key.
+            # Do not build on this until the fix is applied — LEARN backtest depends on it.
             cursor.execute('''
                 INSERT INTO listings (listing_id, shop_name, price, estimated_sales, estimated_views, velocity_score, daily_sales, daily_views, scarcity_stock, demand_signals)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -128,6 +134,9 @@ class MarketDatabase:
         """Used by sentiment_analytics to save DeepSeek output"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # ⚠️ TEMPORAL BUG: this upsert overwrites history. See DECISION_LOG.md.
+            # Fix: make append-only with collected_at as part of the primary key.
+            # Do not build on this until the fix is applied — LEARN backtest depends on it.
             cursor.execute('''
                 INSERT INTO listings (listing_id, top_flaws)
                 VALUES (?, ?)
