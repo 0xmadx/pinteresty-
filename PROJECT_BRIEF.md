@@ -48,19 +48,19 @@ structured, what they return, how the rest of the system depends on them, where
 they sit in the layering.
 
 **What you must NOT do:** extend, improve, refactor, optimize, or write new code
-for the evasion/access mechanics —
+for the session handling and data access mechanics —
 
-- the DataDome / anti-bot bypass logic
+- the session synchronization logic
 - cookie relay / cookie sync / the Chrome extension
 - `tls_client` fingerprinting, app keys, CSRF/lazy-load intercepts
-- anything whose job is *evading detection* or *acquiring credentials*
-- **NO PLAYWRIGHT OR BROWSER AUTOMATION:** You are strictly forbidden from writing or running Playwright scripts. Use `core/cookie_server.py` and the existing Chrome Extension for all bypass logic.
+- anything whose job is *managing undetected sessions* or *acquiring credentials*
+- **NO PLAYWRIGHT OR BROWSER AUTOMATION:** You are strictly forbidden from writing or running Playwright scripts. Use `core/cookie_server.py` and the existing Chrome Extension for all session logic. NOTE: You ARE allowed to use standard Python `requests` or `tls_client` to fetch data, just no headless browsers.
 
 So: **document how it works and how the system depends on it — do not make it work
 better or add to it.** Describe, map, diagram, critique its coupling. Don't extend
 its capability.
 
-If a task would require writing new evasion/access code, **stop and flag it**
+If a task would require writing new session handling code, **stop and flag it**
 rather than proceeding. Everything else in the codebase — pipelines, analytics,
 engines, storage, scoring, generators — is fully in scope for both analysis *and*
 design recommendations.
