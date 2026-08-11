@@ -1,17 +1,18 @@
-import sys
 import os
 import json
 import datetime
 import argparse
 from pathlib import Path
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from etsy.api.public.api import EtsyPublicAPI
 from core.shop_scraper import ShopScraper
 from etsy.api.public.listing_api import get_listing_data
 from etsy.api.public.reviews_api import get_recent_reviews
 from core.database import MarketDatabase
+from etsy.analytics.derivations import estimate_sales, estimate_views
+from core import runlog
+from core.runlog import logged_stage
 
 def parse_date(date_str):
     try:
@@ -30,11 +31,19 @@ class GridAnalyticsPipeline:
         self.shop_scraper = ShopScraper(self.api)
         self.db = MarketDatabase()
         
-        # Override CVR if it exists in the database
+        # Override CVR if it exists in the database. Track where it came from: views are
+        # derived by dividing by this, so a measured CVR and the 0.02 fallback yield
+        # numbers of very different quality.
+        self.cvr_source = "default"
         db_keyword = self.db.get_keyword(self.query)
         if db_keyword and db_keyword.get("query_cvr"):
             self.cvr = db_keyword["query_cvr"]
-            print(f"[*] Pulled exact CVR ({self.cvr}) from Market Database for '{self.query}'")
+            # The stored row records whether *it* was measured; inherit that rather than
+            # assuming a database hit means a real measurement.
+            self.cvr_source = db_keyword.get("cvr_source") or "measured"
+            print(f"[*] Pulled CVR ({self.cvr}, source={self.cvr_source}) from Market Database for '{self.query}'")
+        else:
+            print(f"[*] No stored CVR for '{self.query}' — using default {self.cvr}")
         
         # Setup cache directories
         self.raw_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "public", "data", "raw")
@@ -44,6 +53,7 @@ class GridAnalyticsPipeline:
         
         self.query_slug = self.query.replace(' ', '_')
         
+    @logged_stage("grid_analytics")
     def run(self):
         print(f"\n==========================================================")
         print(f"      STARTING GRID ANALYTICS PIPELINE: '{self.query.upper()}'")
@@ -143,24 +153,27 @@ class GridAnalyticsPipeline:
             
             listing_stats = velocity_database.get(str(lid), {})
             
-            # Lifetime Sales (Ratio Estimator)
-            lifetime_sales = 0
-            estimated_views = 0
-            shop_data = shop_database.get(shop_name)
-            if shop_data and shop_data.get('total_sales') and shop_data.get('total_reviews'):
-                ratio = shop_data['total_sales'] / shop_data['total_reviews']
-                lifetime_sales = int(review_count * ratio)
-                
             # 💥 LIVE DEMAND OVERRIDE 💥
+            shop_data = shop_database.get(shop_name) or {}
             daily_sales = listing_stats.get("daily_sales", 0)
             daily_views = listing_stats.get("daily_views", 0)
-            if daily_sales > 0:
-                lifetime_sales = daily_sales * 30
-                
-            if daily_views > 0:
-                estimated_views = daily_views * 30
-            else:
-                estimated_views = int(lifetime_sales / self.cvr)
+
+            # B-03: pass the measured daily rate so a badge claiming more than the whole
+            # shop sells gets clamped. None when this shop has never been tracked —
+            # unmeasured, so nothing to clamp against, and no clamp is applied.
+            est = estimate_sales(
+                review_count=review_count,
+                shop_total_sales=shop_data.get('total_sales'),
+                shop_total_reviews=shop_data.get('total_reviews'),
+                daily_sales=daily_sales,
+                shop_sales_per_day=self.db.latest_shop_rate(shop_name) if shop_name else None,
+            )
+            sales_lifetime_est, sales_30d_est = est.lifetime, est.thirty_day
+            lifetime_sales, sales_basis = est.chosen, est.basis
+            if est.note:
+                print(f"      [!] {lid}: {est.note}")
+            estimated_views, views_basis = estimate_views(
+                lifetime_sales, daily_views, self.cvr, self.cvr_source)
                 
             # Velocity Calculator
             velocity_score = "DEAD 💀"
@@ -191,7 +204,11 @@ class GridAnalyticsPipeline:
                 "price": card.get("price"),
                 "total_reviews": review_count,
                 "estimated_views": estimated_views,
+                "views_basis": views_basis,
                 "lifetime_sales": lifetime_sales,
+                "sales_lifetime_est": sales_lifetime_est,
+                "sales_30d_est": sales_30d_est,
+                "sales_basis": sales_basis,
                 "velocity": velocity_score,
                 "days_since_last_review": days_since_last,
                 "favorites": favorites,
@@ -208,24 +225,43 @@ class GridAnalyticsPipeline:
             json.dump(results, f, indent=4)
         print(f"[+] Final Report cached to: {report_path}")
         
-        # Save to Master Database
+        # Save to Master Database. Appends one observation per listing, with provenance.
+        #
+        # Failures are counted and reported rather than swallowed: the previous version
+        # wrapped this in `except Exception: pass` and then printed a success line with the
+        # full listing count, so a run where every write failed looked identical to one
+        # where every write succeeded.
+        saved, failed = 0, []
         for res in results:
             try:
-                self.db.upsert_listing_metrics(
+                self.db.record_listing(
                     listing_id=res["listing_id"],
                     shop_name=res["shop_name"],
                     price=res["price"],
-                    est_sales=res["lifetime_sales"],
-                    est_views=res["estimated_views"],
-                    velocity=res["velocity"],
+                    sales_lifetime_est=res.get("sales_lifetime_est"),
+                    sales_30d_est=res.get("sales_30d_est"),
+                    sales_basis=res.get("sales_basis"),
+                    estimated_views=res["estimated_views"],
+                    views_basis=res.get("views_basis"),
+                    velocity_score=res["velocity"],
                     daily_sales=res.get("daily_sales", 0),
                     daily_views=res.get("daily_views", 0),
                     scarcity_stock=res.get("scarcity_stock", 0),
-                    demand_signals=json.dumps(res.get("demand_signals", []))
+                    badge_present=bool(res.get("demand_signals")),
+                    demand_signals=res.get("demand_signals", []),
+                    total_reviews=res.get("total_reviews"),
                 )
+                saved += 1
             except Exception as e:
-                pass
-        print(f"[+] Saved {len(results)} listings to Market Database.")
+                failed.append((res.get("listing_id"), str(e)))
+
+        print(f"[+] Recorded {saved}/{len(results)} listing observations.")
+        # Health question 1 ("rows written") and 4 read these off the stage record.
+        runlog.count(rows_in=len(results), rows_out=saved, errors=len(failed))
+        if failed:
+            print(f"[-] {len(failed)} write(s) FAILED — the report above is incomplete:")
+            for lid, err in failed[:5]:
+                print(f"    {lid}: {err}")
         
         # Render Report
         print("\n\n================================================================================================================")

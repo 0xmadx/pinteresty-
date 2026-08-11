@@ -1,15 +1,15 @@
 import os
-import sys
 import json
 import datetime
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from etsy.api.public.api import EtsyPublicAPI
 from etsy.api.public.listing_api import get_listing_data
 from etsy.api.public.reviews_api import get_recent_reviews
 from core.shop_scraper import ShopScraper
 from core.database import MarketDatabase
+from etsy.analytics.derivations import estimate_sales, estimate_views
+from core.runlog import logged_stage
 
 def parse_date(date_str):
     try:
@@ -18,15 +18,23 @@ def parse_date(date_str):
         return None
 
 class SingleListingPipeline:
-    def __init__(self, listing_id, cvr=0.02):
+    def __init__(self, listing_id, cvr=0.02, cvr_source="default"):
         self.listing_id = str(listing_id)
         self.cvr = cvr
+        # Where the conversion rate came from. Views are derived by dividing by it, so a
+        # measured CVR and the 0.02 assumption produce numbers of very different quality
+        # that used to be stored identically. Callers with a real CVR pass "measured".
+        self.cvr_source = cvr_source
         self.api = EtsyPublicAPI()
         self.shop_scraper = ShopScraper(self.api)
+        # One handle for the run: read (the measured shop rate, for the B-03 clamp) and
+        # write (the observation) previously constructed two separate connections.
+        self.db = MarketDatabase()
         
         self.seo_cache = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "seo", "cache")
         os.makedirs(self.seo_cache, exist_ok=True)
         
+    @logged_stage("single_listing_analytics")
     def run(self):
         print(f"\n==========================================================")
         print(f"      STARTING SINGLE LISTING PIPELINE: {self.listing_id}")
@@ -89,20 +97,27 @@ class SingleListingPipeline:
         if shop_total_reviews > 0:
             sales_ratio = shop_total_sales / shop_total_reviews
             
-        listing_estimated_sales = int(exact_review_count * sales_ratio)
-        
-        # 💥 LIVE DEMAND OVERRIDE 💥
-        # If we have exact daily sales, project the true lifetime run rate (or at least a very accurate proxy)
-        if daily_sales > 0:
-            # We can project the next 30 days exactly
-            listing_estimated_sales = daily_sales * 30
-            
+        # B-03: the badge is a measurement *conditioned on its own value* — it renders
+        # only above a platform threshold — so it is an upper bound, not the display
+        # figure it used to be. shop_sales_per_day clamps a badge claiming more than the
+        # whole shop sells; None means this shop was never tracked, so nothing clamps.
+        est = estimate_sales(
+            review_count=exact_review_count,
+            shop_total_sales=shop_total_sales,
+            shop_total_reviews=shop_total_reviews,
+            daily_sales=daily_sales,
+            shop_sales_per_day=self.db.latest_shop_rate(shop_name) if shop_name else None,
+        )
+        sales_lifetime_est, sales_30d_est = est.lifetime, est.thirty_day
+        listing_estimated_sales, sales_basis = est.chosen, est.basis
+        if est.note:
+            print(f"[!] {est.note}")
+        if est.is_upper_bound:
+            print(f"[!] No shop ratio available — the sales figure below is an UPPER "
+                  f"BOUND derived from the badge, not a best estimate.")
         estimated_revenue = listing_estimated_sales * price
-        
-        if daily_views > 0:
-            estimated_views = daily_views * 30
-        else:
-            estimated_views = int(listing_estimated_sales / self.cvr)
+        estimated_views, views_basis = estimate_views(
+            listing_estimated_sales, daily_views, self.cvr, self.cvr_source)
         
         velocity_score = "DEAD 💀"
         days_since_last = -1
@@ -147,20 +162,30 @@ class SingleListingPipeline:
         print(f"[+] Final Report cached to: {report_path}")
         
         # --- SAVE TO MARKET INTELLIGENCE DB ---
-        db = MarketDatabase()
-        db.upsert_listing_metrics(
+        # Appends one observation. record_listing carries the provenance the old
+        # upsert_listing_metrics could not express, so a reader can tell a measured price
+        # from a twice-derived view count.
+        collected_at = self.db.record_listing(
             listing_id=self.listing_id,
             shop_name=shop_name,
             price=price,
-            est_sales=listing_estimated_sales,
-            est_views=estimated_views,
-            velocity=velocity_score,
+            sales_lifetime_est=sales_lifetime_est,
+            sales_30d_est=sales_30d_est,
+            sales_basis=sales_basis,
+            estimated_views=estimated_views,
+            views_basis=views_basis,
+            velocity_score=velocity_score,
             daily_sales=daily_sales,
             daily_views=daily_views,
             scarcity_stock=scarcity_stock,
-            demand_signals=json.dumps(demand_signals)
+            # An empty signal list means no urgency badge was rendered, which is why the
+            # daily_* fields are 0 — not evidence that nothing sold.
+            badge_present=bool(demand_signals),
+            demand_signals=demand_signals,
+            total_reviews=exact_review_count,
         )
-        print(f"[+] Synced Market Intelligence Database for: {self.listing_id}")
+        print(f"[+] Recorded observation for {self.listing_id} at {collected_at}")
+        print(f"    sales basis: {sales_basis} | views basis: {views_basis}")
         
         print("\n\n=======================================================================================================================================")
         print(f"                               SINGLE LISTING REPORT: {self.listing_id}")
