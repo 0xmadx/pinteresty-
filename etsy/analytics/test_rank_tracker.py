@@ -143,16 +143,24 @@ def main():
 
     # --- append-only over time -------------------------------------------------------------
     print()
-    db.record_rank("111", "mom necklace", rank=4, observed_at="2026-08-12T00:00:00+00:00")
-    db.record_rank("111", "mom necklace", rank=7, observed_at="2026-08-19T00:00:00+00:00")
+    # Derived from the clock, not hardcoded. track_ranks above stamped its row with the
+    # real utcnow, so fixed calendar dates only sort correctly until the wall clock
+    # passes them — this assertion broke exactly that way when the date rolled over.
+    from datetime import datetime, timedelta, timezone
+    base = datetime.now(timezone.utc)
+    later = (base + timedelta(days=1)).isoformat()
+    latest = (base + timedelta(days=8)).isoformat()
+
+    db.record_rank("111", "mom necklace", rank=4, observed_at=later)
+    db.record_rank("111", "mom necklace", rank=7, observed_at=latest)
     hist = db.get_rank_history("111")
     check("later observations append rather than overwrite", len(hist) == 3,
           f"got {len(hist)}")
     check("history is ordered oldest first",
-          [h["rank"] for h in hist][-2:] == [4, 7], f"got {[h['rank'] for h in hist]}")
+          [h["rank"] for h in hist] == [1, 4, 7], f"got {[h['rank'] for h in hist]}")
 
     # Re-running the tracker within the same timestamp must not duplicate.
-    db.record_rank("111", "mom necklace", rank=7, observed_at="2026-08-19T00:00:00+00:00")
+    db.record_rank("111", "mom necklace", rank=7, observed_at=latest)
     check("re-recording the identical observation is idempotent",
           len(db.get_rank_history("111")) == 3,
           f"got {len(db.get_rank_history('111'))}")
