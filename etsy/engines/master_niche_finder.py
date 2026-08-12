@@ -17,17 +17,16 @@ from core.runlog import logged_stage
 # follow from the measured price alone and need no guesses from the operator.
 DEFAULT_PROFILE = {"product_type": DIGITAL}
 
-# The documented Marketplace Insights allowance: REPO_STRUCTURE_AND_CONFIG.md:115
-# (`demand_calls_per_day: 15`) and pinterest/endpoints/overviews.md:10 ("15 analyses per
-# period", from real captures). Believed to apply to the results-data "analysis" call
-# only, not to bulk chart-series comparison. Documented but never observed being hit —
-# the run report below makes it measurable.
-DAILY_ANALYSIS_BUDGET = 15
+# NOTE — the "15 analyses per period" in REPO_STRUCTURE_AND_CONFIG.md:115 and
+# pinterest/endpoints/overviews.md:10 was never observed by this system and has been
+# tested against directly by the operator, who found no limit. No budget constant is
+# enforced here as a result; SessionManager.rate_limited is the live check that would
+# prove otherwise.
 
 
 class MasterNicheFinder:
     def __init__(self, seed_keyword, max_depth=2, max_nodes=50, product_profile=None,
-                 deep_dive_limit=3):
+                 deep_dive_limit=None):
         """
         The Hyper-Optimized Batch Engine.
         Crawls sub-keywords deeply, batches them to the comparison endpoint for speed,
@@ -39,31 +38,32 @@ class MasterNicheFinder:
         `shipping_charged`, `labor_minutes`, `demand_units_per_week`, `offsite_ads`.
 
         `deep_dive_limit` — how many crawled keywords get `get_results_data`.
+        **None (the default) means no limit: deep-dive every candidate.**
 
-        ⚠️ THIS IS THE METERED CALL. `REPO_STRUCTURE_AND_CONFIG.md:115` budgets
-        `demand_calls_per_day: 15`, `pinterest/endpoints/overviews.md:10` records "15
-        analyses per period" from real captures, and `GOAL.md:87-89` makes spending it
-        well the system's first design constraint. Raising this past the daily budget
-        will exhaust it — it is a parameter for deliberate, measured experiments, not a
-        dial to turn up.
+        History, because this number shaped the whole engine. It was hardcoded to 3 to
+        ration a documented quota (`REPO_STRUCTURE_AND_CONFIG.md:115`
+        `demand_calls_per_day: 15`; `pinterest/endpoints/overviews.md:10` "15 analyses
+        per period"). The operator has since tested the endpoint directly and found no
+        limit, and nothing in this system has ever recorded one — so the ceiling is
+        treated as folklore inherited from the docs rather than a measured constraint.
 
-        The quota appears to be PER-ENDPOINT, which reconciles the contradiction in the
-        code comments: `get_results_data` (a deep "analysis") is metered, while
-        `get_chart_series` (bulk comparison) appears not to be — which is why
-        `private_comparison.py` calls it a "Zero-Quota limit bypass" and why step 2 above
-        can batch every crawled keyword through it freely. Step 3's shortlist exists to
-        protect the *analysis* budget specifically.
+        That changes the engine's shape. With only 3 deep dives, 47 of 50 candidates were
+        discarded by a demand/supply score that N-01 proves cannot discriminate, and
+        intent (CVR) and profit — the dimensions that CAN rank — only ever existed for
+        the 3 survivors. Covering the whole pool removes the arbitrary cut entirely:
+        STEP 3 stops filtering, and STEP 6 ranks everything on measured intent and profit.
 
-        Nothing in this system detects the limit being hit, so the number is documented
-        but unverified. `SessionManager.rate_limited` now counts 429s, and this engine
-        prints metered_calls per run — so the budget can finally be observed rather than
-        assumed. Default stays 3; treat 15/period as the ceiling until measurement says
-        otherwise.
+        The safety net is still live rather than removed: `SessionManager.rate_limited`
+        counts 429s, and every run reports analyses spent. If a limit does exist, it
+        will now announce itself instead of being silently absorbed — set an integer
+        here to cap the run if that happens.
         """
         self.seed = seed_keyword
         self.max_depth = max_depth
         self.max_nodes = max_nodes
-        self.deep_dive_limit = deep_dive_limit
+        # None = no cap. max_nodes already bounds the crawl, so this covers everything
+        # the crawl found rather than introducing a second, arbitrary limit.
+        self.deep_dive_limit = max_nodes if deep_dive_limit is None else deep_dive_limit
         self.profile = dict(product_profile or DEFAULT_PROFILE)
         self.api = EtsyPrivateAPI()
 
@@ -141,7 +141,19 @@ class MasterNicheFinder:
         weights = {"demand": 0.5, "supply": 0.5}
         verdict = can_discriminate(pool, weights)
 
-        if verdict.ok:
+        # The best outcome is not to shortlist at all. Every candidate discarded here is
+        # discarded on demand+supply alone, which cannot discriminate — so when the deep
+        # dive can cover the whole pool, skipping this step removes the arbitrary cut
+        # entirely and lets STEP 6 rank on real dimensions (intent, profit) instead.
+        if self.deep_dive_limit >= len(scored_niches):
+            top_3 = scored_niches
+            for n in scored_niches:
+                n["selection"] = "no_filter_applied"
+            print(f"\n  [3] No shortlist needed — deep-diving all "
+                  f"{len(scored_niches)} candidate(s).")
+            print(f"      [+] Nothing is discarded on a demand/supply score that cannot "
+                  f"discriminate. Ranking happens in step 6 on measured intent and profit.")
+        elif verdict.ok:
             ranked = score_pool(pool, weights=weights,
                                 pool_id=f"niche_finder:{self.seed}")
             by_key = {r.key: r for r in ranked}
@@ -284,16 +296,13 @@ class MasterNicheFinder:
         # says what it cost rather than leaving the operator to guess.
         throttled = getattr(self.api.session, "rate_limited", 0)
         runlog.count(metered_calls=len(final_winners))
-        print(f"\n      [i] {len(final_winners)} metered analysis call(s) of the "
-              f"{DAILY_ANALYSIS_BUDGET}/period budget, "
+        print(f"\n      [i] {len(final_winners)} analysis call(s), "
               f"{throttled} rate-limit response(s).")
-        if len(final_winners) > DAILY_ANALYSIS_BUDGET:
-            print(f"      [!] This run alone exceeded the documented budget. If the "
-                  f"results above look complete, the budget figure is wrong; if calls "
-                  f"failed, it is right. Either way it is now measurable.")
         if throttled:
-            print(f"      [!] Etsy throttled this run — the quota is real. "
-                  f"Lower deep_dive_limit.")
+            # The one case that would overturn the operator's finding. Loud, because a
+            # throttle silently absorbed is how the original folklore survived.
+            print(f"      [!] Etsy throttled this run — a limit DOES exist after all. "
+                  f"Pass deep_dive_limit=<n> to cap it, and tell the docs.")
 
         judged = passed + rejected
         fee_date = judged[0]["profit_verdict"]["fee_schedule_verified"] if judged else "n/a"
