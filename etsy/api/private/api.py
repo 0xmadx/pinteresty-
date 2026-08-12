@@ -1,65 +1,74 @@
 import json
 import time
 import urllib.parse
+from core.guards import soft_parse
+from core.request_cache import (RequestCache, TTL_METERED, TTL_TREND_SERIES)
 from core.session_manager import SessionManager
 from core.endpoints_manager import EndpointManager
 from core.settings import ScraperConfig
 
 class EtsyPrivateAPI:
-    def __init__(self):
+    def __init__(self, cache=None):
         self.config = ScraperConfig()
         self.session = SessionManager(self.config)
         self.manager = EndpointManager()
+        # Shared cache-with-TTL. The metered endpoints matter most here: a hit saves
+        # scarce daily quota, not just latency. Injectable for tests.
+        self.cache = cache or RequestCache()
         
-        # Load the base headers and cookies from a known good req (e.g. req_5 which is enqueue)
+        # Load the base headers, cookies, and shop_id from the .env file (synced by the Chrome Extension)
         try:
-            with open('private/endpoints/req_5.py', 'r', encoding='utf-8') as f:
-                self.manager.parse_curl_command("base", f.read())
-            req_config = self.manager.get_endpoint("base")
-            self.cookies = req_config.get("cookies", {})
-            self.headers = req_config.get("headers", {})
+            import os
+            from dotenv import load_dotenv
+            load_dotenv()
             
-            # Clean headers to let session_manager handle TLS impersonation
-            self.headers = {k: v for k, v in self.headers.items() if k.lower() not in [
-                "user-agent", "sec-ch-ua", "sec-ch-ua-mobile", "sec-ch-ua-platform",
-                "sec-ch-ua-full-version-list", "sec-ch-ua-arch", "sec-ch-ua-bitness", "content-length"
-            ]}
+            # 1. Shop ID
+            self.shop_id = os.getenv("ETSY_SHOP_ID")
+            if not self.shop_id:
+                raise ValueError("ETSY_SHOP_ID not found in .env. Please run the Chrome Extension on your Etsy Shop Manager.")
+                
+            # 2. CSRF Token
+            csrf_token = os.getenv("ETSY_CSRF_TOKEN")
+            if not csrf_token:
+                raise ValueError("ETSY_CSRF_TOKEN not found in .env. Please run the Chrome Extension on your Etsy Shop Manager.")
             
-            # Extract shop ID from the URL
-            url = req_config.get("url_template", "")
-            import re
-            match = re.search(r'/shop/(\d+)/', url)
-            self.shop_id = match.group(1) if match else "56057851"
+            self.headers = {
+                "x-csrf-token": csrf_token,
+                "accept": "*/*",
+                "content-type": "application/json"
+            }
+            
+            # 3. Cookies
+            import json
+            cookie_json = os.getenv("ETSY_COOKIES")
+            if cookie_json:
+                self.cookies = json.loads(cookie_json)
+            else:
+                self.cookies = {}
             
         except Exception as e:
             print(f"Failed to initialize API: {e}")
             self.cookies = {}
             self.headers = {}
-            self.shop_id = "56057851"
+            self.shop_id = None
 
     def get_results_data(self, query):
-        """Fetches the master payload (volume, supply, cvr bucket, median price, top 20 listings)"""
-        # --- Cache Check ---
-        import os
-        cache_file = f"etsy/data/cache/results_data_{query.replace(' ', '_')}.json"
-        if os.path.exists(cache_file):
-            print(f"  [+] Loading results_data for '{query}' from cache.")
-            with open(cache_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-                
-        encoded_query = urllib.parse.quote_plus(query)
-        url = f"https://www.etsy.com/api/v3/ajax/bespoke/shop/{self.shop_id}/marketplace-insights/results-data?query={encoded_query}&search_term_hash=&search_trigger=similar_term"
-        
-        resp = self.session.request("GET", url, headers=self.headers, cookies=self.cookies)
-        if resp.status_code == 200:
-            data = resp.json()
-            # Save to cache
-            with open(cache_file, "w", encoding="utf-8") as f:
-                json.dump(data, f)
-            return data
-            
-        print(f"[-] results-data failed: {resp.status_code}")
-        return None
+        """Fetches the master payload (volume, supply, cvr bucket, median price, top 20 listings).
+
+        TTL_METERED (30 days): this is the scarce, quota-costing endpoint, and its data
+        (volume, CVR bucket, median price) moves slowly — so reuse aggressively.
+        """
+        def _fetch():
+            encoded_query = urllib.parse.quote_plus(query)
+            url = f"https://www.etsy.com/api/v3/ajax/bespoke/shop/{self.shop_id}/marketplace-insights/results-data?query={encoded_query}&search_term_hash=&search_trigger=similar_term"
+            resp = self.session.request("GET", url, headers=self.headers, cookies=self.cookies)
+            if resp.status_code == 200:
+                return resp.json()
+            print(f"[-] results-data failed: {resp.status_code}")
+            return None
+
+        return self.cache.get_or_fetch(f"results_data_{query.replace(' ', '_')}",
+                                       TTL_METERED, _fetch, source="etsy_private")
 
     def get_chart_series(self, terms, days=365):
         """Fetches the time-series chart data (burns quota if cold!)"""
@@ -80,21 +89,23 @@ class EtsyPrivateAPI:
         return None
 
     def get_similar_keywords(self, keyword, max_retries=10, iterations=10):
-        """Enqueues an LLM keyword job multiple times to extract a massive, deduplicated list of edges."""
-        # --- Cache Check ---
-        import os
-        cache_file = f"etsy/data/cache/similar_keywords_{keyword.replace(' ', '_')}.json"
-        if os.path.exists(cache_file):
-            print(f"  [+] Loading similar_keywords for '{keyword}' from cache.")
-            with open(cache_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-                
+        """Enqueues an LLM keyword job multiple times to extract a massive, deduplicated list of edges.
+
+        TTL_METERED (30 days): each call runs `iterations` enqueue+poll rounds, so a cache
+        hit saves a large batch of requests, not one. The keyword graph is stable.
+        """
+        return self.cache.get_or_fetch(
+            f"similar_keywords_{keyword.replace(' ', '_')}", TTL_METERED,
+            lambda: self._fetch_similar_keywords(keyword, max_retries, iterations),
+            source="etsy_private")
+
+    def _fetch_similar_keywords(self, keyword, max_retries, iterations):
         enqueue_url = f"https://www.etsy.com/api/v3/ajax/shop/{self.shop_id}/marketplace-insights/llm-exploratory-keywords/search/enqueue"
         payload = {"keyword": keyword}
-        
+
         all_results = []
         seen_queries = set()
-        
+
         for i in range(iterations):
             print(f"  [~] Suggestion LLM Iteration {i+1}/{iterations}...")
             
@@ -135,7 +146,12 @@ class EtsyPrivateAPI:
                 p_resp = self.session.request("POST", poll_url, headers=self.headers, cookies=self.cookies, data=json.dumps(poll_payload))
                 
                 if p_resp.status_code == 200:
-                    try:
+                    # A 200 whose body will not parse is not the same as "still working" —
+                    # it used to fall through to the next attempt and, once retries ran
+                    # out, return silently with fewer keywords than the crawl asked for.
+                    # Recorded now, so a shape change surfaces instead of shrinking the
+                    # result set.
+                    with soft_parse("private.poll_response", keyword=keyword):
                         p_data = p_resp.json()
                         if p_data and "results" in p_data:
                             results = p_data["results"]
@@ -145,8 +161,6 @@ class EtsyPrivateAPI:
                                     seen_queries.add(q)
                                     all_results.append(r)
                             break # Break the poll loop on success
-                    except Exception:
-                        pass
                 elif p_resp.status_code == 202:
                     # 202 Accepted means still processing
                     continue
@@ -156,33 +170,25 @@ class EtsyPrivateAPI:
         
         if all_results:
             print(f"  [+] Extracted a total of {len(all_results)} deduplicated edges!")
-            # Save to cache
-            with open(cache_file, "w", encoding="utf-8") as f:
-                json.dump(all_results, f)
             return all_results
-            
+
         print("[-] Failed to fetch any similar keywords.")
         return None
 
     def get_trending_terms(self, taxonomy_id=199):
         """
         Fetches category-level trending keywords (does NOT consume daily quota).
+
+        TTL_TREND_SERIES (7 days): trending terms are a weekly-scale signal, so re-fetching
+        more often buys nothing — the same reasoning that fixes the Pinterest T-3 keys.
         """
-        import os
-        cache_file = f"etsy/data/cache/trending_terms_{taxonomy_id}.json"
-        if os.path.exists(cache_file):
-            print(f"  [+] Loading trending terms for category '{taxonomy_id}' from cache.")
-            with open(cache_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-                
-        url = f"https://www.etsy.com/api/v3/ajax/bespoke/shop/{self.shop_id}/marketplace-insights/trending-search-terms-v2?taxonomy_id={taxonomy_id}"
-        resp = self.session.request("GET", url, headers=self.headers, cookies=self.cookies)
-        
-        if resp.status_code == 200:
-            data = resp.json()
-            with open(cache_file, "w", encoding="utf-8") as f:
-                json.dump(data, f)
-            return data
-            
-        print(f"[-] trending-search-terms-v2 failed: {resp.status_code}")
-        return None
+        def _fetch():
+            url = f"https://www.etsy.com/api/v3/ajax/bespoke/shop/{self.shop_id}/marketplace-insights/trending-search-terms-v2?taxonomy_id={taxonomy_id}"
+            resp = self.session.request("GET", url, headers=self.headers, cookies=self.cookies)
+            if resp.status_code == 200:
+                return resp.json()
+            print(f"[-] trending-search-terms-v2 failed: {resp.status_code}")
+            return None
+
+        return self.cache.get_or_fetch(f"trending_terms_{taxonomy_id}", TTL_TREND_SERIES,
+                                       _fetch, source="etsy_private")
