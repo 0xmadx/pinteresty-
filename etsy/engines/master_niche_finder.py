@@ -17,6 +17,13 @@ from core.runlog import logged_stage
 # follow from the measured price alone and need no guesses from the operator.
 DEFAULT_PROFILE = {"product_type": DIGITAL}
 
+# The documented Marketplace Insights allowance: REPO_STRUCTURE_AND_CONFIG.md:115
+# (`demand_calls_per_day: 15`) and pinterest/endpoints/overviews.md:10 ("15 analyses per
+# period", from real captures). Believed to apply to the results-data "analysis" call
+# only, not to bulk chart-series comparison. Documented but never observed being hit —
+# the run report below makes it measurable.
+DAILY_ANALYSIS_BUDGET = 15
+
 
 class MasterNicheFinder:
     def __init__(self, seed_keyword, max_depth=2, max_nodes=50, product_profile=None,
@@ -31,20 +38,27 @@ class MasterNicheFinder:
         except `price` (measured per niche): `product_type`, `cogs`, `shipping_cost`,
         `shipping_charged`, `labor_minutes`, `demand_units_per_week`, `offsite_ads`.
 
-        `deep_dive_limit` — how many crawled keywords get `get_results_data`. This was
-        hardcoded to 3 to conserve a private-API quota that **nothing in this system has
-        ever observed** (no quota counter, no 429 ever recorded; the two code comments
-        claiming a cost contradict each other, and the one asserting it lives in a module
-        that cannot import). The cost of that assumption is severe: with max_nodes=50,
-        47 of 50 candidates are discarded by a demand/supply score that N-01 proves
-        carries no information — and intent (CVR) and price, the dimensions that WOULD
-        let the pool be ranked, arrive only from the deep dive.
+        `deep_dive_limit` — how many crawled keywords get `get_results_data`.
 
-        So it is a parameter now, not a constant. Raise it (10, 25, 50) and check
-        `SessionManager.rate_limited` plus the runlog's metered_calls afterwards: if it
-        stays 0, the rationing was never needed and step 3 can rank properly. Default
-        stays 3 until that measurement exists — swapping one unverified belief for the
-        opposite is not an improvement.
+        ⚠️ THIS IS THE METERED CALL. `REPO_STRUCTURE_AND_CONFIG.md:115` budgets
+        `demand_calls_per_day: 15`, `pinterest/endpoints/overviews.md:10` records "15
+        analyses per period" from real captures, and `GOAL.md:87-89` makes spending it
+        well the system's first design constraint. Raising this past the daily budget
+        will exhaust it — it is a parameter for deliberate, measured experiments, not a
+        dial to turn up.
+
+        The quota appears to be PER-ENDPOINT, which reconciles the contradiction in the
+        code comments: `get_results_data` (a deep "analysis") is metered, while
+        `get_chart_series` (bulk comparison) appears not to be — which is why
+        `private_comparison.py` calls it a "Zero-Quota limit bypass" and why step 2 above
+        can batch every crawled keyword through it freely. Step 3's shortlist exists to
+        protect the *analysis* budget specifically.
+
+        Nothing in this system detects the limit being hit, so the number is documented
+        but unverified. `SessionManager.rate_limited` now counts 429s, and this engine
+        prints metered_calls per run — so the budget can finally be observed rather than
+        assumed. Default stays 3; treat 15/period as the ceiling until measurement says
+        otherwise.
         """
         self.seed = seed_keyword
         self.max_depth = max_depth
@@ -265,15 +279,20 @@ class MasterNicheFinder:
         # The evidence that settles the quota question. Every deep dive is one metered
         # call; rate_limited counts 429s the session actually saw. If this run raised
         # deep_dive_limit and rate_limited is still 0, the rationing was unnecessary.
+        # Budget accounting. The documented allowance is 15 analyses per period
+        # (REPO_STRUCTURE_AND_CONFIG.md:115), and each deep dive spends one — so a run
+        # says what it cost rather than leaving the operator to guess.
         throttled = getattr(self.api.session, "rate_limited", 0)
         runlog.count(metered_calls=len(final_winners))
-        print(f"\n      [i] {len(final_winners)} metered deep-dive call(s), "
+        print(f"\n      [i] {len(final_winners)} metered analysis call(s) of the "
+              f"{DAILY_ANALYSIS_BUDGET}/period budget, "
               f"{throttled} rate-limit response(s).")
-        if throttled == 0 and self.deep_dive_limit > 3:
-            print(f"      [i] No throttling at deep_dive_limit={self.deep_dive_limit}. "
-                  f"Evidence that the private API is not quota-scarce here.")
-        elif throttled:
-            print(f"      [!] Etsy throttled this run — the quota belief has support. "
+        if len(final_winners) > DAILY_ANALYSIS_BUDGET:
+            print(f"      [!] This run alone exceeded the documented budget. If the "
+                  f"results above look complete, the budget figure is wrong; if calls "
+                  f"failed, it is right. Either way it is now measurable.")
+        if throttled:
+            print(f"      [!] Etsy throttled this run — the quota is real. "
                   f"Lower deep_dive_limit.")
 
         judged = passed + rejected
