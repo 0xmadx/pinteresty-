@@ -7,6 +7,7 @@ from etsy.analytics.derivations import parse_price
 from etsy.analytics.profit import DIGITAL, verdict
 from etsy.analytics.scoring import (PoolTooSmall, can_discriminate, score_pool,
                                     shortlist)
+from core import runlog
 from core.runlog import logged_stage
 
 # What the operator would actually make if they entered this niche. Profit cannot be
@@ -17,20 +18,37 @@ DEFAULT_PROFILE = {"product_type": DIGITAL}
 
 
 class MasterNicheFinder:
-    def __init__(self, seed_keyword, max_depth=2, max_nodes=50, product_profile=None):
+    def __init__(self, seed_keyword, max_depth=2, max_nodes=50, product_profile=None,
+                 deep_dive_limit=3):
         """
         The Hyper-Optimized Batch Engine.
         Crawls sub-keywords deeply, batches them to the comparison endpoint for speed,
-        and only uses the deep-dive endpoint on the absolute winners.
+        and deep-dives the shortlist.
 
         `product_profile` describes the product the operator would list, and is what
         makes the STEP 5 profit gate possible. Accepts any keyword of `profit.verdict()`
         except `price` (measured per niche): `product_type`, `cogs`, `shipping_cost`,
         `shipping_charged`, `labor_minutes`, `demand_units_per_week`, `offsite_ads`.
+
+        `deep_dive_limit` — how many crawled keywords get `get_results_data`. This was
+        hardcoded to 3 to conserve a private-API quota that **nothing in this system has
+        ever observed** (no quota counter, no 429 ever recorded; the two code comments
+        claiming a cost contradict each other, and the one asserting it lives in a module
+        that cannot import). The cost of that assumption is severe: with max_nodes=50,
+        47 of 50 candidates are discarded by a demand/supply score that N-01 proves
+        carries no information — and intent (CVR) and price, the dimensions that WOULD
+        let the pool be ranked, arrive only from the deep dive.
+
+        So it is a parameter now, not a constant. Raise it (10, 25, 50) and check
+        `SessionManager.rate_limited` plus the runlog's metered_calls afterwards: if it
+        stays 0, the rationing was never needed and step 3 can rank properly. Default
+        stays 3 until that measurement exists — swapping one unverified belief for the
+        opposite is not an improvement.
         """
         self.seed = seed_keyword
         self.max_depth = max_depth
         self.max_nodes = max_nodes
+        self.deep_dive_limit = deep_dive_limit
         self.profile = dict(product_profile or DEFAULT_PROFILE)
         self.api = EtsyPrivateAPI()
 
@@ -121,14 +139,14 @@ class MasterNicheFinder:
             scored_niches = sorted(scored_niches,
                                    key=lambda x: x.get("base_opportunity_score", 0),
                                    reverse=True)
-            top_3 = scored_niches[:3]
+            top_3 = scored_niches[:self.deep_dive_limit]
             print(f"\n  [3] Shortlist (ranked — {verdict.reason}):")
             for idx, niche in enumerate(top_3):
                 print(f"      #{idx+1} '{niche['keyword']}': "
                       f"{niche['base_opportunity_score']:.3f} "
                       f"(Vol: {niche['volume']}, Comp: {niche['competition']})")
         else:
-            picks = shortlist(pool, limit=3)
+            picks = shortlist(pool, limit=self.deep_dive_limit)
             chosen = {p.key: p for p in picks}
             for n in scored_niches:
                 # No score is written. A number here would be read as merit, and there
@@ -211,6 +229,20 @@ class MasterNicheFinder:
                       f"{v['margin']:.1%} margin — REJECTED")
             for reason in v["reasons"]:
                 print(f"           ! {reason}")
+
+        # The evidence that settles the quota question. Every deep dive is one metered
+        # call; rate_limited counts 429s the session actually saw. If this run raised
+        # deep_dive_limit and rate_limited is still 0, the rationing was unnecessary.
+        throttled = getattr(self.api.session, "rate_limited", 0)
+        runlog.count(metered_calls=len(final_winners))
+        print(f"\n      [i] {len(final_winners)} metered deep-dive call(s), "
+              f"{throttled} rate-limit response(s).")
+        if throttled == 0 and self.deep_dive_limit > 3:
+            print(f"      [i] No throttling at deep_dive_limit={self.deep_dive_limit}. "
+                  f"Evidence that the private API is not quota-scarce here.")
+        elif throttled:
+            print(f"      [!] Etsy throttled this run — the quota belief has support. "
+                  f"Lower deep_dive_limit.")
 
         judged = passed + rejected
         fee_date = judged[0]["profit_verdict"]["fee_schedule_verified"] if judged else "n/a"

@@ -55,8 +55,10 @@ class EtsyPrivateAPI:
     def get_results_data(self, query):
         """Fetches the master payload (volume, supply, cvr bucket, median price, top 20 listings).
 
-        TTL_METERED (30 days): this is the scarce, quota-costing endpoint, and its data
-        (volume, CVR bucket, median price) moves slowly — so reuse aggressively.
+        TTL_METERED (7 days): this is the most accurate source in the system — real
+        search volume, real CVR, real median price. It was cached for 30 days on the
+        belief that it is quota-limited; no quota has ever been observed here, and these
+        are the numbers that move, so it is re-read at roughly the batch cadence instead.
         """
         def _fetch():
             encoded_query = urllib.parse.quote_plus(query)

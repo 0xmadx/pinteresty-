@@ -50,7 +50,13 @@ TTL_LIVE = 0                 # stock, "N in cart", today's badge — never cache
 TTL_SERP = 1 * DAY           # rankings shift, but not hour to hour
 TTL_TREND_SERIES = 7 * DAY   # a WEEKLY number; re-fetching daily buys nothing (fixes T-3)
 TTL_LISTING_TAGS = 30 * DAY  # sellers rarely re-tag
-TTL_METERED = 30 * DAY       # private-API data: expensive, moves slowly
+# Private-API (Marketplace Insights) data. This was 30 days, justified as "expensive,
+# quota-costing" — but no quota has ever been observed in this system, and search volume
+# and CVR are exactly the numbers that move. A month-old volume served as current is a
+# freshness bug, and this is the most accurate source available, so it should be re-read
+# roughly at the batch cadence rather than hoarded. 7 days still dedups within a run and
+# across a week's work.
+TTL_METERED = 7 * DAY
 TTL_TAXONOMY = 30 * DAY      # category trees, demographics splits — structural, slow
 TTL_FOREVER = None           # genuinely immutable (a taxonomy id map, say)
 
