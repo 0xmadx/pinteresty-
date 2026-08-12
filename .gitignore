@@ -14,3 +14,7 @@ pinterest_test.html
 # Track the lowercase spelling only.
 .claude/Skills/
 request_cache.db
+
+# Contains a captured live Etsy session (32 cookies incl. session-key-*, uaid).
+# Untracked 2026-08-12 — it is credentials, not config. Keep it local.
+etsy/api/private/registry.json
