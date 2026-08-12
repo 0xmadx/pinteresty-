@@ -32,6 +32,8 @@ Pure functions. No I/O.
 """
 from dataclasses import dataclass, field
 
+from etsy.analytics.freshness import freshness_floor, freshness_tag
+
 WEIGHTS_VERSION = 1
 
 # Below this a percentile carries no information: with two candidates every value is
@@ -85,6 +87,11 @@ class Scored:
     pool_id: str = ""
     pool_size: int = 0
     weights_version: int = WEIGHTS_VERSION
+    # B-10: the age this score inherits — the oldest collected_at among its inputs, and
+    # the plain tag derived from it. None/"unknown" when no input carried a timestamp,
+    # which is a distinct state from fresh.
+    freshness_floor: str = None
+    freshness: str = "unknown"
 
 
 def percentile_ranks(values):
@@ -122,13 +129,19 @@ def percentile_ranks(values):
     return out
 
 
-def score_pool(candidates, weights=None, pool_id="default", min_pool_size=MIN_POOL_SIZE):
+def score_pool(candidates, weights=None, pool_id="default", min_pool_size=MIN_POOL_SIZE,
+               now=None):
     """Score a pool of candidates against each other. Returns `Scored`, best first.
 
     `candidates` is a list of dicts with a `key` plus any of DIMENSIONS. Optional keys:
       margin        — from profit.unit_economics; compared against margin_floor
       margin_floor  — from profit.verdict
       capacity_bound— from profit.verdict; recorded, never silently ignored
+      freshness     — dict of dimension -> collected_at (ISO). B-10: the score inherits
+                      the oldest timestamp among the dimensions it actually used, and a
+                      KNOWN-stale floor halves confidence. Omit it and scoring is
+                      time-blind exactly as before — a value that never claimed a
+                      freshness is not penalised for lacking one.
 
     Scores are only comparable **within one pool**. Two candidates scored in different
     pools cannot be ranked against each other, which is what pool_id records.
@@ -182,6 +195,18 @@ def score_pool(candidates, weights=None, pool_id="default", min_pool_size=MIN_PO
         if missing:
             reasons.append(f"missing input(s): {', '.join(sorted(missing))}")
 
+        # B-10: the floor is the oldest timestamp among the dimensions this candidate
+        # ACTUALLY used — a stale input for a dimension that was missing (and so excluded
+        # from the score) does not drag the composite's freshness down.
+        ts_map = cand.get("freshness") or {}
+        used_timestamps = [ts_map[d] for d in present if d in ts_map]
+        floor_ts = freshness_floor(*used_timestamps) if used_timestamps else None
+        tag = freshness_tag(floor_ts, now=now)
+        if tag == "stale":
+            confidence = round(confidence * 0.5, 4)
+            reasons.append(f"stale: oldest input is {floor_ts} — the score spans that "
+                           f"much time and may already have moved")
+
         results.append(Scored(
             key=cand.get("key", f"candidate_{i}"),
             score=round(score, 6),
@@ -192,6 +217,8 @@ def score_pool(candidates, weights=None, pool_id="default", min_pool_size=MIN_PO
             reasons=tuple(reasons),
             pool_id=pool_id,
             pool_size=n,
+            freshness_floor=floor_ts,
+            freshness=tag,
         ))
 
     # A pool can clear min_pool_size and still produce scores too close together to mean
