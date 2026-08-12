@@ -1,13 +1,17 @@
-import os
-import sys
 import argparse
+import json
+import os
 from typing import List, Dict
 import statistics
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+from datetime import datetime, timezone
 
 from etsy.api.private.api import EtsyPrivateAPI
 from etsy.api.public.api import EtsyPublicAPI
+from etsy.analytics.tag_mining import mine_consensus
+
+
+def _utcnow():
+    return datetime.now(timezone.utc).isoformat()
 
 class ListingGenerator:
     def __init__(self):
@@ -88,39 +92,57 @@ class ListingGenerator:
         
     def _fetch_consensus_from_listings(self, listings: List[Dict], title: str) -> dict:
         print(f"\n[*] Extracting Public Listing Data for {title}...")
-        all_tags = []
+        # B-02: keep each listing's tags WITH its age/review evidence, instead of pooling
+        # all tags into one flat list. Pooling gave a 4,000-review veteran the same vote
+        # as a six-month-old shop that outranks it — which copies the symptom of ranking
+        # (tenure) rather than the cause (tags). mine_consensus weights the vote by how
+        # much the ranking was earned.
+        mined = []
         all_breadcrumbs = []
-        
+
         # Scrape top 5 competitors to save time
         count = 0
         for listing in listings:
             if count >= 5:
                 break
-                
+
             # Private API listings use 'id', Public API cards use 'listing_id'
             listing_id = listing.get("id") or listing.get("listing_id")
             if not listing_id:
                 continue
-                
+
             data = self.public_api.get_listing_data(listing_id)
             if data:
-                all_tags.extend(data.get("tags", []))
+                mined.append({
+                    "tags": data.get("tags", []),
+                    # Public cards: review_count + shop_years_on_etsy. Private cards:
+                    # numberOfReviews, no age. Pass whatever exists; earned_weight uses
+                    # the axes it has and stays neutral on the ones it doesn't.
+                    "review_count": listing.get("review_count",
+                                                listing.get("numberOfReviews")),
+                    "shop_years": listing.get("shop_years_on_etsy"),
+                })
                 bc = data.get("breadcrumb", [])
                 if bc:
                     all_breadcrumbs.append(" > ".join(bc))
                 count += 1
-                
+
+        consensus = mine_consensus(mined, limit=10, min_listings=2)
+        if consensus["all_confounded"] and consensus["consensus_tags"]:
+            print(f"    [!] Every competitor sampled is established (old or heavily "
+                  f"reviewed). These tags may reflect tenure, not SEO — treat as a "
+                  f"weaker signal.")
+
         from collections import Counter
-        tag_counts = Counter(all_tags)
-        consensus_tags = [tag for tag, count in tag_counts.most_common(10) if count >= 2]
-        
         bc_counts = Counter(all_breadcrumbs)
         consensus_category = bc_counts.most_common(1)[0][0] if bc_counts else "Unknown Category"
-        
+
         return {
-            "consensus_tags": consensus_tags,
+            "consensus_tags": consensus["consensus_tags"],
             "consensus_category": consensus_category,
-            "all_tags": all_tags
+            "tag_support": consensus["support"],
+            "all_confounded": consensus["all_confounded"],
+            "all_tags": [t for m in mined for t in m["tags"]],
         }
 
     def fetch_evergreen_consensus(self, top_listings: List[Dict]) -> dict:
@@ -147,7 +169,7 @@ class ListingGenerator:
         top_rated_listings = data["cards"]
         return self._fetch_consensus_from_listings(top_rated_listings, "Top Rated (Highest Reviews)")
         
-    def generate_listing(self, seed: str, variants: List[Dict], evergreen: dict, trending: dict, top_rated: dict):
+    def generate_listing(self, seed: str, variants: List[Dict], evergreen: dict, trending: dict, top_rated: dict, gap: dict = None):
         """Generates the Listing Brief based on Claude's formula, blending Evergreen, Trending, and Top Rated."""
         print("\n=== CLAUDE'S LISTING BRIEF ===")
         
@@ -230,17 +252,55 @@ class ListingGenerator:
             
         print(f"\n[+] Saved listing brief to: {output_file}")
 
+        # --- PREDICTION SNAPSHOT (M-3) ---
+        # The launch itself happens outside this system: the operator lists the product
+        # on Etsy and only then does a listing_id exist. But the *prediction* exists
+        # now, and after the fact it is unrecoverable — volume, supply and the SERP
+        # readings all move. So it is written beside the brief, and
+        # `python -m etsy.analytics.launch` picks it up once there is an id to attach.
+        prediction = {
+            "term_id": seed,
+            "generated_at": _utcnow(),
+            "volume": (gap or {}).get("volume"),
+            "supply": (gap or {}).get("supply"),
+            "exact_matches": (gap or {}).get("exact_matches"),
+            "median_reviews": (gap or {}).get("median_reviews"),
+            "gap_score": (gap or {}).get("gap_score"),
+            "serp_score": (gap or {}).get("serp_score"),
+            "title": final_title,
+            "tags": tags,
+        }
+        prediction_file = f"etsy/data/outputs/{seed.replace(' ', '_')}.prediction.json"
+        with open(prediction_file, "w", encoding="utf-8") as f:
+            json.dump(prediction, f, indent=2)
+        print(f"[+] Saved prediction snapshot to: {prediction_file}")
+        print(f"    After you list it, record the launch:\n"
+              f"      python -m etsy.analytics.launch --seed \"{seed}\" --listing-id <ID>")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=str, required=True, help="The seed keyword to generate a listing for")
     args = parser.parse_args()
-    
-    gen = ListingGenerator()
-    gap = gen.analyze_gap(args.seed)
-    if gap:
-        variants = gen.fetch_variants(args.seed)
-        evergreen = gen.fetch_evergreen_consensus(gap.get("top_listings", []))
-        trending = gen.fetch_trending_consensus(args.seed)
-        top_rated = gen.fetch_top_rated_consensus(args.seed)
-        gen.generate_listing(args.seed, variants, evergreen, trending, top_rated)
+
+    # No single run() method here — the stage is the whole six-call sequence, which is
+    # what the operator actually invokes.
+    from core import runlog
+    from core.runlog import stage
+
+    with stage("listing_generator", seed=args.seed):
+        gen = ListingGenerator()
+        gap = gen.analyze_gap(args.seed)
+        if gap:
+            variants = gen.fetch_variants(args.seed)
+            evergreen = gen.fetch_evergreen_consensus(gap.get("top_listings", []))
+            trending = gen.fetch_trending_consensus(args.seed)
+            top_rated = gen.fetch_top_rated_consensus(args.seed)
+            gen.generate_listing(args.seed, variants, evergreen, trending, top_rated, gap=gap)
+            runlog.count(rows_out=1)
+        else:
+            # A seed with no gap is a legitimate answer, but it produces no listing —
+            # recorded so a run that generated nothing is distinguishable from one that
+            # never got that far.
+            runlog.count(rows_out=0)
+            print("[-] No gap found for this seed — no listing generated.")
