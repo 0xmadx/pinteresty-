@@ -1,20 +1,20 @@
 import json
 import os
 from etsy.api.private.api import EtsyPrivateAPI
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from etsy.analytics.derivations import parse_price
 from core.database import MarketDatabase
+from core.runlog import logged_stage
 
 class PrivateBlueprintPipeline:
     def __init__(self, target_keyword):
         """
         Deep-dives into a single keyword to extract Pricing, Conversion, and Competitors.
         """
-        """
         self.keyword = target_keyword
         self.api = EtsyPrivateAPI()
         self.db = MarketDatabase()
 
+    @logged_stage("private_blueprint")
     def run(self):
         print(f"\n[BLUEPRINT] Initializing Product Blueprint for: '{self.keyword}'")
         
@@ -88,17 +88,35 @@ class PrivateBlueprintPipeline:
             json.dump(blueprint, f, indent=4)
         print(f"\n[+] Product Blueprint saved to {report_path}")
         
-        # Save to Master Database
+        # Save to Master Database.
+        #
+        # P-3: this used to call upsert_keyword, which stamps cvr_source='unspecified'
+        # for every write — so a CVR the API actually returned and the 0.02 fallback
+        # landed as the same untagged number, the exact measured-vs-derived hole this
+        # system exists to close. record_keyword carries the real provenance.
+        #
+        # The price defaults did the same thing more quietly: an "Unknown" price became
+        # 0.0, a real measured value indistinguishable from missing. parse_price returns
+        # None for the unreadable cases, and price_basis records whether either end of
+        # the band was actually measured.
+        cvr_measured = cvr_raw not in (None, 0, "")
+        low = parse_price(low_price)
+        high = parse_price(high_price)
+        price_basis = "measured" if (low is not None or high is not None) else "absent"
         try:
-            self.db.upsert_keyword(
+            self.db.record_keyword(
                 keyword=self.keyword,
+                source="etsy_private",
                 volume=vol,
                 competition=listings,
-                cvr=cvr_raw if cvr_raw else 0.02,
-                price_low=float(str(low_price).replace('$', '').replace(',', '')) if low_price != "Unknown" else 0.0,
-                price_high=float(str(high_price).replace('$', '').replace(',', '')) if high_price != "Unknown" else 0.0
+                cvr=cvr_raw if cvr_measured else 0.02,
+                cvr_source="measured" if cvr_measured else "default",
+                price_low=low,
+                price_high=high,
+                price_basis=price_basis,
             )
-            print(f"[+] Saved '{self.keyword}' metrics to Market Database.")
+            print(f"[+] Saved '{self.keyword}' metrics to Market Database "
+                  f"(cvr_source={'measured' if cvr_measured else 'default'}).")
         except Exception as e:
             print(f"[-] Failed to save to database: {e}")
 
