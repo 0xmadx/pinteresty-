@@ -3,18 +3,28 @@ import urllib.parse
 from bs4 import BeautifulSoup
 import re
 import os
+from core.guards import soft_parse
+from core.request_cache import RequestCache, TTL_LISTING_TAGS, TTL_SERP
 from core.session_manager import SessionManager
 from core.settings import ScraperConfig
 
 class EtsyPublicAPI:
-    def __init__(self):
+    def __init__(self, cache=None):
         self.config = ScraperConfig()
         self.session = SessionManager(self.config)
+        # Shared cache-with-TTL, replacing the two hand-rolled file caches this client
+        # used to keep (which never expired). Injectable so tests pass a temp one.
+        self.cache = cache or RequestCache()
+
+        from dotenv import load_dotenv
+        load_dotenv()
+        
+        user_agent = os.getenv("BROWSER_USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36")
         
         self.headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
             'accept-language': 'en-US,en;q=0.9',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36'
+            'user-agent': user_agent
         }
         
         self.cookies = {}
@@ -33,43 +43,27 @@ class EtsyPublicAPI:
         loaded through the `neu/specs/listingCards` POST (see filter_relevant_aftersearch.py).
         """
         filters = filters or {}
-        
-        # Build a consistent cache suffix based on active filters
-        cache_suffix = ""
-        if filters:
-            sorted_items = sorted(filters.items())
-            suffix_parts = [f"{k}_{str(v).lower()}" for k, v in sorted_items]
-            cache_suffix = "_" + "_".join(suffix_parts)
-            
-        cache_file = f"etsy/data/cache/public_search_{query.replace(' ', '_')}{cache_suffix}.json"
-        if os.path.exists(cache_file):
-            print(f"  [+] Loading public search for '{query}' from cache.")
-            with open(cache_file, "r", encoding="utf-8") as f:
-                return json.load(f)
 
-        # Build dynamic URL
-        params = {"q": query}
-        params.update(filters)
-        
-        # Explicit is often appended by default on Etsy searches
-        if "explicit" not in params:
-            params["explicit"] = "1"
-            
-        url = f"https://www.etsy.com/search?{urllib.parse.urlencode(params)}"
-        
-        resp = self.session.request("GET", url, headers=self.headers, cookies=self.cookies)
+        # Cache key from query + sorted filters, so the same search is asked once per TTL
+        # window regardless of dict ordering. TTL_SERP (1 day): rankings shift, but not
+        # hour to hour. A failed fetch returns None and is not cached (see request_cache).
+        suffix = "".join(f"_{k}_{str(v).lower()}" for k, v in sorted(filters.items()))
+        key = f"public_search_{query.replace(' ', '_')}{suffix}"
 
-        if resp.status_code != 200:
-            print(f"[-] public search failed: {resp.status_code}")
-            return None
+        def _fetch():
+            params = {"q": query}
+            params.update(filters)
+            # Explicit is often appended by default on Etsy searches
+            if "explicit" not in params:
+                params["explicit"] = "1"
+            url = f"https://www.etsy.com/search?{urllib.parse.urlencode(params)}"
+            resp = self.session.request("GET", url, headers=self.headers, cookies=self.cookies)
+            if resp.status_code != 200:
+                print(f"[-] public search failed: {resp.status_code}")
+                return None
+            return self.parse_search_html(resp.text, query) or None
 
-        data = self.parse_search_html(resp.text, query)
-        if not data:
-            return None
-
-        with open(cache_file, "w", encoding="utf-8") as out:
-            json.dump(data, out)
-        return data
+        return self.cache.get_or_fetch(key, TTL_SERP, _fetch, source="etsy_public")
 
     @staticmethod
     def _parse_count(text):
@@ -165,49 +159,47 @@ class EtsyPublicAPI:
         return result if result["total_results"] is not None or result["cards"] else None
 
     def get_listing_data(self, listing_id):
-        """Scrapes a public listing page to extract Tags and Breadcrumb."""
-        cache_file = f"etsy/data/cache/public_listing_{listing_id}.json"
-        if os.path.exists(cache_file):
-            with open(cache_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-                
-        url = f"https://www.etsy.com/listing/{listing_id}"
-        resp = self.session.request("GET", url, headers=self.headers, cookies=self.cookies)
-        
-        if resp.status_code == 200:
+        """Scrapes a public listing page to extract Tags and Breadcrumb.
+
+        TTL_LISTING_TAGS (30 days): a seller's tags and category rarely change, so this
+        is the cheapest thing in the system to reuse.
+        """
+        def _fetch():
+            url = f"https://www.etsy.com/listing/{listing_id}"
+            resp = self.session.request("GET", url, headers=self.headers, cookies=self.cookies)
+            if resp.status_code != 200:
+                return None
             html = resp.text
             soup = BeautifulSoup(html, 'html.parser')
-            
+
             result = {
                 "breadcrumb": [],
                 "tags": []
             }
-            
+
             # 1. Extract Breadcrumb from LD+JSON
+            # Several LD+JSON blocks per page; only one is the BreadcrumbList, so most
+            # iterations legitimately find nothing. soft_parse keeps that tolerance but
+            # records the failures, so a changed schema is distinguishable from the
+            # ordinary misses instead of both yielding a silently empty list.
             for script in soup.find_all('script', type='application/ld+json'):
-                try:
+                with soft_parse("listing.breadcrumb_ld_json", listing_id=listing_id):
                     data = json.loads(script.string)
                     if data.get('@type') == 'BreadcrumbList':
                         items = data.get('itemListElement', [])
                         # Sort by position just in case
                         items.sort(key=lambda x: x.get('position', 0))
                         result['breadcrumb'] = [item.get('name') for item in items if item.get('name')]
-                except Exception:
-                    pass
-                    
+
             # 2. Extract Tags from Listzilla JSON
             for script in soup.find_all('script', type='text/json', attrs={'data-neu-spec-placeholder-data': '1'}):
-                try:
+                with soft_parse("listing.listzilla_tags", listing_id=listing_id):
                     data = json.loads(script.string)
                     if data.get('spec_name') == 'Listzilla_ApiSpecs_Tags_Landing':
                         tags = data.get('args', {}).get('click_queries', [])
                         # The first 13 are usually the actual tags, the rest are broadened matches
                         result['tags'] = tags[:13]
-                except Exception:
-                    pass
-                    
-            with open(cache_file, "w", encoding="utf-8") as out:
-                json.dump(result, out)
             return result
-            
-        return None
+
+        return self.cache.get_or_fetch(f"public_listing_{listing_id}", TTL_LISTING_TAGS,
+                                       _fetch, source="etsy_public")
