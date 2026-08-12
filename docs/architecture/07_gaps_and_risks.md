@@ -469,10 +469,18 @@ ordinal bucket (1-4), not a rate, so converting search volume into weekly units 
 fabrication. Without it the margin gate is fully live; `weekly_profit` and the capacity
 ceiling are only meaningful once real demand is supplied.
 
-### 🟠 T-3 · Time-varying Pinterest series are cached under a **dateless key** — found 2026-08-11
+### ✅ T-3 · Time-varying Pinterest series cached under a dateless key — **fixed** (found 2026-08-11)
+
+> **Closed two ways.** (1) The keys now carry the week: `related_terms` and `prefix_match`
+> resolve `end_date = end_date or self.latest_available_date()` **before** building the
+> key (`pinterest/endpoints/api.py:268,284`), so `related_{country}_{term}_{end_date}`
+> describes the week it holds. (2) As belt-and-suspenders, the Pinterest client now caches
+> through the shared `RequestCache` with a **7-day TTL** on trend series (`a691d47`), so
+> even a same-week key cannot be served past its freshness window. The original write-up
+> follows.
 
 Surfaced the moment B-4b was fixed and `pinterest/tests/test_local_derivations.py` could
-run for the first time. It fails 2 of 17:
+run for the first time. It failed 2 of 17:
 
 ```
 [FAIL] related_terms counts[] is byte-identical to /metrics/?days=365   0/5 matched
@@ -498,9 +506,10 @@ size of the drift, not a parse bug.
 This is **invariant 2 in the cache layer**: the same defect class as the upserts, one
 tier further out. The value is not merely stale, it is stale *and unlabelled*.
 
-**Fix is one line each** — add `_slug(end_date)` to both keys. Deliberately **not
-applied**: it invalidates every `related_*` and `prefix_*` cache entry and forces a
-re-fetch against a rate-limited host, which is the operator's call to schedule.
+**Fix (applied):** `_slug(end_date)` is now in both keys, and the whole client caches
+through `RequestCache` with a 7-day TTL on trend series. One consequence to note for the
+operator: both changes invalidate the old dateless entries, so the first run after this
+re-fetches every `related_*`/`prefix_*` series once against a rate-limited host.
 
 ### ✅ T-1 · Six writes destroyed history — **all 6 fixed 2026-08-11**
 
@@ -746,7 +755,7 @@ Cost-weighted. The first four are hours; the rest are the project.
 | # | Action | Refs | Effort |
 |---|---|---|---|
 | ~~0~~ | ~~**Repair Pinterest cookie sourcing**~~ | **B-4b** | ✅ **done by the operator** — 15 modules live again |
-| 🟠 **0b** | Add the date to the `related_*` / `prefix_*` cache keys — stale weekly series are served as current | **T-3** | 2 lines + a cache flush (operator schedules it) |
+| ~~0b~~ | ~~Add the date to the `related_*` / `prefix_*` cache keys~~ ✅ **done** — date in key + one shared `RequestCache` with per-type TTLs across all 3 API clients (`d86b693`, `e2381aa`, `3e13fca`, `a691d47`) | **T-3** | closed |
 | ~~B1~~ | ~~`is_control` on `launches`~~ ✅ **done** — `control_ratio()`, `--control`, nag below 10% at record time | **B-04** | `8252316` |
 | ~~B2~~ | ~~Make the daily delta actually run~~ ✅ **done** — `shop_observations` stores delta + real window; found and fixed 4 further defects (silo, unwindowed delta, same-day baseline drift, discarded number) | W3.5 | `7f468a2` |
 | ~~B3~~ | ~~Badge as an upper bound~~ ✅ **done** — `SalesEstimate`; a 17/day badge on a 4/day shop fell 510→120 | **B-03** | `de376ea` |
