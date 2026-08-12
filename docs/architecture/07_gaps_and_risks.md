@@ -608,11 +608,17 @@ authoritative."* This chain manufactures one every run.
 `_old_etsy_analytics.md:19` confirms the override is intentional — but nothing records
 which basis produced a given row.
 
-### 🟠 P-3 · A defaulted CVR is stored as if measured
+### ✅ P-3 · A defaulted CVR was stored as if measured — **fixed 2026-08-11** (`2b6217f`)
 
-`private_blueprint.py:97` — `cvr=cvr_raw if cvr_raw else 0.02`. `grid_analytics.py:23`
-— same default. `REPO_STRUCTURE_AND_CONFIG.md` names `cvr_source=default` as a guard
-flag to log; **no such column exists.**
+Was: `private_blueprint.py` wrote through `upsert_keyword`, which stamps
+`cvr_source='unspecified'` on every row, so a CVR the private API returned and the
+`0.02` fallback were indistinguishable once stored. The `cvr_source` column **now
+exists** (added when `keyword_observations` went append-only) and both analytics
+pipelines set it; `private_blueprint` was the last writer storing it blind. It now calls
+`record_keyword` directly with `cvr_source='measured'` / `'default'`. The same fix closed
+the price hole — `"Unknown"` was coerced to `0.0`, indistinguishable from a real measured
+price; `parse_price` returns `None` and `price_basis` records provenance. Guard test
+`core/test_keyword_provenance.py`.
 
 ### ✅ P-4 · Review ratings are fabricated — **fixed 2026-08-11**, see **B-4**
 
@@ -741,14 +747,14 @@ Cost-weighted. The first four are hours; the rest are the project.
 |---|---|---|---|
 | ~~0~~ | ~~**Repair Pinterest cookie sourcing**~~ | **B-4b** | ✅ **done by the operator** — 15 modules live again |
 | 🟠 **0b** | Add the date to the `related_*` / `prefix_*` cache keys — stale weekly series are served as current | **T-3** | 2 lines + a cache flush (operator schedules it) |
-| 🔴 **B1** | **`is_control` on `launches`** — the table is empty, so this is free today and unfixable in retrospect once launches accumulate | **B-04** | 1 column + test |
-| 🔴 **B2** | **Make the daily delta actually run** — seed `tracking_data.json`, schedule `run_daily_tracker`. It has never produced a number, and **B-03's mitigation depends on it** | W3.5, `bias_audit.md` | half day |
-| 🔴 **B3** | **Badge as an upper bound**, not the chosen point estimate — calibrate against B2's delta | **B-03** | needs B2 first |
-| 🟠 **B4** | **Survivor ratio** — `total_results` and per-card `review_count` are already fetched (`api.py:114,162`) and discarded | **B-01** | arithmetic, no new requests |
-| 🔴 **B4.5** | **N-01 — the score cannot discriminate.** With demand+supply at equal weight (one inverted), every candidate scores exactly 0.500 at *any* pool size, because that data is rank-correlated by nature. Not fixable by a guard (the guard already fires); fixable only by **adding dimensions** — profit and intent are already available, survivor ratio arrives in B4. **Must land before any UI: Discover ranks this pool.** | **N-01** | 1 day |
-| 🟠 **B5** | **Age-weight tag mining** — `shop_years_on_etsy` parsed at `api.py:160`, ignored. Copying tags from 4-year-old listings copies a symptom of ranking, not a cause | **B-02** | half day |
-| 🟠 **B6** | **`freshness_floor`** on composites — a score inherits its oldest input's `collected_at` | **B-10** | half day |
-| 🟠 **B7** | **P-3 — `private_blueprint.py:96`** defaults CVR to 0.02 without setting `cvr_source`, so it stores as `unspecified` | **P-3** | 10 min |
+| ~~B1~~ | ~~`is_control` on `launches`~~ ✅ **done** — `control_ratio()`, `--control`, nag below 10% at record time | **B-04** | `8252316` |
+| ~~B2~~ | ~~Make the daily delta actually run~~ ✅ **done** — `shop_observations` stores delta + real window; found and fixed 4 further defects (silo, unwindowed delta, same-day baseline drift, discarded number) | W3.5 | `7f468a2` |
+| ~~B3~~ | ~~Badge as an upper bound~~ ✅ **done** — `SalesEstimate`; a 17/day badge on a 4/day shop fell 510→120 | **B-03** | `de376ea` |
+| ~~B4~~ | ~~Survivor ratio~~ ✅ **done** as a *bound* — the doc's formula was not computable from a SERP; a low share is a graveyard finding, a high share is "uninformative", never "healthy" | **B-01** | `0fbf85d` |
+| ~~B4.5~~ | ~~N-01 — the score cannot discriminate~~ ✅ **done** — `can_discriminate()` asks before scoring; step 3 is now a labelled filter, real ranking moved to step 6 where intent+profit exist (spread 0.000→0.550) | **N-01** | `2c45b9f` |
+| ~~B5~~ | ~~Age-weight tag mining~~ ✅ **done** — `earned_weight` (0.89 young vs 0.17 tenured); the 2-listing robustness guard kept so it does not overfit one outlier | **B-02** | `88fd636` |
+| ~~B6~~ | ~~`freshness_floor` on composites~~ ✅ **done** — `freshness.py` + `score_pool` carries the floor and halves confidence when stale; SERVE-layer consumer still to come | **B-10** | `acfcba3` |
+| ~~B7~~ | ~~P-3 — `private_blueprint` CVR provenance~~ ✅ **done** — migrated to `record_keyword`; measured vs default now distinguishable, prices no longer coerced to 0.0 | **P-3** | `2b6217f` |
 | ~~1~~ | ~~`git rm --cached .env`; rotate the two API keys~~ | S-1 | ✅ **done** — DeepSeek rotated, CapSolver removed outright. Optional leftover: add `.env.example` |
 | ~~1b~~ | ~~Separate the rotating token from long-lived keys~~ | S-1b | ✅ **moot** — `.env` is untracked, so the exposure is closed |
 | ~~2~~ | ~~Delete the stray `"""` at `private_blueprint.py:13`~~ | B-1 | ✅ **done** |

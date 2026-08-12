@@ -130,11 +130,18 @@ reviews" is wrong: it fetches **one page**.
 
 ## What is still open after this verification
 
-| # | Item | Why it matters |
+**Every bias item below was closed 2026-08-11** — see `architecture/bias_audit.md` and the
+fix-list in `07_gaps_and_risks.md` (commits `8252316`…`2b6217f`).
+
+| # | Item | Resolution |
 |---|---|---|
-| **N-01** | Demand+supply scoring collapses to 0.500 for every candidate | A ranking that looks meaningful and is not — the exact failure this project names as its reason to exist. Needs *dimensions*, not guards. |
-| **P-3** | `private_blueprint.py:96` stores a defaulted CVR untagged | A derived value indistinguishable from a measured one — invariant 1. |
-| **B-01** | No survivor ratio | The denominator is unnamed. Data is already fetched (`api.py:114,162`) and discarded. |
-| **B-03** | Badge is a point estimate, not a bound | Cannot be fixed until the daily delta actually produces a number. |
-| **W3.5** | Daily delta never runs | Blocks B-03. No `tracking_data.json`, no caller. |
-| **M-6** | The 1.256 calibration | Described for years, never built. Decide: build it or delete the claim. |
+| ~~N-01~~ | Demand+supply scoring collapses to 0.500 | ✅ `can_discriminate()` refuses to rank when it cannot; real ranking moved to step 6 with four dimensions (`2c45b9f`) |
+| ~~P-3~~ | `private_blueprint` stores a defaulted CVR untagged | ✅ migrated to `record_keyword` with real `cvr_source` (`2b6217f`) |
+| ~~B-01~~ | No survivor ratio | ✅ built as a *bound* — the SERP cannot support a rate (`0fbf85d`) |
+| ~~B-03~~ | Badge is a point estimate, not a bound | ✅ now an upper bound, clamped against the measured shop rate (`de376ea`) |
+| ~~W3.5~~ | Daily delta never runs | ✅ `shop_observations` + rewired tracker (`7f468a2`) — still needs a **schedule** |
+| **M-6** | The 1.256 calibration | 🔴 **still not built.** Decide: build it or delete the claim. The only remaining backend gap of the ones this audit surfaced. |
+
+**Operational, not code:** the daily tracker and rank tracker both exist and both need a
+**scheduler** (`MIGRATION_AND_OPERATIONS.md:108-114` wants weekly / 3×-weekly). Until then
+they are manual, and the LEARN loop and B-03 calibration only accumulate data when run.
