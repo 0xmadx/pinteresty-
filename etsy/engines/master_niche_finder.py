@@ -26,7 +26,7 @@ DEFAULT_PROFILE = {"product_type": DIGITAL}
 
 class MasterNicheFinder:
     def __init__(self, seed_keyword, max_depth=2, max_nodes=50, product_profile=None,
-                 deep_dive_limit=None):
+                 deep_dive_limit=None, edges_per_node=10):
         """
         The Hyper-Optimized Batch Engine.
         Crawls sub-keywords deeply, batches them to the comparison endpoint for speed,
@@ -64,13 +64,24 @@ class MasterNicheFinder:
         # None = no cap. max_nodes already bounds the crawl, so this covers everything
         # the crawl found rather than introducing a second, arbitrary limit.
         self.deep_dive_limit = max_nodes if deep_dive_limit is None else deep_dive_limit
+        # How many distinct sub-keywords to pull from each node. get_similar_keywords is
+        # an LLM endpoint that returns DIFFERENT terms on each call, so this is the number
+        # of enqueue+poll rounds it runs and de-dupes. The crawl loop overrode the
+        # method's own default of 10 down to 2 — a frugality hack for a quota that does
+        # not exist. Restored to 10: each node now offers up to ~5x more real candidates,
+        # so the shared max_nodes bucket fills with denser, closer-to-seed suggestions
+        # rather than a thin scattering forced wide. It is slower on a cold crawl (10
+        # rounds x 1.5s poll each, per node) but get_similar_keywords is cached, so that
+        # cost is paid once per keyword and every re-run is instant.
+        self.edges_per_node = edges_per_node
         self.profile = dict(product_profile or DEFAULT_PROFILE)
         self.api = EtsyPrivateAPI()
 
     @logged_stage("niche_finder")
     def run(self):
         print(f"\n[MASTER ENGINE] Initializing Hyper-Optimized Spider for seed: '{self.seed}'")
-        print(f"[MASTER ENGINE] Max Depth: {self.max_depth} | Max Nodes: {self.max_nodes}")
+        print(f"[MASTER ENGINE] Max Depth: {self.max_depth} | Max Nodes: {self.max_nodes} "
+              f"| Edges/node: {self.edges_per_node}")
         
         # STEP 1: DEEP RECURSIVE CRAWL (BFS)
         print(f"\n  [1] Executing Deep Crawl...")
@@ -83,7 +94,8 @@ class MasterNicheFinder:
             print(f"      🕸️ [Depth {current_depth}] Mapping node '{current_keyword}'...")
             
             if current_depth < self.max_depth:
-                edges = self.api.get_similar_keywords(current_keyword, iterations=2)
+                edges = self.api.get_similar_keywords(current_keyword,
+                                                      iterations=self.edges_per_node)
                 if edges:
                     for e in edges:
                         term = e.get("searchTerm")
