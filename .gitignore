@@ -13,3 +13,4 @@ pinterest_test.html
 # On a Linux/macOS checkout that becomes two real directories which then drift apart.
 # Track the lowercase spelling only.
 .claude/Skills/
+request_cache.db
