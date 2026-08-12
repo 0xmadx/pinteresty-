@@ -7,6 +7,7 @@ from etsy.analytics.derivations import parse_price
 from etsy.analytics.profit import DIGITAL, verdict
 from etsy.analytics.scoring import (PoolTooSmall, can_discriminate, score_pool,
                                     shortlist)
+from etsy.analytics.survivorship import describe, survivor_bound
 from core import runlog
 from core.runlog import logged_stage
 
@@ -183,9 +184,40 @@ class MasterNicheFinder:
                 niche["pricing_band"] = f"{low_price} to {high_price}"
                 niche["median_price_low"] = parse_price(low_price)
                 niche["median_price_high"] = parse_price(high_price)
+
+                # The same call already returned the top listings for this keyword —
+                # title, price, shop, rating and numberOfReviews each. This step used to
+                # take cvr and prices and DISCARD the cards, after which the arbitrage
+                # engine made ~24 public requests per niche to rebuild a thinner version
+                # of them. numberOfReviews is exactly what the survivor bound needs, so
+                # B-01 is now answerable from data already paid for, with no extra call.
+                cards = data.get("competitiveResearchListingCards") or []
+                if isinstance(cards, dict):
+                    cards = cards.get("listingCards", [])
+                niche["competitor_listings"] = cards
+
+                if cards:
+                    bound = survivor_bound(
+                        [{"listing_id": c.get("listingId") or c.get("listingUrl"),
+                          # Private field name; survivorship speaks review_count.
+                          "review_count": c.get("numberOfReviews")}
+                         for c in cards],
+                        total_supply=niche.get("competition"))
+                    niche["survivorship"] = {
+                        "verdict": bound.verdict,
+                        "reviewed_share": bound.reviewed_share,
+                        "sample_size": bound.sample_size,
+                        "total_supply": bound.total_supply,
+                        "is_upper_bound": bound.is_upper_bound,
+                        "note": bound.note,
+                    }
+
                 final_winners.append(niche)
 
-                print(f"         [!] Verified: CVR={cvr} | Buyer Pays: {niche['pricing_band']}")
+                print(f"         [!] Verified: CVR={cvr} | Buyer Pays: {niche['pricing_band']}"
+                      f" | {len(cards)} competitor listing(s)")
+                if niche.get("survivorship"):
+                    print(f"             {describe(bound)}")
 
         # STEP 5: PROFIT GATE (D-01)
         #
@@ -300,6 +332,7 @@ class MasterNicheFinder:
             "max_depth_scanned": self.max_depth,
             "total_niches_analyzed": len(kw_list),
             "product_profile": self.profile,
+            "deep_dive_limit": self.deep_dive_limit,
             # top_3_deep_dive keeps its meaning for existing consumers (master_arbitrage
             # reads it); the profit split is additive so nothing downstream breaks.
             "top_3_deep_dive": final_winners,
