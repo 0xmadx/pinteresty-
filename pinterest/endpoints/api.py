@@ -17,6 +17,7 @@ from pathlib import Path
 
 import httpx
 
+from core.request_cache import RequestCache, TTL_TAXONOMY, TTL_TREND_SERIES
 from .constants import (FASHION_TRIPLE, ORDER_BY, PREDICTED_DAYS, SHOPPING_DAYS_RANGE,
                         SHOPPING_REGIONS, SPOTLIGHT_EVENT, SPOTLIGHT_REGIONS,
                         TOP_LIMIT_MAX, VERTICALS)
@@ -46,10 +47,8 @@ def _slug(value):
 
 class PinterestTrendsAPI:
     def __init__(self, cache=True, delay=0.6, store=True):
-        if not COOKIE_FILE.exists():
-            raise FileNotFoundError(
-                f"No cookies at {COOKIE_FILE}. Start the cookie server and sync via the extension.")
-        self.cookies = json.loads(COOKIE_FILE.read_text()).get("cookie_json", {})
+        from pinterest.core.client import get_pinterest_cookies
+        self.cookies = get_pinterest_cookies()
         self.cache = cache
         self.delay = delay
         self._end_date = None
@@ -58,6 +57,9 @@ class PinterestTrendsAPI:
         # /metrics/. Set store=False to force every series to come off the wire.
         self.store = SeriesStore() if store else None
         self.saved_requests = 0
+        # The shared request cache, replacing bespoke JSON files under CACHE_DIR. Kept in
+        # a pinterest-scoped DB so a cache flush here never touches the Etsy cache.
+        self._backend = RequestCache(db_path=str(CACHE_DIR / "request_cache.db"))
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
         self.client = httpx.Client(
@@ -90,16 +92,37 @@ class PinterestTrendsAPI:
                              f"parent_product_categories, never as product_category_id(s). "
                              f"The server returns 400, and one bad id fails the whole call.")
 
+    # Prefix -> TTL. Weekly trend series expire in a week (belt-and-suspenders on top of
+    # the date-in-key fix that already closed T-3); demographics and taxonomy move slowly.
+    _TTL_BY_PREFIX = (
+        ("metrics_", TTL_TREND_SERIES), ("related_", TTL_TREND_SERIES),
+        ("prefix_", TTL_TREND_SERIES), ("trends_", TTL_TREND_SERIES),
+        ("cat_metrics_", TTL_TREND_SERIES), ("top_categories_", TTL_TREND_SERIES),
+        ("demographics_", TTL_TAXONOMY), ("cat_demographics_", TTL_TAXONOMY),
+        ("product_categories", TTL_TAXONOMY), ("top_products_", TTL_TAXONOMY),
+        ("featured_", TTL_TAXONOMY), ("editorial_", TTL_TAXONOMY),
+        ("moments_", TTL_TAXONOMY),
+    )
+
+    def _ttl_for(self, key):
+        for prefix, ttl in self._TTL_BY_PREFIX:
+            if key.startswith(prefix):
+                return ttl
+        return TTL_TREND_SERIES   # unknown -> the conservative weekly default
+
     def _cached(self, key):
-        path = CACHE_DIR / f"{key}.json"
-        if self.cache and path.exists():
+        # self.cache stays the on/off flag callers pass; the backend does the storage.
+        # Migrated off bespoke never-expiring JSON files onto the shared request cache,
+        # so these entries expire and finally feed the runlog cache_hits/misses counters.
+        if not self.cache:
+            return None
+        data = self._backend.get(key, self._ttl_for(key))
+        if data is not None:
             print(f"  [+] cache hit: {key}")
-            return json.loads(path.read_text(encoding="utf-8"))
-        return None
+        return data
 
     def _store(self, key, data):
-        (CACHE_DIR / f"{key}.json").write_text(json.dumps(data), encoding="utf-8")
-        return data
+        return self._backend.put(key, data, source="pinterest")
 
     def _get(self, path, **params):
         time.sleep(self.delay)
@@ -268,7 +291,7 @@ class PinterestTrendsAPI:
         """Co-searched terms — topically similar, need not share a word. Returns ~5 rows,
         so this refines a corpus rather than growing one."""
         end_date = end_date or self.latest_available_date()
-        key = f"related_{_slug(country)}_{_slug(term)}"
+        key = f"related_{_slug(country)}_{_slug(term)}_{_slug(end_date)}"
         data = self._cached(key)
         if data is None:
             data = self._get("/related_terms/", requestTerm=term, country=country,
@@ -284,7 +307,7 @@ class PinterestTrendsAPI:
     def prefix_match(self, query, country="US", end_date=None):
         """Autocomplete — terms that START with the query, each with 52 weeks of history."""
         end_date = end_date or self.latest_available_date()
-        key = f"prefix_{_slug(country)}_{_slug(query)}"
+        key = f"prefix_{_slug(country)}_{_slug(query)}_{_slug(end_date)}"
         data = self._cached(key)
         if data is None:
             data = self._get("/prefix_match/", query=query, country=country)

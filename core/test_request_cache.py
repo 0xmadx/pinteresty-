@@ -150,6 +150,20 @@ def main():
     check("an unparseable cached payload is treated as a miss and re-fetched",
           cache.get_or_fetch("bad", 3600, refetch) == {"clean": 1} and refetch.calls == 1)
 
+    # --- split get/put (the Pinterest _cached/_store pattern) ---------------------------------
+    print()
+    clock.t = datetime(2026, 8, 11, tzinfo=timezone.utc)
+    check("get on a missing key is None", cache.get("split:1", 3600) is None)
+    cache.put("split:1", {"v": 1}, source="pin")
+    check("after put, get within TTL returns it", cache.get("split:1", 3600) == {"v": 1})
+    clock.advance(hours=2)
+    check("get past TTL is None even though the row exists",
+          cache.get("split:1", 3600) is None
+          and cache.get_entry("split:1") is not None)
+    check("put returns its data for return-chaining", cache.put("split:2", {"w": 2}) == {"w": 2})
+    check("put(None) stores nothing", cache.put("split:3", None) is None
+          and cache.get_entry("split:3") is None)
+
     # --- stats --------------------------------------------------------------------------------
     print()
     s = cache.stats()

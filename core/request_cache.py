@@ -51,6 +51,7 @@ TTL_SERP = 1 * DAY           # rankings shift, but not hour to hour
 TTL_TREND_SERIES = 7 * DAY   # a WEEKLY number; re-fetching daily buys nothing (fixes T-3)
 TTL_LISTING_TAGS = 30 * DAY  # sellers rarely re-tag
 TTL_METERED = 30 * DAY       # private-API data: expensive, moves slowly
+TTL_TAXONOMY = 30 * DAY      # category trees, demographics splits — structural, slow
 TTL_FOREVER = None           # genuinely immutable (a taxonomy id map, say)
 
 
@@ -101,6 +102,24 @@ class RequestCache:
         # A failed fetch is not cached — freezing a transient error would serve it as
         # truth until the TTL expired. TTL_LIVE (0) is never stored either.
         if data is not None and ttl_seconds != 0:
+            self._store(key, data, source)
+        return data
+
+    def get(self, key, ttl_seconds):
+        """TTL-respecting read: the payload if fresh, else None. For callers that keep
+        the fetch separate (get-then-maybe-store), like the Pinterest client's split
+        `_cached`/`_store` pattern. Counts hits/misses the same as get_or_fetch."""
+        entry = self._live_entry(key, ttl_seconds)
+        if entry is not None:
+            runlog.count(cache_hits=1)
+            return entry.payload
+        runlog.count(cache_misses=1)
+        return None
+
+    def put(self, key, data, source=None):
+        """Store a fetched value. None is not stored (a failed fetch is not cached).
+        Returns data unchanged so callers can `return cache.put(key, fetch())`."""
+        if data is not None:
             self._store(key, data, source)
         return data
 
