@@ -121,17 +121,19 @@ class GridAnalyticsPipeline:
             recent_dates = []
             favorites = 0
             in_cart = 0
-            daily_sales = 0
-            daily_views = 0
-            scarcity = 0
+            # N-02: None, not 0 — an absent badge is unmeasured, not zero demand.
+            # Re-defaulting to 0 here would undo the distinction listing_api now makes.
+            daily_sales = None
+            daily_views = None
+            scarcity = None
             demand_sigs = []
-            
+
             if listing_data:
                 favorites = listing_data.get('favorites', 0)
                 in_cart = listing_data.get('in_cart', 0)
-                daily_sales = listing_data.get('daily_sales', 0)
-                daily_views = listing_data.get('daily_views', 0)
-                scarcity = listing_data.get('scarcity_stock', 0)
+                daily_sales = listing_data.get('daily_sales')
+                daily_views = listing_data.get('daily_views')
+                scarcity = listing_data.get('scarcity_stock')
                 demand_sigs = listing_data.get('demand_signals', [])
                 shop_id = listing_data.get('shop_id')
                 csrf_token = listing_data.get('csrf_token')
@@ -167,7 +169,7 @@ class GridAnalyticsPipeline:
             
             # 💥 LIVE DEMAND OVERRIDE 💥
             shop_data = shop_database.get(shop_name) or {}
-            daily_sales = listing_stats.get("daily_sales", 0)
+            daily_sales = listing_stats.get("daily_sales")   # None = unmeasured (N-02)
             daily_views = listing_stats.get("daily_views", 0)
 
             # B-03: pass the measured daily rate so a badge claiming more than the whole
@@ -227,7 +229,7 @@ class GridAnalyticsPipeline:
                 "in_cart": listing_stats.get("in_cart", 0),
                 "daily_sales": daily_sales,
                 "daily_views": daily_views,
-                "scarcity_stock": listing_stats.get("scarcity_stock", 0),
+                "scarcity_stock": listing_stats.get("scarcity_stock"),
                 "demand_signals": listing_stats.get("demand_signals", [])
             })
             
@@ -275,9 +277,9 @@ class GridAnalyticsPipeline:
                     estimated_views=res["estimated_views"],
                     views_basis=res.get("views_basis"),
                     velocity_score=res["velocity"],
-                    daily_sales=res.get("daily_sales", 0),
+                    daily_sales=res.get("daily_sales"),
                     daily_views=res.get("daily_views", 0),
-                    scarcity_stock=res.get("scarcity_stock", 0),
+                    scarcity_stock=res.get("scarcity_stock"),
                     badge_present=bool(res.get("demand_signals")),
                     demand_signals=res.get("demand_signals", []),
                     total_reviews=res.get("total_reviews"),

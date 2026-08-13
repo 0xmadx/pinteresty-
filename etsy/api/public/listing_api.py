@@ -2,6 +2,8 @@ import re
 import json
 from bs4 import BeautifulSoup
 
+from core.guards import soft_parse
+
 def get_listing_data(listing_id, public_api):
     """
     Fetches the raw listing page to extract:
@@ -72,7 +74,11 @@ def get_listing_data(listing_id, public_api):
     price = 0.0
     ld_matches = re.finditer(r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>', html, re.IGNORECASE | re.DOTALL)
     for m in ld_matches:
-        try:
+        # Was `except Exception: pass`. A listing page carries several LD+JSON blocks and
+        # only one is the Product, so failing on the others is normal — but a change to
+        # the Product block used to look identical to those benign misses, leaving price
+        # and review count at 0 with nothing said.
+        with soft_parse("listing.ld_json", listing_id=listing_id):
             data = json.loads(m.group(1).strip())
             if isinstance(data, list):
                 for item in data:
@@ -82,21 +88,30 @@ def get_listing_data(listing_id, public_api):
                             exact_review_count = int(rating['reviewCount'])
                         if 'ratingValue' in rating:
                             rating_value = float(rating['ratingValue'])
-                            
+
                         offers = item.get('offers', {})
                         if 'lowPrice' in offers:
                             price = float(offers['lowPrice'])
                         elif 'price' in offers:
                             price = float(offers['price'])
-        except Exception as e:
-            pass
-            
+
+
     # 5. Extract Live Demand Signals (Urgency Badges) & Parse Integers
+    #
+    # N-02: these start as None, not 0. A badge renders only above a platform
+    # threshold, so its ABSENCE means "we cannot see this listing's daily sales" —
+    # not "this listing sold nothing today". Defaulting to 0 made those two
+    # indistinguishable, and downstream `daily_sales > 0` checks then took the
+    # not-measured case down the same branch as a genuine zero, which is the
+    # measured-vs-derived collapse this codebase keeps having to undo.
+    #
+    # Callers that need a number for arithmetic should coalesce explicitly at the
+    # point of use, where the choice is visible.
     demand_signals = []
-    daily_sales = 0
-    daily_views = 0
-    scarcity_stock = 0
-    
+    daily_sales = None
+    daily_views = None
+    scarcity_stock = None
+
     soup = BeautifulSoup(html, 'html.parser')
     for elem in soup.find_all(['span', 'div', 'p']):
         text = elem.get_text(strip=True).replace('\n', ' ')

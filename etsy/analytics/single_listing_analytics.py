@@ -57,9 +57,11 @@ class SingleListingPipeline:
         csrf = listing_data.get('csrf_token')
         demand_signals = listing_data.get('demand_signals', [])
         
-        daily_sales = listing_data.get('daily_sales', 0)
-        daily_views = listing_data.get('daily_views', 0)
-        scarcity_stock = listing_data.get('scarcity_stock', 0)
+        # N-02: None means the badge was absent, i.e. unmeasured — NOT zero demand.
+        # Defaulting to 0 put "we couldn't see it" and "nothing sold" on the same path.
+        daily_sales = listing_data.get('daily_sales')
+        daily_views = listing_data.get('daily_views')
+        scarcity_stock = listing_data.get('scarcity_stock')
         
         print(f"[+] Found Shop: {shop_name}")
         print(f"[+] Listing Price: ${price:.2f}")
@@ -71,9 +73,9 @@ class SingleListingPipeline:
             print("\n[!] LIVE DEMAND SIGNALS DETECTED:")
             for sig in demand_signals:
                 print(f"    -> 🔥 {sig}")
-            if daily_sales > 0: print(f"    [Parsed] Daily Sales Velocity: {daily_sales}")
-            if daily_views > 0: print(f"    [Parsed] Daily Views Velocity: {daily_views}")
-            if scarcity_stock > 0: print(f"    [Parsed] Scarcity Stock Left: {scarcity_stock}")
+            if daily_sales: print(f"    [Parsed] Daily Sales Velocity: {daily_sales}")
+            if daily_views: print(f"    [Parsed] Daily Views Velocity: {daily_views}")
+            if scarcity_stock: print(f"    [Parsed] Scarcity Stock Left: {scarcity_stock}")
         
         # 2. Scrape Shop Data for Ratio Estimator
         print(f"\n[PHASE 2] Scraping Shop Data...")
