@@ -1,6 +1,7 @@
 import json
 import os
-from etsy.api.private.api import EtsyPrivateAPI
+from etsy.api.private.api import EtsyPrivateAPI, parse_term_summaries
+from core.runlog import logged_stage
 
 class PrivateComparisonPipeline:
     def __init__(self, keywords, days=30):
@@ -11,23 +12,25 @@ class PrivateComparisonPipeline:
         self.days = days
         self.api = EtsyPrivateAPI()
 
+    @logged_stage("private_comparison")
     def run(self):
         print(f"\n[PRIVATE COMPARISON] Initializing Zero-Quota limit bypass for: {self.keywords}")
         
         # 1. Zero-Quota Extraction (via chart-series-data)
         chart_data = self.api.get_chart_series(self.keywords, days=self.days)
-        if not chart_data or "termSummaries" not in chart_data:
+        # snake_case: the API returns term_summaries, not termSummaries. Reading the
+        # camelCase key made this bail out on every run.
+        summaries = parse_term_summaries(chart_data)
+        if not summaries:
             print("[-] Failed to extract comparison data.")
             return
-            
-        summaries = chart_data["termSummaries"]
         
         # 2. Mathematical Comparison
         results = []
         for s in summaries:
-            term = s.get("searchTerm", "")
-            vol = s.get("searchVolume", 0)
-            listings = s.get("avgTotalListings", 0)
+            term = s["keyword"]
+            vol = s["volume"] or 0
+            listings = s["supply"] or 0
             
             # Demand vs Supply Ratio
             ratio = round(vol / listings, 4) if listings > 0 else 0

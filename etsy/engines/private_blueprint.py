@@ -1,6 +1,6 @@
 import json
 import os
-from etsy.api.private.api import EtsyPrivateAPI
+from etsy.api.private.api import EtsyPrivateAPI, parse_results_data
 from etsy.analytics.derivations import parse_price
 from core.database import MarketDatabase
 from core.runlog import logged_stage
@@ -24,40 +24,35 @@ class PrivateBlueprintPipeline:
             print(f"[-] Failed to extract blueprint data for '{self.keyword}'")
             return
             
-        stats = data.get("stats", {})
-        prices = data.get("competitivePriceData", {}).get("searchTermMedianPrice", {})
-        competitors = data.get("competitiveResearchListingCards", [])
-        
+        # parse_results_data reads the API's real snake_case fields. Every metric below
+        # was previously None: the code asked for searchVolume / avgTotalListings /
+        # queryCvr / competitivePriceData, while Etsy returns search_volume /
+        # avg_total_listings / query_cvr / competitive_price_data.
+        parsed = parse_results_data(data)
+        competitors = parsed["listings"]
+
         # 2. Extract Key Metrics
-        vol = stats.get("searchVolume", 0)
-        listings = stats.get("avgTotalListings", 0)
-        cvr_bucket = stats.get("cvr")
-        cvr_raw = stats.get("queryCvr")
+        vol = parsed["volume"] or 0
+        listings = parsed["supply"] or 0
+        cvr_bucket = parsed["cvr_bucket"]
+        cvr_raw = parsed["cvr"]
+
+        low_price = parsed["price_low"] or "Unknown"
+        high_price = parsed["price_high"] or "Unknown"
         
-        low_price = prices.get("medianPriceLow", "Unknown")
-        high_price = prices.get("medianPriceHigh", "Unknown")
-        
-        # 3. Format Competitors
-        top_competitors = []
-        
-        # Safely handle if competitors is a dictionary instead of a list
-        if isinstance(competitors, dict):
-            competitors = competitors.get("listingCards", [])
-            
-        if competitors and isinstance(competitors, list):
-            for c in competitors[:10]: # Top 10
-                # Extract formatted price if it's a dict
-                raw_price = c.get("price", "")
-                price_str = raw_price.get("formattedPrice", "") if isinstance(raw_price, dict) else raw_price
-                
-                top_competitors.append({
-                    "title": c.get("title", ""),
-                    "price": price_str,
-                    "shop": c.get("shopName", ""),
-                    "rating": c.get("rating", 0),
-                    "reviews": c.get("numberOfReviews", 0),
-                    "url": c.get("listingUrl", "")
-                })
+        # 3. Format Competitors — already normalised by parse_results_data, which
+        # unwraps the listing_cards container, converts the string review counts to
+        # int, and pulls formatted_price out of the nested price object.
+        top_competitors = [{
+            "title": c["title"],
+            "price": c["price_text"],
+            "price_value": c["price"],
+            "shop": c["shop_name"],
+            "rating": c["rating"],
+            "reviews": c["review_count"],
+            "is_star_seller": c["is_star_seller"],
+            "url": c["url"],
+        } for c in competitors[:10]]
             
         # 4. Generate Blueprint Report
         blueprint = {

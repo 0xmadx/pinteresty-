@@ -5,7 +5,7 @@ from typing import List, Dict
 import statistics
 from datetime import datetime, timezone
 
-from etsy.api.private.api import EtsyPrivateAPI
+from etsy.api.private.api import EtsyPrivateAPI, edge_term, parse_results_data
 from etsy.api.public.api import EtsyPublicAPI
 from etsy.analytics.tag_mining import mine_consensus
 
@@ -26,22 +26,23 @@ class ListingGenerator:
             print("[-] Failed to fetch master payload.")
             return None
             
-        stats = data.get("stats", {})
-        listings = data.get("competitiveResearchListingCards", {}).get("listingCards", [])[:10]
-        
+        # parse_results_data reads the real snake_case fields and normalises the cards
+        # (string review counts -> int, nested price -> float). Reading the camelCase
+        # spelling returned zero listings and a volume of 0 on every run.
+        parsed = parse_results_data(data)
+        listings = parsed["listings"][:10]
+
         # 1. Supply and Demand
-        volume = stats.get("searchVolume", 0)
-        supply = stats.get("avgTotalListings", 0)
-        
+        volume = parsed["volume"] or 0
+        supply = parsed["supply"] or 0
+
         # 2. SERP Strength (Median Reviews of top 10)
         reviews = []
         exact_matches = 0
-        
+
         for item in listings:
-            rev = item.get("numberOfReviews", "0")
-            if isinstance(rev, str):
-                rev = int(rev.replace(',', '').replace('.', ''))
-            reviews.append(rev)
+            rev = item.get("review_count")
+            reviews.append(rev if rev is not None else 0)
             
             # 3. Gap Detection (Exact phrase match in title)
             title = item.get("title", "").lower()
@@ -79,11 +80,11 @@ class ListingGenerator:
         variants = []
         for r in results:
             # We want terms that are different from the seed but relevant
-            term = r.get("searchTerm", "").lower()
+            term = (edge_term(r) or "").lower()
             if term != seed.lower():
                 variants.append({
                     "term": term,
-                    "volume": r.get("searchVolume", 0)
+                    "volume": r.get("search_volume", r.get("searchVolume", 0))
                 })
                 
         # Sort by volume descending

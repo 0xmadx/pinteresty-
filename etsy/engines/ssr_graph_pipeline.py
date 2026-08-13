@@ -1,14 +1,13 @@
-import os
-import sys
 import json
 import time
 import argparse
 from typing import List, Dict
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 from core.graph_db import GraphDB
-from etsy.api.private.api import EtsyPrivateAPI
+from etsy.api.private.api import EtsyPrivateAPI, edge_term, parse_results_data
+from etsy.analytics.derivations import parse_price
+from core.runlog import logged_stage
 
 def extract_node_data(api: EtsyPrivateAPI, term: str) -> dict:
     """Uses the API wrapper to get the master payload for a single node."""
@@ -16,19 +15,23 @@ def extract_node_data(api: EtsyPrivateAPI, term: str) -> dict:
     if not data:
         return None
         
+    # One parser for the whole response — it reads the API's real snake_case names.
+    # This block previously hedged between spellings for some fields and not others,
+    # so volume, supply, prices and listings all came back empty.
     stats = data.get("stats", {})
+    p = parse_results_data(data)
     return {
         "term_id": str(stats.get("search_term_hash", stats.get("searchTermHash", ""))),
         "term": term,
-        "volume": stats.get("searchVolume", 0),
-        "supply": stats.get("avgTotalListings", 0),
-        "cvr_raw": stats.get("queryCvr", stats.get("query_cvr", 0)),
-        "wow_value": data.get("wow_data", data.get("wowData", {})).get("value", 0.0) if data.get("wow_data") or data.get("wowData") else 0.0,
-        "wow_trend": data.get("wow_data", data.get("wowData", {})).get("trendDirection", "") if data.get("wow_data") or data.get("wowData") else "",
-        "price_low": data.get("competitivePriceData", {}).get("searchTermMedianPrice", {}).get("medianPriceBarLowFloat"),
-        "price_high": data.get("competitivePriceData", {}).get("searchTermMedianPrice", {}).get("medianPriceBarHighFloat"),
-        "listings": data.get("competitiveResearchListingCards", []),
-        "series": data.get("dailyStats", {}).get("stats", [])
+        "volume": p["volume"] or 0,
+        "supply": p["supply"] or 0,
+        "cvr_raw": p["cvr"] or 0,
+        "wow_value": p["wow_change"] or 0.0,
+        "wow_trend": p["wow_direction"] or "",
+        "price_low": parse_price(p["price_low"]),
+        "price_high": parse_price(p["price_high"]),
+        "listings": p["listings"],
+        "series": (data.get("daily_stats") or data.get("dailyStats") or {}).get("stats", []),
     }
 
 def extract_edges(api: EtsyPrivateAPI, term: str) -> List[Dict]:
@@ -40,14 +43,17 @@ def extract_edges(api: EtsyPrivateAPI, term: str) -> List[Dict]:
         
     edges = []
     for r in results:
+        # edge_term accepts whichever key the enqueue response uses (query vs
+        # searchTerm) — reading one spelling produced an empty term on every edge.
         edges.append({
-            "term": r.get("searchTerm", ""),
-            "volume": r.get("searchVolume", 0),
-            "supply": r.get("avgTotalListings", 0),
+            "term": edge_term(r) or "",
+            "volume": r.get("search_volume", r.get("searchVolume", 0)),
+            "supply": r.get("avg_total_listings", r.get("avgTotalListings", 0)),
             "cvr_bucket": r.get("cvr", 0)
         })
     return edges
 
+@logged_stage("ssr_graph_bfs")
 def run_bfs(seed_term: str, max_depth: int, max_nodes: int):
     print("\nInitializing Recursive Pipeline...")
     api = EtsyPrivateAPI()

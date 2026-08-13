@@ -1,9 +1,6 @@
-import sys
-import os
 import re
 import json
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from etsy.api.public.api import EtsyPublicAPI
 
 def get_recent_reviews(listing_id, public_api=None, shop_id=None, csrf_token=None):
@@ -182,35 +179,51 @@ def get_review_details(listing_id, public_api=None, shop_id=None, csrf_token=Non
     html_output = ""
     if "output" in data and "deep_dive_reviews" in data["output"]:
         html_output = data["output"]["deep_dive_reviews"]
-        
+
+    return parse_reviews_html(html_output)
+
+
+def parse_reviews_html(html_output):
+    """Pure HTML → review dicts. Split out of get_review_details so the parse — the part
+    that silently biased the flaw analysis — is testable without a network."""
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(html_output, 'html.parser')
-    
+
     reviews = []
     # Since Etsy HTML classes change often, we'll try to find review containers or just extract paragraphs.
     # Usually reviews are in div or li with some review-item class.
     # We will just do a rough extraction of paragraphs that are long enough to be reviews.
     paragraphs = soup.find_all('p')
-    
+
+    star_pattern = re.compile(r'([1-5])\s+out of 5 stars', re.IGNORECASE)
+
     for p in paragraphs:
         text = p.get_text(strip=True)
         if len(text) > 20 and "out of 5 stars" not in text.lower():
-            # Estimate rating based on surrounding text, default to 5
-            rating = 5
-            parent = p.parent
-            if parent:
-                parent_text = parent.get_text(strip=True).lower()
-                if "1 out of 5 stars" in parent_text: rating = 1
-                elif "2 out of 5 stars" in parent_text: rating = 2
-                elif "3 out of 5 stars" in parent_text: rating = 3
-                elif "4 out of 5 stars" in parent_text: rating = 4
-                
+            # A rating is MEASURED or None — never fabricated. The old code defaulted to 5
+            # when the star text wasn't found, so a failed parse rated every review 5 and
+            # the flaw analysis silently found nothing critical (invariant 1: a plausible
+            # wrong number, not an error). Walk up a few ancestors; the star text usually
+            # sits in a sibling node (aria/screen-reader span), so an ancestor's subtree
+            # text will contain it if it exists at all.
+            rating = None
+            node = p
+            for _ in range(3):
+                node = node.parent
+                if node is None:
+                    break
+                m = star_pattern.search(node.get_text(" ", strip=True))
+                if m:
+                    rating = int(m.group(1))
+                    break
+
             reviews.append({
                 "text": text,
-                "rating": rating,
+                "rating": rating,                                   # None = not parsed
+                "rating_basis": "measured" if rating else "unparsed",
                 "date": "Recent"
             })
-            
+
     return reviews
 
 if __name__ == "__main__":

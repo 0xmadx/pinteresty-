@@ -29,7 +29,7 @@ from core import runlog
 from core.database import MarketDatabase
 from core.runlog import logged_stage
 from etsy.analytics.scoring import PoolTooSmall, can_discriminate, score_pool
-from etsy.api.private.api import EtsyPrivateAPI, edge_term
+from etsy.api.private.api import EtsyPrivateAPI, edge_term, parse_term_summaries
 
 # Etsy returns CVR as an ordinal bucket, not a rate. 2 is "Typical"; below that the
 # keyword converts poorly regardless of how much volume it has.
@@ -68,12 +68,16 @@ class PrivateScoringPipeline:
         for i in range(0, len(terms), 3):
             chunk = terms[i:i + 3]
             chart = self.api.get_chart_series(chunk, days=365)
-            for s in (chart or {}).get("termSummaries", []) or []:
+            # Real field names are snake_case (term_summaries / search_volume /
+            # avg_total_listings); reading the camelCase spelling returned nothing.
+            for s in parse_term_summaries(chart):
                 measured.append({
-                    "keyword": s.get("searchTerm"),
-                    "volume": s.get("searchVolume"),
-                    "supply": s.get("avgTotalListings"),
-                    "cvr": s.get("cvr"),
+                    "keyword": s["keyword"],
+                    "volume": s["volume"],
+                    "supply": s["supply"],
+                    # chart-series carries no CVR — only results-data does.
+                    "cvr": None,
+                    "wow_change": s["wow_change"],
                 })
 
         # --- Phase 3: gate, then persist ---------------------------------------------

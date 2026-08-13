@@ -2,10 +2,135 @@ import json
 import time
 import urllib.parse
 from core.guards import soft_parse
+from etsy.analytics.derivations import parse_price
 from core.request_cache import (RequestCache, TTL_METERED, TTL_TREND_SERIES)
 from core.session_manager import SessionManager
 from core.endpoints_manager import EndpointManager
 from core.settings import ScraperConfig
+
+def _pick(d, *names, default=None):
+    """First present key out of several spellings."""
+    for n in names:
+        if isinstance(d, dict) and d.get(n) is not None:
+            return d[n]
+    return default
+
+
+def parse_results_data(payload):
+    """Normalise a `results-data` response into a stable shape.
+
+    ⚠️ THE BUG THIS EXISTS TO KILL. Etsy returns **snake_case**; every consumer in
+    this repo was reading **camelCase**, so each got None and wrote nothing:
+
+        API                                  code was reading
+        search_volume                        searchVolume
+        avg_total_listings                   avgTotalListings
+        query_cvr                            cvr
+        competitive_price_data               competitivePriceData
+        competitive_research_listing_cards   competitiveResearchListingCards
+        listing_cards[].number_of_reviews    numberOfReviews
+
+    Verified live 2026-08-12: "mom necklace" returns 12,867 searches, 351,677
+    listings, CVR 0.000256, $17.10-$20.90, 20 competitor cards — all of which the
+    pipelines were reading as empty. That, not the quota and not the broken import,
+    is why every table had 0 rows.
+
+    Both spellings are accepted so a future API change in either direction cannot
+    silently zero the system again.
+    """
+    payload = payload or {}
+    stats = payload.get("stats") or {}
+    price_block = payload.get("competitive_price_data") or payload.get("competitivePriceData") or {}
+    median = _pick(price_block, "search_term_median_price", "searchTermMedianPrice", default={}) or {}
+    cards_box = (payload.get("competitive_research_listing_cards")
+                 or payload.get("competitiveResearchListingCards") or {})
+    raw_cards = _pick(cards_box, "listing_cards", "listingCards", default=None)
+    if raw_cards is None:
+        raw_cards = cards_box if isinstance(cards_box, list) else []
+    wow = payload.get("wow_data") or {}
+    quota = payload.get("quota_data") or {}
+
+    return {
+        "keyword": _pick(stats, "search_term", "searchTerm"),
+        # query_cvr is the real rate; `cvr` is an ordinal bucket and is often 0.
+        "volume": _pick(stats, "search_volume", "searchVolume"),
+        "supply": _pick(stats, "avg_total_listings", "avgTotalListings"),
+        "cvr": _pick(stats, "query_cvr", "queryCvr"),
+        "cvr_bucket": stats.get("cvr"),
+        "price_low": _pick(median, "median_price_low", "medianPriceLow"),
+        "price_high": _pick(median, "median_price_high", "medianPriceHigh"),
+        # Etsy's OWN week-over-week momentum — free, and previously unread.
+        "wow_change": wow.get("value"),
+        "wow_direction": wow.get("trend_direction"),
+        "listings": [normalise_listing_card(c) for c in (raw_cards or [])],
+        # Reported by the API itself. Observed to stay at 15/15 across repeated
+        # distinct calls, i.e. this endpoint does not consume it (D-14).
+        "quota_total": quota.get("total_quota"),
+        "quota_remaining": quota.get("remaining_quota"),
+        "quota_reached": payload.get("is_quota_reached"),
+        "similar_terms": payload.get("similar_search_terms"),
+        "market_gap": payload.get("market_gap_recommendations"),
+    }
+
+
+def normalise_listing_card(card):
+    """One competitor listing, in the shape the analytics layer expects.
+
+    `review_count` is the name `survivorship.survivor_bound` reads; the API calls it
+    `number_of_reviews`.
+    """
+    card = card or {}
+
+    # The API sends review counts as STRINGS ("1459") and price as a nested dict.
+    # survivor_bound compares review_count with `> 0`, and the profit model needs a
+    # float — both would have silently mis-handled the raw shapes.
+    raw_reviews = _pick(card, "number_of_reviews", "numberOfReviews")
+    try:
+        reviews = int(str(raw_reviews).replace(",", "")) if raw_reviews is not None else None
+    except (TypeError, ValueError):
+        reviews = None   # unreadable is unknown, never 0 (N-02)
+
+    price_block = card.get("price")
+    if isinstance(price_block, dict):
+        price_text = _pick(price_block, "formatted_price", "formattedPrice")
+        is_discounted = price_block.get("is_discounted")
+    else:
+        price_text, is_discounted = price_block, None
+
+    return {
+        "listing_id": _pick(card, "id", "listing_id", "listingId"),
+        "title": card.get("title"),
+        "review_count": reviews,
+        "rating": card.get("rating"),
+        "shop_name": _pick(card, "shop_name", "shopName"),
+        "price_text": price_text,
+        "price": parse_price(price_text),
+        "is_discounted": is_discounted,
+        "url": _pick(card, "listing_url", "listingUrl"),
+        "is_star_seller": _pick(card, "is_star_seller", "isStarSeller"),
+        "badge_text": _pick(card, "badge_text", "badgeText"),
+    }
+
+
+def parse_term_summaries(chart):
+    """Rows out of a `chart-series-data` response.
+
+    Same defect: the API returns `term_summaries` with `search_volume` /
+    `avg_total_listings`; the callers read `termSummaries` / `searchVolume`, so the
+    batch measurement step produced an empty list on every run.
+    """
+    chart = chart or {}
+    rows = _pick(chart, "term_summaries", "termSummaries", default=[]) or []
+    out = []
+    for s in rows:
+        out.append({
+            "keyword": _pick(s, "search_term", "searchTerm"),
+            "volume": _pick(s, "search_volume", "searchVolume"),
+            "supply": _pick(s, "avg_total_listings", "avgTotalListings"),
+            "wow_change": (s.get("wow_data") or {}).get("value"),
+        })
+    return out
+
 
 def edge_term(edge):
     """The keyword out of one `get_similar_keywords` edge, whichever key it uses.

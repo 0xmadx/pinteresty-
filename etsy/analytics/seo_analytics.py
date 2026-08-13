@@ -1,12 +1,11 @@
 import os
-import sys
 import json
 import re
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from etsy.api.public.api import EtsyPublicAPI
 from etsy.api.public.listing_api import get_listing_data
+from core.runlog import logged_stage
 
 class SEOAnalyticsPipeline:
     def __init__(self, listing_id):
@@ -16,6 +15,7 @@ class SEOAnalyticsPipeline:
         self.seo_cache = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "seo", "cache")
         os.makedirs(self.seo_cache, exist_ok=True)
         
+    @logged_stage("seo_analytics")
     def run(self):
         print(f"\n==========================================================")
         print(f"        STARTING SEO ANALYTICS PIPELINE: {self.listing_id}")

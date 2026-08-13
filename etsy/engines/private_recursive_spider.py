@@ -2,7 +2,7 @@ import json
 import os
 import time
 from collections import deque
-from etsy.api.private.api import EtsyPrivateAPI, edge_term
+from etsy.api.private.api import EtsyPrivateAPI, edge_term, parse_term_summaries
 from core.runlog import logged_stage
 
 class PrivateRecursiveSpider:
@@ -67,11 +67,11 @@ class PrivateRecursiveSpider:
             time.sleep(0.5)
             
             chart = self.api.get_chart_series(chunk, days=365)
-            if chart and "termSummaries" in chart:
-                for s in chart["termSummaries"]:
-                    term = s.get("searchTerm")
-                    vol = s.get("searchVolume", 0)
-                    listings = s.get("avgTotalListings", 0)
+            for s in parse_term_summaries(chart):
+                    # snake_case fields; the camelCase reads returned nothing.
+                    term = s["keyword"]
+                    vol = s["volume"] or 0
+                    listings = s["supply"] or 0
                     
                     ratio = round(vol / listings, 4) if listings > 0 else 0
                     

@@ -1,14 +1,12 @@
-import sys
-import os
 import re
 import argparse
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from etsy.analytics.single_listing_analytics import SingleListingPipeline
 from etsy.analytics.sentiment_analytics import SentimentAnalyticsPipeline
 from etsy.analytics.seo_analytics import SEOAnalyticsPipeline
 from core.database import MarketDatabase
+from core.runlog import logged_stage
 
 class MasterListingAnalyzer:
     def __init__(self, url):
@@ -26,6 +24,7 @@ class MasterListingAnalyzer:
             return url
         return None
         
+    @logged_stage("master_listing_analyzer")
     def run(self):
         print("\n=========================================================================================")
         print("                        ETSY URL X-RAY ANALYZER")

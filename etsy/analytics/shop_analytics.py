@@ -1,11 +1,10 @@
 import os
-import sys
 import json
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from etsy.api.public.api import EtsyPublicAPI
 from core.shop_scraper import ShopScraper
+from core.runlog import logged_stage
 
 class ShopAnalyticsPipeline:
     def __init__(self, shop_name):
@@ -16,6 +15,7 @@ class ShopAnalyticsPipeline:
         self.seo_cache = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "seo", "cache")
         os.makedirs(self.seo_cache, exist_ok=True)
         
+    @logged_stage("shop_analytics")
     def run(self):
         print(f"\n==========================================================")
         print(f"       STARTING SHOP ANALYTICS PIPELINE: {self.shop_name}")

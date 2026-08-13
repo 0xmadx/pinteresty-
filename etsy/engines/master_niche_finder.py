@@ -2,7 +2,8 @@ import json
 import os
 import time
 from collections import deque
-from etsy.api.private.api import EtsyPrivateAPI, edge_term
+from etsy.api.private.api import (EtsyPrivateAPI, edge_term, parse_results_data,
+                                  parse_term_summaries)
 from etsy.analytics.derivations import parse_price
 from etsy.analytics.profit import DIGITAL, verdict
 from etsy.analytics.scoring import (PoolTooSmall, can_discriminate, score_pool,
@@ -124,11 +125,13 @@ class MasterNicheFinder:
             time.sleep(0.5) # Be polite
             
             chart = self.api.get_chart_series(chunk, days=365)
-            if chart and "termSummaries" in chart:
-                for s in chart["termSummaries"]:
-                    term = s.get("searchTerm")
-                    vol = s.get("searchVolume", 0)
-                    listings = s.get("avgTotalListings", 0)
+            # parse_term_summaries handles the real snake_case field names. Reading
+            # chart["termSummaries"] returned nothing on every run — the batch
+            # measurement step has never produced a row.
+            for s in parse_term_summaries(chart):
+                    term = s["keyword"]
+                    vol = s["volume"] or 0
+                    listings = s["supply"] or 0
                     
                     # Base Mathematical Scoring
                     opportunity_score = round((vol / listings) * 1000, 2) if listings > 0 else 0
@@ -215,36 +218,35 @@ class MasterNicheFinder:
             print(f"      -> Extracting Absolute Truth for '{kw}'...")
             time.sleep(1)
             
-            data = self.api.get_results_data(kw)
-            if data and "stats" in data:
-                cvr = data["stats"].get("cvr", 0)
-                prices = data.get("competitivePriceData", {}).get("searchTermMedianPrice", {})
-                low_price = prices.get("medianPriceLow", "Unknown")
-                high_price = prices.get("medianPriceHigh", "Unknown")
-                
-                niche["cvr_bucket"] = cvr
+            data = parse_results_data(self.api.get_results_data(kw))
+            if data.get("keyword") or data.get("volume") is not None:
+                # query_cvr is the real conversion RATE; stats["cvr"] is an ordinal
+                # bucket that is frequently 0 and was being read as if it were the rate.
+                niche["cvr_bucket"] = data["cvr"]
+                low_price, high_price = data["price_low"], data["price_high"]
                 niche["pricing_band"] = f"{low_price} to {high_price}"
                 niche["median_price_low"] = parse_price(low_price)
                 niche["median_price_high"] = parse_price(high_price)
+                # Etsy's own week-over-week momentum, free in this response and never
+                # read before — a second momentum source alongside Pinterest.
+                niche["etsy_wow_change"] = data["wow_change"]
+                # Correct the batch figures with the deep dive's, which are per-keyword
+                # rather than from a 3-term chart call.
+                if data["volume"] is not None:
+                    niche["volume"] = data["volume"]
+                if data["supply"] is not None:
+                    niche["competition"] = data["supply"]
 
-                # The same call already returned the top listings for this keyword —
-                # title, price, shop, rating and numberOfReviews each. This step used to
-                # take cvr and prices and DISCARD the cards, after which the arbitrage
-                # engine made ~24 public requests per niche to rebuild a thinner version
-                # of them. numberOfReviews is exactly what the survivor bound needs, so
-                # B-01 is now answerable from data already paid for, with no extra call.
-                cards = data.get("competitiveResearchListingCards") or []
-                if isinstance(cards, dict):
-                    cards = cards.get("listingCards", [])
+                # The same call already returned the top 20 listings — title, price,
+                # shop, rating and review count each. This step used to discard them,
+                # after which the arbitrage engine made ~24 public requests per niche to
+                # rebuild a thinner version. review_count is exactly what the survivor
+                # bound needs, so B-01 is answerable from data already paid for.
+                cards = data["listings"]
                 niche["competitor_listings"] = cards
 
                 if cards:
-                    bound = survivor_bound(
-                        [{"listing_id": c.get("listingId") or c.get("listingUrl"),
-                          # Private field name; survivorship speaks review_count.
-                          "review_count": c.get("numberOfReviews")}
-                         for c in cards],
-                        total_supply=niche.get("competition"))
+                    bound = survivor_bound(cards, total_supply=niche.get("competition"))
                     niche["survivorship"] = {
                         "verdict": bound.verdict,
                         "reviewed_share": bound.reviewed_share,
@@ -256,7 +258,7 @@ class MasterNicheFinder:
 
                 final_winners.append(niche)
 
-                print(f"         [!] Verified: CVR={cvr} | Buyer Pays: {niche['pricing_band']}"
+                print(f"         [!] Verified: CVR={niche['cvr_bucket']} | Buyer Pays: {niche['pricing_band']}"
                       f" | {len(cards)} competitor listing(s)")
                 if niche.get("survivorship"):
                     print(f"             {describe(bound)}")
