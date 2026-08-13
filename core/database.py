@@ -439,6 +439,29 @@ class MarketDatabase:
                     pass
             return out
 
+    def find_trend(self, keyword, country="US"):
+        """Pinterest trend data for an ETSY keyword, joining across the wording gap.
+
+        `get_trend` is an exact match, so the bridge writing "Mom Necklaces" and the
+        engine asking for "mom necklace" miss each other and the candidate scores with
+        no momentum — a free dimension lost silently. This normalises both sides
+        (overviews.md §5) and matches on the content-word set.
+
+        Returns None rather than a near-match: importing "cat collar"'s momentum for
+        "dog collar" would be a wrong number wearing the right label.
+        """
+        exact = self.get_trend(keyword, country)
+        if exact:
+            return exact
+
+        from etsy.analytics.term_join import best_match
+        with self.get_connection() as conn:
+            names = [r[0] for r in conn.execute(
+                'SELECT DISTINCT trend_name FROM trends_latest WHERE country = ?',
+                (country,))]
+        matched = best_match(keyword, names)
+        return self.get_trend(matched, country) if matched else None
+
     def get_trend_history(self, trend_name, country="US"):
         """Every observation for a trend, oldest first — the reason for append-only."""
         with self.get_connection() as conn:

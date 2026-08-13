@@ -9,6 +9,7 @@ from etsy.analytics.scoring import (PoolTooSmall, can_discriminate, score_pool,
                                     shortlist)
 from etsy.analytics.survivorship import describe, survivor_bound
 from core import runlog
+from core.database import MarketDatabase
 from core.runlog import logged_stage
 
 # What the operator would actually make if they entered this niche. Profit cannot be
@@ -76,6 +77,9 @@ class MasterNicheFinder:
         self.edges_per_node = edges_per_node
         self.profile = dict(product_profile or DEFAULT_PROFILE)
         self.api = EtsyPrivateAPI()
+        # Read-only here: the Pinterest bridge writes trend_observations, this joins
+        # against it for momentum. Nothing in this engine writes trends.
+        self.db = MarketDatabase()
 
     @logged_stage("niche_finder")
     def run(self):
@@ -257,6 +261,42 @@ class MasterNicheFinder:
                 if niche.get("survivorship"):
                     print(f"             {describe(bound)}")
 
+        # STEP 4b: PINTEREST SIGNALS (the join)
+        #
+        # overviews.md §6 specifies the scoring model and where each variable comes
+        # from. Momentum is Pinterest's mom_change, and it is FREE — but nothing ever
+        # read it into the Etsy scorer, which is the deeper cause of N-01: the pool
+        # collapsed to 0.500 because it had only demand and supply, two rank-correlated
+        # dimensions, while a third independent one sat in the database unused.
+        #
+        # find_trend joins across the wording gap ("Mom Necklaces" vs "mom necklace");
+        # a miss leaves momentum as None, which score_pool excludes from the weighting
+        # rather than scoring as zero.
+        matched = 0
+        for niche in final_winners:
+            trend = self.db.find_trend(niche["keyword"])
+            if not trend:
+                continue
+            niche["pinterest"] = {
+                "momentum": trend.get("growth_mom"),
+                "velocity": trend.get("velocity"),
+                "dominant_color": trend.get("dominant_color"),
+                "demographic": trend.get("demographic"),
+                "takeoff": trend.get("takeoff_timestamp"),
+                "list_by": trend.get("list_by"),
+                "matched_as": trend.get("trend_name"),
+                "collected_at": trend.get("collected_at"),
+            }
+            matched += 1
+            print(f"      🔗 '{niche['keyword']}' ← Pinterest '{trend.get('trend_name')}': "
+                  f"momentum={trend.get('growth_mom')}"
+                  + (f", list by {trend['list_by']}" if trend.get("list_by") else ""))
+
+        if final_winners:
+            print(f"      [+] {matched}/{len(final_winners)} joined to Pinterest data."
+                  + ("" if matched else "  Run the Pinterest bridge to populate momentum "
+                                        "— without it the ranking has one fewer dimension."))
+
         # STEP 5: PROFIT GATE (D-01)
         #
         # Everything above ranks on demand and supply — how many people want it and how
@@ -330,14 +370,22 @@ class MasterNicheFinder:
         # rather than assumed: four dimensions CAN separate a pool, but this particular
         # pool still might not, and finding that out afterwards is too late.
         if len(passed) >= 2:
+            # Momentum is Pinterest's free contribution and the dimension that breaks
+            # the demand/supply correlation — it is None when the join missed, and
+            # score_pool excludes a None from the weighting instead of scoring it zero.
             final_pool = [{
                 "key": n["keyword"],
                 "demand": n["volume"],
                 "supply": n["competition"],
                 "intent": n.get("cvr_bucket"),
                 "profit": n["profit_verdict"]["profit_per_unit"],
+                "momentum": (n.get("pinterest") or {}).get("momentum"),
+                # B-10: the score inherits the age of its oldest input. The Pinterest
+                # reading can be weeks older than the Etsy call made moments ago.
+                "freshness": {"momentum": (n.get("pinterest") or {}).get("collected_at")},
             } for n in passed]
-            final_weights = {"demand": 0.2, "supply": 0.15, "intent": 0.25, "profit": 0.4}
+            final_weights = {"demand": 0.2, "supply": 0.1, "intent": 0.2,
+                             "profit": 0.35, "momentum": 0.15}
             final_verdict = can_discriminate(final_pool, final_weights)
 
             print(f"\n  [6] Ranking the {len(passed)} profitable niche(s)...")
