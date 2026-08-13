@@ -7,6 +7,26 @@ from core.session_manager import SessionManager
 from core.endpoints_manager import EndpointManager
 from core.settings import ScraperConfig
 
+def edge_term(edge):
+    """The keyword out of one `get_similar_keywords` edge, whichever key it uses.
+
+    ⚠️ The producer and the consumers disagreed. `_fetch_similar_keywords` de-duplicates
+    on `r["query"]` and appends the whole object, while `master_niche_finder` and
+    `private_recursive_spider` both read `e["searchTerm"]`. If the response carries only
+    `query`, every consumer gets None, no term is ever added to the frontier, and the
+    crawl silently stops at the seed — which looks identical to "the API returned
+    nothing". Accepting either key removes the guess; callers must use this rather than
+    indexing a key directly.
+    """
+    if not isinstance(edge, dict):
+        return None
+    for key in ("searchTerm", "query", "term", "keyword"):
+        value = edge.get(key)
+        if value:
+            return value
+    return None
+
+
 class EtsyPrivateAPI:
     def __init__(self, cache=None):
         self.config = ScraperConfig()

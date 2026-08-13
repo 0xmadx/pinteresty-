@@ -2,7 +2,8 @@ import json
 import os
 import time
 from collections import deque
-from etsy.api.private.api import EtsyPrivateAPI
+from etsy.api.private.api import EtsyPrivateAPI, edge_term
+from core.runlog import logged_stage
 
 class PrivateRecursiveSpider:
     def __init__(self, seed_keyword, max_depth=2, max_nodes=50):
@@ -19,6 +20,7 @@ class PrivateRecursiveSpider:
         self.graph = {} # Maps keyword -> list of suggested keywords
         self.node_metrics = {} # Maps keyword -> {volume, listings, demand_ratio}
 
+    @logged_stage("private_recursive_spider")
     def run(self):
         print(f"\n[SPIDER] Initializing Recursive Spider for seed: '{self.seed}'")
         print(f"[SPIDER] Max Depth: {self.max_depth} | Max Nodes: {self.max_nodes}")
@@ -44,7 +46,7 @@ class PrivateRecursiveSpider:
                 if edges:
                     extracted_terms = []
                     for e in edges:
-                        term = e.get("searchTerm")
+                        term = edge_term(e)
                         if term:
                             extracted_terms.append(term)
                             if term not in self.visited:

@@ -2,7 +2,7 @@ import json
 import os
 import time
 from collections import deque
-from etsy.api.private.api import EtsyPrivateAPI
+from etsy.api.private.api import EtsyPrivateAPI, edge_term
 from etsy.analytics.derivations import parse_price
 from etsy.analytics.profit import DIGITAL, verdict
 from etsy.analytics.scoring import (PoolTooSmall, can_discriminate, score_pool,
@@ -102,7 +102,7 @@ class MasterNicheFinder:
                                                       iterations=self.edges_per_node)
                 if edges:
                     for e in edges:
-                        term = e.get("searchTerm")
+                        term = edge_term(e)
                         if term and term not in keywords_to_analyze:
                             keywords_to_analyze.add(term)
                             queue.append((term, current_depth + 1))
