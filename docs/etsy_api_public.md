@@ -1,11 +1,11 @@
 # Etsy Public API Layer
 
-This directory contains the scraping clients designed to emulate a standard Google Chrome user browsing the public Etsy website. It is designed to navigate around Etsy's DataDome anti-bot systems by utilizing standard requests, dynamic cookie injection, and HTML parsing.
+This directory contains the scraping clients designed to emulate a standard Google Chrome user browsing the public Etsy website. It is designed to navigate around Etsy's bot systems by utilizing standard requests, dynamic cookie injection, and HTML parsing.
 
 ## 1. `api.py` (The Core Client)
 The central `EtsyPublicAPI` class.
 * **Purpose:** Handles raw HTTP requests to Etsy's public HTML pages (e.g., search grids, shop pages).
-* **Anti-Bot Mechanism:** Automatically loads the `DATADOME_COOKIE` from the root `.env` file (which is constantly updated by the Chrome Extension relay) to bypass blocks.
+* **Mechanism:** Automatically loads the `COOKIE` from the root `.env` file (which is constantly updated by the Chrome Extension relay) to bypass blocks.
 
 ## 2. `listing_api.py` (Listing Data Extractor)
 Scrapes specific Etsy listing pages (`https://www.etsy.com/listing/ID`).

@@ -22,7 +22,9 @@ The goal of this system is to mathematically remove all guesswork from e-commerc
 * **What:** The base operating system of the scraper.
 * **How:** Manages live cookie injection, handles Datadome bypasses, and maintains a local Graph Database (`graph_db.py`) to map out how different niches connect to each other.
 
-### The Automated Anti-Bot Bridge (Chrome Extension)
+### The Automated 
+
+Bridge (Chrome Extension)
 * **Where:** `chrome_extension/background.js` and `core/cookie_server.py`
 * **What:** The ultimate bypass tool for Etsy's DataDome firewall.
 * **How:** A custom Chrome extension running in your browser automatically detects whenever Etsy generates a new `datadome` clearance cookie. It instantly syncs that fresh token via HTTP POST to the local Python FastAPI server (`cookie_server.py`), keeping the scrapers alive infinitely without manual intervention.
@@ -138,9 +140,9 @@ It permanently solves 5 historical data silos:
 
 ---
 
-## 8. The Anti-Bot & Cookie Sync System (Instructions for Claude Code)
+## 8.  Cookie Sync System (Instructions for Claude Code)
 **Where:** `chrome_extension/` and `core/cookie_server.py`  
-**What:** Etsy (DataDome) and Pinterest have extremely strict anti-bot systems. We completely bypass this using a "Browser-to-Backend Relay".
+**What:** Etsy (DataDome) and Pinterest have extremely strict  systems. We completely bypass this using a "Browser-to-Backend Relay".
 
 ### How It Works:
 1. **The Chrome Extension (Keep-Alive System):** A custom Chrome Extension runs in the background of the user's browser. It features an "Auto-Refresh Alarm" that silently reloads active Etsy and Pinterest tabs every 4 minutes. This forces DataDome/Pinterest to constantly issue fresh, human-validated cookies.

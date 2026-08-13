@@ -41,7 +41,7 @@ The "Master" scripts that chain multiple analytical pipelines together.
 Managed by Claude Code, this folder contains the logic for predictive trend analysis.
 * Designed to track demographic and aesthetic trends (dominant colors, fashion waves) and save them to `market_intelligence.db` so you can verify if an Etsy supply gap aligns with a Pinterest demand spike.
 
-## 📂 /chrome_extension (The Keep-Alive Anti-Bot)
+## 📂 /chrome_extension (The Keep-Alive )
 A custom Google Chrome Extension.
 * **`background.js`**: Keeps Etsy and Pinterest tabs open in your browser, automatically refreshing them every 4 minutes.
 * **Purpose**: Forces your browser to naturally generate fresh DataDome and Auth cookies, which are then immediately POSTed to the `cookie_server.py` relay in the `/core` directory.

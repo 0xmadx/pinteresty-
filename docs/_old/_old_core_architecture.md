@@ -1,6 +1,6 @@
 # Core Directory
 
-This directory contains the foundational, shared utilities that power the entire architecture. Rather than executing scraping pipelines themselves, these scripts provide the central database, AI, and Anti-Bot services that the `etsy/` and `pinterest/` engines rely on.
+This directory contains the foundational, shared utilities that power the entire architecture. Rather than executing scraping pipelines themselves, these scripts provide the central database, AI, and Bot services that the `etsy/` and `pinterest/` engines rely on.
 
 ## 1. `database.py` (The Central Intelligence)
 The single source of truth for the entire arbitrage system.
@@ -10,10 +10,10 @@ The single source of truth for the entire arbitrage system.
   * `listings`: Stores exact estimated sales, velocity, and AI-identified flaws.
   * `trends`: Stores the demographic and aesthetic trend data mapped by Claude Code on Pinterest.
 
-## 2. `cookie_server.py` (The Anti-Bot Relay)
-The backbone of our automated cookie-syncing strategy.
+## 2. `cookie_server.py`
+The backbone of our automated cooki)e-syncing strategy.
 * **Purpose:** A local FastAPI server (`localhost:8000`) that constantly listens for incoming POST requests from the custom Chrome Extension.
-* **How It Works:** When the Chrome Extension detects a freshly minted DataDome cookie or Pinterest auth token, it beams it to this server. This script then programmatically updates the `.env` file and `pinterest_cookies.json`, allowing the Python scrapers to completely bypass bot-protection without manual intervention.
+* **How It Works:** When the Chrome Extension detects a freshly minted cookie or Pinterest auth token, it beams it to this server. This script then programmatically updates the `.env` file and `pinterest_cookies.json`, allowing the Python scrapers to completely bypass bot-protection without manual intervention.
 
 ## 3. `llm_client.py` (The DeepSeek Wrapper)
 A dedicated, decoupled client for interacting with AI.

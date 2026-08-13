@@ -218,12 +218,35 @@ independently shippable and leaves the repo runnable — the strangle pattern fr
 | **5** | Rebuild `core/database.py` append-only: `collected_at` in the PK, `*_latest` views for current-state reads, `measured\|derived` + `confidence` columns | ~1 day | invariants 1 and 2. **Do before data accrues.** | medium — write the guard test first (`MIGRATION_AND_OPERATIONS.md:43`) |
 | **6** | Consolidate guards into `ingest/guards.py`; route every write through it | ~1 day | D-06; one place to audit | medium |
 | **7** | Define `sources/contracts.py` and wrap the three existing clients to emit it. **Wrap, don't rewrite.** | ~2 days | D-05; makes the Pinterest→Etsy join expressible | medium |
-| **8** | Write the join: Pinterest momentum → Etsy candidates, through the contract | ~1 day | **the product premise** | low, once 7 lands |
-| **9** | Replace `print()` with structured logging carrying guard counts | ~half day | the five health questions (`MIGRATION_AND_OPERATIONS.md:118-128`) | low |
+| ~~**8**~~ | ~~Write the join: Pinterest momentum → Etsy candidates~~ | ✅ **DONE** | **the product premise** | — |
+| ~~**9**~~ | ~~Replace `print()` with structured logging carrying guard counts~~ | ✅ **DONE** (`core/runlog.py`) | the five health questions | — |
 | **10** | `api/` read-only over Gold, then 3 UI pages | — | the next phase | — |
 
 **Steps 1–2 are the whole unlock.** Until `etsy/` is an importable package, nothing
 in it can be tested, and every later step is guesswork.
+
+> ⚠️ **Steps 1–9 are complete. Step 7's contract layer was NOT built** — the join
+> (step 8) was written directly against the database instead, joining on the normalised
+> term (D-17) rather than through a source-agnostic record. That is a deliberate
+> shortcut: the join was the product premise and it now works, but D-05's "swapping a
+> provider means writing one class" is still unmet. Revisit if a second marketplace
+> is ever added.
+
+---
+
+## What changed the shape after this table was written
+
+Three findings, each recorded in `DECISION_LOG.md`, that alter the design rather than
+extend it — the plan above assumed the first of them:
+
+| Finding | Old shape | New shape |
+|---|---|---|
+| **D-14** no observed quota | crawl free sources wide, spend the metered call narrowly (3 of 50) | crawl wide **everywhere**; analyse every candidate |
+| **D-15/D-16** the scorer had two correlated dimensions | tune the formula | **add dimensions** — momentum/intent/audience are free from Pinterest and were never read |
+| **D-18** caches never expired | five per-client JSON caches | one TTL cache that forgets, separate from the stores that remember |
+
+The consequence for design: the bottleneck was never API budget, it was **unused
+surface**. `08_capability_map.md` is the inventory of what remains unused.
 
 Steps 4, 5 and 8 are the three that change what the system *is* rather than how it
 is arranged. If time is short, do 1, 2, 5, 4 — in that order — and stop. That yields

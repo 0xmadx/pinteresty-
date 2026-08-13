@@ -1,3 +1,8 @@
+
+
+
+
+
 # Etsy Analytics Pipelines
 
 This directory contains the 4 core data extraction and calculation pipelines. They form the backbone of the "Public API Scraping Layer", transforming raw HTML into structured arbitrage data and saving it directly into the central `market_intelligence.db`.

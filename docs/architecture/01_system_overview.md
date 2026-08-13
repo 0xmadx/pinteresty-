@@ -32,8 +32,10 @@ Audit date: 2026-08-11 · 59 Python modules (excluding `.venv/`) · **all 59 par
     ║  pinterest/       ║   ║  etsy/api/private/    ║   ║  etsy/api/public/ ║
     ║  endpoints/api.py ║   ║  api.py               ║   ║  api.py           ║
     ║                   ║   ║                       ║   ║                   ║
-    ║  ✅ WORKS         ║   ║  ❌ NON-FUNCTIONAL    ║   ║  ✅ WORKS         ║
-    ║  29 fns, tested   ║   ║  see §Broken tier     ║   ║  parses SERP HTML ║
+    ║  ✅ WORKS         ║   ║  ✅ WORKS             ║   ║  ✅ WORKS         ║
+    ║  29 fns, tested   ║   ║  4 endpoints, no      ║   ║  parses SERP HTML ║
+    ║  momentum·intent  ║   ║  observed quota (D-14)║   ║  13 filters, open ║
+    ║  ·demographics    ║   ║                       ║   ║  passthrough      ║
     ╚═════════╤═════════╝   ╚═══════════╤═══════════╝   ╚═════════╤═════════╝
               │                         │                         │
               │                         └────────────┬────────────┘
@@ -48,16 +50,26 @@ Audit date: 2026-08-11 · 59 Python modules (excluding `.venv/`) · **all 59 par
     ┌─────────▼──────────┐                ┌──────────▼───────────┐
     │ series.db          │                │ market_intelligence  │
     │ history.db         │                │ .db  (SQLite)        │
-    │ data/cache/*.json  │                │ etsy/data/cache/*.json│
-    └────────────────────┘                │ etsy/data/reports/*.json│
+    │ request_cache.db   │                │ request_cache.db     │
+    │  (TTL — forgets)   │                │  (TTL — forgets)     │
+    └────────────────────┘                │ graph.db             │
+                                          │  (observations —     │
+                                          │   remember, D-18)    │
                                           └──────────────────────┘
-              ▲                                      ▲
-              └────────  intended channel: ──────────┘
-                    the `trends` table handoff
-              (BY DESIGN two agents, joined at the DB —
-               _old_etsy_master_architecture.md:119,129)
-              ⚠ NEVER IMPLEMENTED on the Pinterest side.
-              0 of 79 import edges, and 0 rows in `trends`.
+              │                                      ▲
+              └───────  THE JOIN  ───────────────────┘
+        pinterest/pipelines/trends_bridge.py
+              writes → trend_observations
+        core/database.find_trend(keyword)
+              reads ← via etsy/analytics/term_join.py
+              (normalise both sides, exact content-word
+               set match — strict, never fuzzy · D-17)
+
+        Carries: momentum · velocity · dominant_color
+                 · demographic · takeoff / list_by
+        ✅ IMPLEMENTED — momentum is a scoring dimension.
+        This is what breaks the demand/supply degeneracy
+        (D-15/D-16): flat 0.500 → 0.250-0.675 spread.
 
               ┌───────────────────────────────────────┐
               │  core/graph_db.py → etsy/data/graph/  │

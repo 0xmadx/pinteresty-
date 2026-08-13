@@ -1,3 +1,4 @@
+
 # Etsy Engines Layer
 
 This directory contains the "Master Engines"—the high-level orchestrators that chain multiple scraping pipelines and API endpoints together to automate large-scale arbitrage analysis. 
@@ -28,7 +29,9 @@ The primary entry point for discovering "Blue Ocean" keywords.
   2. Automatically queries the Private API to fetch the hidden `search_volume` and `query_cvr` for every single keyword.
 * **Output:** Streams the highest-converting, highest-volume keywords directly into the `keywords` table in `market_intelligence.db`.
 
-## 4. `master_niche_finder.py` & `ssr_graph_pipeline.py` (Semantic Mappers)
+## 4. `master_niche_finder.py` & `ssr_graph_pipeline.py` (Sem
+
+c Mappers)
 These engines traverse Etsy's internal graph to build maps of related keywords.
 * **How It Works:** They scrape the "Related Searches" and "Similar Items" metadata to branch out from a seed keyword (e.g., mapping "leather journal" to "rustic mens diary").
 

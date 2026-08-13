@@ -1,0 +1,238 @@
+# DECISION LOG
+
+Every significant design decision, why it was made, and what was rejected. When
+someone (or future-you) asks "why is it like this?", the answer is here.
+
+Format: **D-nn — Decision** · Context · Chosen · Rejected · Consequence.
+
+---
+
+## D-01 — Profit, not revenue, is the central metric
+
+**Context:** The original architecture had no cost input anywhere. It estimated
+revenue and treated a big number as a win.
+**Chosen:** A profit model per product type — fees, COGS, shipping, labor — feeding
+the score as a weighted variable with per-type margin floors.
+**Rejected:** Ranking by revenue or by demand alone.
+**Consequence:** Verdicts change. In the three-way demo, the *highest-revenue*
+option was a no-go on margin. Profit reorders the rankings, which is the point.
+
+## D-02 — Percentile normalization instead of multiplying raw values
+
+**Context:** `(Demand × Momentum × Intent) / (Supply × SERP)` multiplied Etsy
+absolute counts (thousands) by Pinterest 0–100 indices. Whichever variable had the
+biggest raw range silently dominated.
+**Chosen:** Convert every variable to its percentile rank within the pool, then
+take a weighted sum.
+**Rejected:** Z-scores (distributions are skewed and full of sentinels);
+min-max scaling (one outlier destroys it).
+**Consequence:** Scores became comparable and *interpretable* — you can read why a
+candidate ranked where it did. Also introduced the need for `pool_id`/`pool_size`,
+since a percentile is meaningless without its pool.
+
+## D-03 — Product type is a front-door router, not an end filter
+
+**Context:** The original spec scored once and then evaluated three ways.
+**Chosen:** The operator picks digital/physical/personalized up front; that
+selection routes profit model, margin floor, applicable dimensions, discovery
+pillar, and timing.
+**Rejected:** Scoring once and filtering after.
+**Consequence:** One honest pipeline per type. "Compare all three" survives as a
+separate mode for deciding *how* to make something already chosen.
+
+## D-04 — Time is append-only; predictions snapshot their inputs
+
+**Context:** If a keyword's demand is overwritten by fresher data, evaluating an
+old prediction against the new value tests a prediction that was never made.
+**Chosen:** Time-varying tables append-only with `collected_at`; `launches` stores
+the literal feature values used, never foreign keys.
+**Rejected:** Upsert-in-place with a "current state" table only.
+**Consequence:** LEARN becomes honest, and `launches` doubles as a future ML
+training set. **This cannot be retrofitted** — it must be right from the first row.
+⚠️ `trends_store.py` currently violates this and needs fixing.
+
+## D-05 — The source is an implementation detail behind an adapter
+
+**Context:** The operator prototypes on one data source but intends to move to
+official/commercial APIs later.
+**Chosen:** A normalized record contract; every provider implements the same
+interface; `field_provenance` marks per-field availability.
+**Rejected:** Coupling business logic directly to any provider's response shape.
+**Consequence:** Switching providers is writing one class and editing config.
+Also forces the honest finding that **official APIs expose less** — some signals
+come back `None`, which the confidence gate already handles.
+
+## D-06 — Guards live at exactly one boundary (Bronze→Silver)
+
+**Context:** Sentinels, noisy series, and freshness could be handled anywhere.
+**Chosen:** One transform applies all guards: clamp sentinels, set `noisy`, stamp
+`collected_at`, strip PII.
+**Rejected:** Guarding at point of use (scattered, unauditable).
+**Consequence:** One place to audit and fix. Also means anything reading Silver can
+trust it — and that pandas vectorization is safe *because* the data was cleaned
+before it reached a DataFrame.
+
+## D-07 — Embedded stack; nothing distributed
+
+**Context:** "Multidimensional, layers, nodes, big data" suggested heavy tooling.
+**Chosen:** SQLite (writes), DuckDB (analytical reads), pandas/numpy (compute),
+FastAPI (serving), Docker (reproducibility, one container).
+**Rejected:** Kafka, Spark, Kubernetes, Postgres, Redis, graph/time-series DBs.
+**Consequence:** Dimensionality is a property of the *data model*; volume is what
+justifies distribution, and the volume is megabytes. Docker is used for
+reproducibility, not scale. All rejected tools have a named trigger condition in
+`07_saas_evolution.md`.
+
+## D-08 — Ingestion and serving are separate processes
+
+**Context:** A dashboard could fetch on demand.
+**Chosen:** Batch jobs write; a read-only API serves Gold. They meet only at the
+database.
+**Rejected:** API-triggered fetching.
+**Consequence:** A user click can never wait on (or fail because of) a provider
+call. Also the seam that lets serving scale independently later.
+
+## D-09 — Count functions, not descriptions
+
+**Context:** "~45 tools" came from counting tool *descriptions* across docs; the
+same capability appears under several names.
+**Chosen:** De-duplicate; map each documented tool to its implementing function;
+mark functionless docs aspirational.
+**Rejected:** Trusting the doc-derived count.
+**Consequence:** ~45 → likely ~28–32. Compositions (`master_*` scripts) counted as
+pipelines, not tools. See `CAPABILITY_COUNT_DEDUP.md`.
+
+## D-10 — The empty-bracket trap gates the gap-finder
+
+**Context:** Slicing a market 7 ways always produces empty cells; the original
+design read 0% saturation as a loophole.
+**Chosen:** Demand must be shown to hold *inside* the bracket; dimension sets are
+selected by product type.
+**Rejected:** Treating any 0% bracket as opportunity.
+**Consequence:** Prevents confident nonsense — e.g. shipping-speed arbitrage on a
+digital product returns a guaranteed-empty bracket that means nothing.
+
+## D-11 — Where-to-list is decided by demand *type*, not fees alone
+
+**Context:** Shopify keeps ~97% vs Etsy's ~85%, which naively always favors Shopify.
+**Chosen:** Decide on whether demand is **searched-for** (→ Etsy's free traffic) or
+**discovered** (→ Shopify/Pinterest), with CAC modeled as a *range*.
+**Rejected:** Picking the platform on fee percentage.
+**Consequence:** Shopify wins only if traffic is cheap. Paid CAC often exceeds
+Etsy's fees, flipping the answer. Also reframed as a *sequence*: validate on Etsy,
+scale winners on Shopify.
+
+## D-12 — Don't auto-tune weights below ~10 launches
+
+**Context:** LEARN can fit weights from outcomes.
+**Chosen:** Report raw comparisons under ~10 launches; only automate tuning above
+it.
+**Rejected:** Fitting immediately.
+**Consequence:** Avoids a model that explains five past outcomes perfectly and
+predicts nothing.
+
+## D-13 — Build 3 UI pages, not 10
+
+**Context:** The UI design specifies 10 page types.
+**Chosen:** Ship Discover + Cockpit + Settings; add the rest as data and need
+appear. Inward views (My Shops, Performance) *can't* exist until history accrues.
+**Rejected:** Building all ten up front.
+**Consequence:** A usable product much sooner, and no empty screens.
+
+---
+
+## D-14 — The private API is not rationed (supersedes the quota assumption)
+
+**Context:** D-01…D-13 and the whole engine were designed around a documented
+"15 analyses per period" (`REPO_STRUCTURE_AND_CONFIG.md:115`,
+`overviews.md:10`). Nothing in the system ever detected a limit: no counter, no
+quota header, no recorded 429 — and `SessionManager` answered 401/403/429 alike by
+waiting for a fresh cookie, so a throttle was indistinguishable from a stale session.
+The two code comments claiming a cost contradicted each other, and the one asserting
+it sat in a module that cannot import.
+**Chosen:** Treat the endpoint as unrationed. The operator tested it directly and
+found no limit; `deep_dive_limit` defaults to None (analyse every candidate).
+**Rejected:** Keeping `deep_dive_limit=3` on the strength of the docs alone.
+**Consequence:** This changes the architecture's shape, not just a constant. The old
+design was *crawl wide on free sources, spend metered narrowly*; it is now *crawl
+wide everywhere*. 47 of 50 candidates were previously discarded by a demand/supply
+score that D-15 shows carries no information. The detection stays — `rate_limited`
+counts 429s and every run reports its call count — so if a limit exists it announces
+itself instead of being silently absorbed, which is how the belief survived unexamined.
+
+## D-15 — Refuse to rank when the dimensions cannot discriminate
+
+**Context:** Percentile ranks of two rank-correlated inputs are p and (1-p); with one
+inverted the weighted sum is exactly 0.500 for every candidate at any pool size. Etsy
+demand and supply have that shape by nature — popular keywords carry more listings —
+so the "opportunity score" was uninformative in the normal case, not an edge case.
+**Chosen:** `can_discriminate()` asks *before* scoring whether a ranking could carry
+information. When it cannot, the step emits a labelled **filter** with a stated rule
+and no score at all.
+**Rejected:** Annotating a flat result afterwards. By then the caller holds an ordered
+list and reads it as a judgement.
+**Consequence:** A number is never printed where none is earned. The real fix is more
+dimensions (D-16), not a better formula.
+
+## D-16 — Momentum, intent and audience come from Pinterest, free
+
+**Context:** `overviews.md` §6 specifies the scoring model and its sources. Three of
+its variables — momentum, purchase intent, audience fit — have no Etsy equivalent at
+any price, and are free on Pinterest. None reached the scorer, which is *why* the pool
+had only the two correlated dimensions of D-15.
+**Chosen:** Join Pinterest into Etsy scoring as a first-class dimension.
+**Consequence:** The join, not the formula, was the missing piece. Adding momentum
+turns a flat 0.500 pool into a 0.250–0.675 spread on the same candidates.
+
+## D-17 — The term join is strict, never fuzzy
+
+**Context:** Pinterest writes "Mom Necklaces", Etsy asks "mom necklace"; an exact
+match misses and the candidate is scored with one dimension fewer, silently.
+**Chosen:** Normalise both sides (lowercase, singularise, strip stopwords) and require
+**exact content-word set equality**. Word order may differ; content may not.
+**Rejected:** Edit distance, partial overlap, best-guess scoring.
+**Consequence:** On short retail phrases one word *is* the niche — "cat collar" vs
+"dog collar", "wedding" vs "birthday". A fuzzy match would import another niche's
+momentum under the right label, which is the plausible-wrong-number failure this
+system exists to prevent. A miss costs one absent dimension; a wrong match costs a
+wrong recommendation. Singularisation is conservative for the same reason: "dress"
+must not stem to "dres" and break every future match.
+
+## D-18 — Cache and store are different concerns, in different files
+
+**Context:** Five clients each kept their own JSON file cache with **no expiry**, so a
+weekly trend series harvested once was served as current forever.
+**Chosen:** One `RequestCache` (SQLite, per-type TTLs). It exists to **forget** — the
+latest copy replaces the old. The observation tables exist to **remember** — every
+reading with its `collected_at`, forever.
+**Rejected:** Redis (solves cross-process coordination that does not exist here at
+single-operator scale), and sharing tables between the two.
+**Consequence:** TTL is an explicit bet per data type — live data is never cached
+(`TTL_LIVE=0`), weekly series expire weekly. A failed fetch is never cached, so a
+transient error is not frozen into truth.
+
+## D-19 — Report bounds, not rates, where only survivors are visible
+
+**Context:** `BIASES_AND_BLIND_SPOTS.md` B-01 proposes a survivor rate from total
+supply ÷ listings with reviews. That is not computable from a SERP: it renders ~12
+cards against a supply in the tens of thousands, and those 12 are the best-ranked.
+**Chosen:** Report an upper **bound** with an asymmetric verdict — a low reviewed
+share among top listings is real evidence of a graveyard; a high share is
+`uninformative`, never "healthy".
+**Consequence:** The same discipline applies to badge-derived sales (an upper bound,
+clamped against the measured shop rate) and to any value observed only above a
+threshold.
+
+---
+
+## Open decisions (not yet made)
+
+| # | Question | Blocked on |
+|---|---|---|
+| ~~O-1~~ | ~~`scoring.py` or `scoring_engine.py`~~ | ✅ closed — neither existed; both written |
+| O-2 | Append-only table vs separate history table for `trends`? | ✅ closed — append-only with `collected_at` in the PK |
+| O-3 | Which signals survive the move to official APIs? | the signal-survival matrix |
+| ~~O-4~~ | ~~Real tool count~~ | ✅ closed — 31 operator tools, 23 functional |
+| ~~O-5~~ | ~~The three source-doc contradictions~~ | ✅ closed — see `WHATS_ACTUALLY_THERE.md` |
+| **O-6** | Which Etsy public parameters exist beyond the 13 in use (`page`, `min`/`max`, `attr_2/3`)? | reading Etsy's own filter UI — guessing is what this project keeps getting burned by |
+| **O-7** | Should the goal be reframed from "is this niche good?" to a **seasonal calendar** ("what do I list, and when")? | the holiday loop (Pinterest `moments` → Etsy `holiday` filter) is two wires from working |
