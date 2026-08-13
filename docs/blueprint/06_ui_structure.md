@@ -158,15 +158,33 @@ POST /jobs/discover     (optional, manual trigger)         → enqueues a batch 
 
 ## Progressive build
 
-1. **Discover + Cockpit** first — the core loop (find → decide) is the product.
-2. **Settings** second — the profit model needs its inputs.
-3. **Radar + Calendar** — trend and timing.
-4. **Market + X-ray** — competitive depth.
-5. **My Shops / Listings / Performance** — the inward half, once rank data has
-   accumulated.
+> ⚠️ **Revised 2026-08-12 (D-20, D-23).** The order below was written before the
+> operator chose a calendar-first product. Two changes: **Settings is now first**, and
+> **Calendar is the home screen** rather than a later view.
+
+1. **Settings** — fees, COGS, hourly rate, hours/week, tracked shops. First, because
+   every profit verdict depends on these and they currently ship as defaults (D-23).
+   A calendar built on unverified fees is wrong in the most expensive place.
+2. **Calendar** — **the home screen** (D-20). 🔴 list now · 🟡 list by Sept 22 ·
+   ⚪ watching. Driven by Pinterest `moments` → Etsy `holiday` filter → `list_by`,
+   gated by profit. This is the product; nobody else can build it.
+3. **Cockpit** — the decision screen for one candidate. Reached from the calendar or
+   from the keyword search that lives permanently in the top bar (the second door).
+4. **Blueprint** — title, 13 tags, price band, review flaws to solve.
+5. **Market + X-ray** — competitive depth.
+6. **Performance / My Shops** — the inward half, **last**, once launches and rank
+   observations have accumulated. These cannot exist on day one and an empty screen
+   teaches nothing.
 
 Build outward-then-inward, because inward views need history the system hasn't
 collected yet on day one.
+
+**Where-to-list is deferred** (D-21): Etsy-only for now, so `<WhereToListBar/>` is not
+in the first build. Keep the data model channel-aware so adding it is not a rewrite.
+
+**Product type is detected, not asked** (D-22): all three types are in scope, and type
+changes which gap dimensions are answerable and which margin floor applies. The UI
+should show the detected type and let the operator override it — never silently assume.
 
 ---
 

@@ -12,14 +12,24 @@ each file answers and who it's for.
 >
 > | File | Settles |
 > |---|---|
+> | **`architecture/09_build_plan.md`** | **what we are building, in what order, and why** — start here |
 > | `architecture/08_capability_map.md` | every endpoint, parameter and link across all three sources — used vs never called |
 > | `architecture/bias_audit.md` | the **verified** bias picture (`BIASES_AND_BLIND_SPOTS.md` is self-declared unverified; 2 of its 10 claims were wrong) |
 > | `architecture/07_gaps_and_risks.md` | the defect list, with what is fixed and what remains |
 >
-> **`DECISION_LOG.md` D-14 supersedes a premise repeated throughout these docs:**
-> the Etsy Private quota was never observed and the operator tested it directly. The
-> architecture is no longer "ration the metered call" — it is "crawl wide everywhere
-> and join the three sources". Any doc below that budgets calls is stale on that point.
+> **Two premises repeated throughout the docs below are now superseded:**
+>
+> - **D-14** — the Etsy Private quota was never observed, and the operator tested it
+>   directly. The architecture is no longer "ration the metered call"; it is "crawl wide
+>   everywhere and join the three sources". Any doc that budgets calls is stale.
+> - **D-24** — every table held 0 rows because Etsy returns **snake_case** and every
+>   consumer read **camelCase**, not because of the quota, a broken import, or missing
+>   scheduling. All three of those were argued at length and all three were wrong.
+>   `07_gaps_and_risks.md` §ROOT CAUSE has the detail.
+>
+> **The goal has been sharpened** (D-20…D-23): a **calendar-first** product — what to
+> list, when, and whether it pays — with keyword search as the second door. Etsy-only
+> for now, all three product types, and **Settings ships before anything else**.
 
 **If you are the operator:** read `GOAL.md`, then `MASTER_DOCUMENT.md`, then
 whatever section you're working on.

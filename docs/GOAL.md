@@ -5,6 +5,27 @@ choice is unclear, this document decides it.*
 
 ---
 
+## The one-line goal (decided 2026-08-12)
+
+> **A weekly calendar that says what to list, when to list it, and whether it will
+> make money — with a keyword search as the second door.**
+
+Not a niche checker. Every competitor is a niche checker; the calendar is the part
+they cannot build, because it needs Pinterest's takeoff dates joined to Etsy's real
+demand and a profit model willing to say no.
+
+| | Decision | Ref |
+|---|---|---|
+| Home screen | **Calendar first**, search always in the top bar | D-20 |
+| Channels | **Etsy only for now**, data model stays channel-aware | D-21 |
+| Product types | **All three** — and the type is **detected**, not assumed | D-22 |
+| Fees & costs | **Settings ships first**; nothing hardcoded | D-23 |
+
+The three questions it answers, in order — **what**, **when**, **whether it pays** —
+then it checks itself: did the prediction hold? See `architecture/09_build_plan.md`.
+
+---
+
 ## Who
 
 A single operator running their **own Etsy shops**. Sells a mix:

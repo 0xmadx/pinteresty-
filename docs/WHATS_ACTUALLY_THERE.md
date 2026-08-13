@@ -6,6 +6,15 @@
 > bottom are now answered with file:line evidence, and the claims this document
 > got wrong have been corrected in place. Corrections are marked **[was wrong]**.
 > The verified bias picture lives in `architecture/bias_audit.md`.
+>
+> 🔴 **VERIFIED AGAINST THE LIVE API 2026-08-12 — and that overturned the
+> explanation for the empty tables.** Etsy returns **snake_case**; every consumer in
+> the private tier read **camelCase** (`search_volume` vs `searchVolume`,
+> `term_summaries` vs `termSummaries`, `competitive_research_listing_cards` vs
+> `competitiveResearchListingCards`). Seven modules fetched correct data and read
+> empty values out of it. **That, not the quota and not the broken import, is why
+> every table held 0 rows.** Fixed by `parse_results_data` /
+> `parse_term_summaries`; see `architecture/09_build_plan.md` §3 and D-24.
 
 ---
 

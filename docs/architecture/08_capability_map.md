@@ -31,12 +31,36 @@ is the only absolute measure; Etsy Public is the only view of who you'd fight.
 
 ## 2. Etsy Private — 4 endpoints
 
+> 🔴 **The response is snake_case.** Verified live 2026-08-12. Every consumer read
+> camelCase and therefore read nothing — the root cause of the empty tables (D-24).
+> Always go through `parse_results_data` / `parse_term_summaries` /
+> `normalise_listing_card`; never index a raw key.
+
 | Endpoint | Parameters | Answers | Status |
 |---|---|---|---|
-| `get_similar_keywords` | `keyword`, `iterations` | what sub-keywords branch off this? | ✅ (`iterations` 2→10 fixed) |
+| `get_similar_keywords` | `keyword`, `iterations` | what sub-keywords branch off this? | ✅ (`iterations` 2→10 fixed; edges keyed `query`, not `searchTerm` — use `edge_term()`) |
 | `get_chart_series` | `search_terms[]`, `days`, `include_trendline`, `include_wow_data`, `include_search_volume`, `include_avg_total_listings` | volume + supply for many terms at once | ⚠️ `include_trendline:false` — **we decline a free seasonality curve** |
 | `get_results_data` | `query`, `search_term_hash`, `search_trigger` | CVR, real prices, competitor listings | ⚠️ `search_term_hash` sent empty; `search_trigger` pinned to `similar_term` |
 | `get_trending_terms` | `taxonomy_id` | hot keywords in a whole category | ❌ **never called** — this is the playbook's Phase 1 |
+
+### 2.1 What `results-data` actually returns (verified live)
+
+One call. `parse_results_data` normalises all of it.
+
+| Field | Contains | Used? |
+|---|---|---|
+| `stats.search_volume` | absolute monthly searches | ✅ |
+| `stats.avg_total_listings` | real supply | ✅ |
+| `stats.query_cvr` | **the real conversion rate** (`stats.cvr` is an ordinal bucket, often 0) | ✅ |
+| `competitive_price_data.search_term_median_price` | `median_price_low` / `_high` as `"$17.10"` strings | ✅ |
+| `competitive_research_listing_cards.listing_cards[]` | **20 competitors**: `id`, `title`, `number_of_reviews` (a STRING), `rating`, `shop_name`, `is_star_seller`, `badge_text`, nested `price` object | ✅ feeds the survivor bound |
+| `wow_data` | **Etsy's own week-over-week momentum** (`value`, `trend_direction`) | ⚠️ now parsed, not yet scored |
+| `similar_search_terms` | keyword expansion **in the same response** | ❌ may make the enqueue/poll crawl redundant |
+| `market_gap_recommendations` | **Etsy's own gap analysis** | ❌ never read |
+| `quota_data` | `{total: 15, remaining: 15}` — observed unchanged across 3 consecutive distinct calls, so this endpoint does **not** consume it (D-14) | ✅ surfaced |
+
+`chart-series-data` returns `term_summaries[]` with `search_term`, `search_volume`,
+`avg_total_listings`, `wow_data` — plus a `series[]` of `points` that nothing reads.
 
 ---
 

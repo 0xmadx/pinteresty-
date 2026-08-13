@@ -27,6 +27,47 @@ those are marked **by design, unbuilt** rather than filed as mistakes.
 
 ---
 
+## 🔴 ROOT CAUSE — found 2026-08-12 by calling the API
+
+Every table in the system held 0 rows. Three explanations were offered across this
+document and its reviews — a 15/period **quota**, the broken `src.services.executor`
+**import**, and missing **scheduling**. All three were plausible. **All three were
+wrong.**
+
+Etsy returns **snake_case**. Every consumer in the private tier read **camelCase**:
+
+| API returns | Code read | Got |
+|---|---|---|
+| `search_volume` | `searchVolume` | `None` |
+| `avg_total_listings` | `avgTotalListings` | `None` |
+| `query_cvr` | `cvr` (an ordinal bucket) | `0` |
+| `term_summaries` | `termSummaries` | `[]` |
+| `competitive_price_data` | `competitivePriceData` | `{}` |
+| `competitive_research_listing_cards` | `competitiveResearchListingCards` | `[]` |
+| `listing_cards[].number_of_reviews` | `numberOfReviews` | `None` |
+
+**Seven modules** — `master_niche_finder`, `private_blueprint`, `private_comparison`,
+`private_recursive_spider`, `private_scoring_pipeline`, `ssr_graph_pipeline`,
+`listing_generator` — fetched correct data and read empty values out of it.
+
+Live proof: `"mom necklace"` → **12,867 searches · 351,677 listings · CVR 0.000256 ·
+$17.10–$20.90 · 20 competitor listings**, none of which any pipeline could see.
+
+Fixed by centralising the shape in `parse_results_data` / `parse_term_summaries` /
+`normalise_listing_card`, which accept both spellings so it cannot drift again. Two
+further shape traps were caught there: review counts arrive as **strings** and price as
+a **nested object**, where `survivor_bound` compares with `> 0` and the profit model
+needs a float.
+
+**Why it survived an architecture pass, a bias audit and several reviews:** every
+reviewer reasoned about the *code* and the *docs*. Nobody read the *wire*. Recorded as
+**D-24 — probe the live response before theorising about missing data.**
+
+Three fields nobody had read came with it: `wow_data` (Etsy's **own** week-over-week
+momentum), `similar_search_terms`, and `market_gap_recommendations`.
+
+---
+
 ## S — Security
 
 ### ✅ S-1 · `.env` was committed, with three live secrets — **resolved 2026-08-11**
@@ -153,25 +194,33 @@ literal (detected at line 104)*.
 **The operator removed the stray line mid-pass.** Re-verified: all 59 modules now
 parse, 0 failures.
 
-⚠️ **The cascade is not yet cleared.** This module is the only caller of
-`upsert_keyword` (`:93`), but it constructs `EtsyPrivateAPI()` at `:15`, which still
-fails at `etsy/api/private/api.py:16` (see **B-2**). So `keywords` remains at 0 rows,
-and both downstream reads still get `None`:
+✅ **The cascade is cleared (2026-08-12).** This module writes the `keywords` table via
+`record_keyword`, and it imports and runs. The real blocker was never the auth path — it
+was the field-name mismatch (see ROOT CAUSE), which made every metric `None` even on a
+successful call. First live row written 2026-08-12:
+`ceramic planter pot · 4,776 searches · 130,673 listings`.
 
-- `grid_analytics.py:34` `get_keyword()` → `None` → CVR stays at the `0.02` guess
-- `master_arbitrage.py:241` `get_keyword()` → `None` → three report fields null
+Both downstream reads now resolve:
 
-**B-2 is now the binding constraint on the entire demand tier.**
+- `grid_analytics.py:34` `get_keyword()` → a real row → CVR from measurement, not the
+  `0.02` guess (and `cvr_source` records which it was)
+- `master_arbitrage.py` `get_keyword()` → real volume, supply and price band
 
-### 🔴 B-2 · The Etsy Private tier cannot run — three missing paths
+### ✅ B-2 · The Etsy Private tier cannot run — **resolved 2026-08-12**
 
-**Now the single blocking defect for the demand half**, since B-1 is resolved.
+⚠️ **This was believed to be "the single blocking defect for the demand half". It was
+not.** The private tier ran fine; it was reading the wrong field names (see ROOT CAUSE
+above). `private_scoring_pipeline` was genuinely broken, but it is **not** the writer of
+the `keywords` table — `private_blueprint` is, and it imported cleanly throughout. Even
+when `private_scoring_pipeline` worked, it wrote only JSON files and never touched the
+database.
 
-| Break | Location | Missing |
+| Break | Location | Resolution |
 |---|---|---|
-| Auth headers read from `.env` | `etsy/api/private/api.py` | **FIXED:** Replaced the missing `private/endpoints/req_5.py` with automatic Chrome Extension `.env` injection. |
-| Import from a non-existent package | `etsy/engines/private_scoring_pipeline.py:10` | `src/services/executor` |
-| Glob over a missing directory | `etsy/engines/private_scoring_pipeline.py:23` | `inputs/curl_commands/private/` |
+| Auth headers read from `.env` | `etsy/api/private/api.py` | ✅ Chrome Extension `.env` injection |
+| Import from a non-existent package | `private_scoring_pipeline.py:10` | ✅ **rewired onto `EtsyPrivateAPI`** — `src/services/executor` exists in neither the repo nor its history, so it was never restorable; both endpoints it needed were already wrapped (`req_1` = `get_similar_keywords`, `req_3` = `get_chart_series`) |
+| Glob over a missing directory | `private_scoring_pipeline.py:23` | ✅ removed — the cURL registry is superseded by the typed methods |
+| **Wrong field names** | **the whole private tier** | ✅ see ROOT CAUSE — *this* was the real defect |
 
 Verified: `src/`, `private/`, `inputs/`, `public/` do not exist at repo root. These
 are **stale references to the pre-refactor layout** — commit `2536aa3` restructured

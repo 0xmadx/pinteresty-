@@ -223,6 +223,68 @@ share among top listings is real evidence of a graveyard; a high share is
 clamped against the measured shop rate) and to any value observed only above a
 threshold.
 
+## D-20 — Calendar is the home screen; search is the second door
+
+**Context:** The system could open with a keyword box (like every competitor) or with
+a timed list of what to launch. O-7, decided by the operator 2026-08-12.
+**Chosen:** **Calendar first** — 🔴 list now / 🟡 list by Sept 22 / ⚪ watching — with
+keyword search always available in the top bar.
+**Rejected:** Search-only. It is the commodity product; eRank and Everbee already do it.
+**Consequence:** Timing becomes the spine, so the TIME loop (Pinterest `moments` → Etsy
+`holiday` filter → `list_by`) moves from "nice to have" to the engine of the landing
+page. The forecast layer (`predicted_days`) becomes load-bearing rather than decorative,
+because ⚪ WATCHING is the row no competitor can produce.
+
+## D-21 — Etsy only for now, but stay channel-aware
+
+**Context:** D-11 designs a where-to-list decision (Etsy vs Shopify/Pinterest) on
+searched-for vs discovered demand. Building it is real work.
+**Chosen:** Ship **Etsy-only**, and keep the data model and docs channel-aware so adding
+a second channel is not a rewrite.
+**Rejected:** Building where-to-list now (scope), and hardcoding Etsy assumptions
+everywhere (would force a rewrite later).
+**Consequence:** D-11 stays designed and unbuilt. Anything that stores a decision or a
+launch should carry a channel field even while only one value is ever written.
+
+## D-22 — All three product types are in scope, so type must be DETECTED
+
+**Context:** The operator sells digital, physical and personalized.
+**Chosen:** Support all three, and **detect the type** rather than requiring the operator
+to declare it per run.
+**Consequence:** This is not a preference, it changes correctness. The gap dimensions
+that can even be *asked* differ by type (a download has no delivery window — D-10), the
+margin floor differs (0.70 / 0.35 / 0.50), and for personalized goods the binding
+constraint is the weekly capacity ceiling rather than demand. A wrong or assumed type
+produces confident wrong verdicts in all three subsystems. One `is_digital` request
+answers it, so detection is cheap; assuming is not.
+
+## D-23 — Settings ships before anything else
+
+**Context:** `profit.py` ships default fee values (6.5% transaction, 3% + $0.25
+processing, $25/hr, 15 h/week) from `REPO_STRUCTURE_AND_CONFIG.md`. Every profit verdict
+— and therefore the whole calendar and cockpit — depends on them.
+**Chosen:** Build the **Settings page first**, so fees, COGS, hourly rate, hours/week and
+tracked shops are operator-owned data, never hardcoded.
+**Rejected:** Shipping the calendar on default constants and confirming later. A verdict
+computed from an unverified fee schedule is exactly the plausible-wrong-number this
+system exists to prevent, and it would be wrong in the most expensive place.
+**Consequence:** Settings moves ahead of the Calendar in the UI build order, matching
+what the `ui-builder` skill already required.
+
+## D-24 — Probe the live response before theorising about missing data
+
+**Context:** Every table held 0 rows. Three explanations were offered and argued over —
+an API quota, a broken `src.services.executor` import, and missing scheduling. All were
+plausible, all were reasoned from documents, and **all were wrong**. Etsy returns
+snake_case; every consumer read camelCase, so seven modules fetched correct data and
+read empty values out of it.
+**Chosen:** When data is missing, **call the endpoint and read the actual response
+first**. Treat doc-derived explanations as hypotheses until a live payload confirms them.
+**Consequence:** The field-name mismatch had survived the entire architecture pass, a
+bias audit and several rounds of review, because every reviewer reasoned about the code
+rather than the wire. `parse_results_data` now centralises the shape and accepts both
+spellings. See `09_build_plan.md` §3.
+
 ---
 
 ## Open decisions (not yet made)
@@ -235,4 +297,4 @@ threshold.
 | ~~O-4~~ | ~~Real tool count~~ | ✅ closed — 31 operator tools, 23 functional |
 | ~~O-5~~ | ~~The three source-doc contradictions~~ | ✅ closed — see `WHATS_ACTUALLY_THERE.md` |
 | **O-6** | Which Etsy public parameters exist beyond the 13 in use (`page`, `min`/`max`, `attr_2/3`)? | reading Etsy's own filter UI — guessing is what this project keeps getting burned by |
-| **O-7** | Should the goal be reframed from "is this niche good?" to a **seasonal calendar** ("what do I list, and when")? | the holiday loop (Pinterest `moments` → Etsy `holiday` filter) is two wires from working |
+| ~~O-7~~ | ~~Calendar or search box as the home screen?~~ | ✅ closed — **calendar first, search as second door** (D-20) |
