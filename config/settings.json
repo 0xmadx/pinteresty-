@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "global": {
+    "fees": {
+      "verified": "2026-01",
+      "listing_fee": 0.2,
+      "transaction_rate": 0.065,
+      "processing_rate": 0.03,
+      "processing_flat": 0.25,
+      "offsite_rate_under_10k": 0.15,
+      "offsite_rate_over_10k": 0.12
+    },
+    "operator": {
+      "hourly_rate": 25.0,
+      "labor_hours_per_week": 15.0
+    },
+    "floors": {
+      "digital": 0.7,
+      "physical": 0.35,
+      "personalized": 0.5
+    }
+  },
+  "confirmed": [],
+  "product_profiles": {}
+}

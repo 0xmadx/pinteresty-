@@ -119,7 +119,7 @@ everything else or it accumulates over time.
 
 | # | Build | Why |
 |---|---|---|
-| 1 | **Settings** — config file + CLI first, web page later | D-23. Every profit verdict depends on these and they are currently defaults. A config file gets real numbers into `profit.py` today rather than after a UI exists. |
+| 1 | ~~**Settings** — config file + CLI~~ | ✅ **done 2026-08-14** — `core/settings_store.py`, `config/settings.json`, 28 assertions. See below. |
 | 2 | **Competitor outcome tracker** — shop inventory + per-listing review velocity | D-25. **Worthless if started late** — it needs weeks of history. Also the only unbiased outcome dataset available (partially solves B-04). |
 | 3 | **Scheduler** — daily shop delta, 3×/week ranks, weekly Pinterest bridge | Every signal is a time-series. Value compounds only with time, and the clock has not started. |
 | 4 | **Seed 2–3 shops + one bridge run** | The daily delta is the only genuinely measured sales number; momentum is `None` until the bridge runs. Track **some mid-tier shops, not only stars** — tracking winners only re-creates survivorship bias. |
@@ -141,6 +141,42 @@ changes the verdict, it is not decoration.
 ⚠️ **No LLM estimates these numbers.** Classification (product type, occasion) and
 extraction (a price off a supplier page the operator pastes) only. A confidently wrong
 COGS flows straight into a go/no-go.
+
+#### Settings carry provenance — the part that was not in the original plan
+
+Building it exposed a gap the plan had missed. `verdict()` returns the **same shape**
+whether its fees came from the operator or from `profit.py`'s placeholders:
+arithmetically identical, worth completely different amounts of trust. A `go` resting
+on guessed fees was indistinguishable from a real one — this system's defining failure
+sitting directly under the go/no-go.
+
+So settings record **which fields a human confirmed**, and that provenance rides into
+every verdict:
+
+```python
+v = profit.verdict(price=24.0, demand_units_per_week=12,
+                   **settings.verdict_kwargs("Ceramic mug"))
+v["go"]           # True
+v["provisional"]  # True  ← six verdict-critical values are still defaults
+```
+
+Confirming is an *act*, not a value change: re-confirming a default at its current
+value counts, because the missing thing was a human checking it, not a different
+number. Confirmation moves the trust label and never the arithmetic — pinned by test.
+
+Two refusals worth noting, both `refuse rather than guess`:
+
+* an **unknown profile name raises** — silently defaulting to a zero-cost profile
+  would make every unmatched candidate a guaranteed `go`
+* a **personalized profile without `labor_minutes` is rejected** — those minutes *are*
+  the weekly capacity ceiling, and `0` silently promises unlimited output by hand
+
+```bash
+.venv/Scripts/python.exe -m core.settings_store show
+.venv/Scripts/python.exe -m core.settings_store set operator.hourly_rate 30
+.venv/Scripts/python.exe -m core.settings_store profile add "Ceramic mug" \
+    --type physical --cogs 8.50 --shipping 4.20 --labour 3
+```
 
 ### Phase 1 — Fill the tables
 

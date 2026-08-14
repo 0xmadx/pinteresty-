@@ -66,6 +66,12 @@ class ProfitConfig:
     fees: FeeSchedule = field(default_factory=FeeSchedule)
     operator: Operator = field(default_factory=Operator)
     floors: MarginFloors = field(default_factory=MarginFloors)
+    # Whether a human confirmed the numbers above, or they are still this file's
+    # placeholders. A verdict from guessed fees is arithmetically identical to one from
+    # real fees — only this field separates them, so it rides along into the result.
+    # `core.settings_store` sets it; the default is deliberately the pessimistic one.
+    settings_basis: str = "default"
+    unconfirmed_settings: tuple = ()
 
 
 def etsy_fees(price, shipping_charged=0.0, config=None, offsite_ads=False, over_10k=False):
@@ -198,6 +204,11 @@ def verdict(price, product_type, demand_units_per_week=0, cogs=0.0, shipping_cos
         "reasons": reasons,
         "basis": "derived_from_config",
         "fee_schedule_verified": cfg.fees.verified,
+        # A `go` resting on unconfirmed fees is provisional, and the caller must be
+        # able to see that without re-deriving it.
+        "settings_basis": cfg.settings_basis,
+        "unconfirmed_settings": list(cfg.unconfirmed_settings),
+        "provisional": cfg.settings_basis != "operator",
     }
 
 
