@@ -63,6 +63,9 @@
             color: #666;
             margin: 6px 0 0;
         }
+        .hint.warn {
+            color: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -70,16 +73,20 @@
     <label for="profileName">Profile Name:</label>
     <input type="text" id="profileName" placeholder="e.g. Seller_Account_1">
     
-    <label for="profileRole">Account Role: <span class="req">(required)</span></label>
+    <label for="profileRole">Etsy account in this browser:</label>
     <select id="profileRole">
-        <option value="">— pick one —</option>
-        <option value="etsy_public">Etsy Public (buyer session)</option>
-        <option value="etsy_private">Etsy Seller (your own shop)</option>
-        <option value="pinterest">Pinterest</option>
+        <option value="">— not signed in to Etsy —</option>
+        <option value="etsy_public">Buyer account (public scraping)</option>
+        <option value="etsy_private">My seller account (Shop Manager)</option>
     </select>
     <p class="hint">
-        One Chrome profile = one role. A seller-logged-in browser set to
-        <em>Public</em> puts your seller session in the competitor-scraping pool.
+        Only Etsy needs this — we can't tell a buyer login from a seller login by
+        looking. <strong>Pinterest syncs automatically</strong>, so you can keep
+        both open in one browser.
+    </p>
+    <p class="hint warn">
+        Don't mark a seller-logged-in browser as <em>Buyer</em> — that puts your
+        seller session in the competitor-scraping pool.
     </p>
 
     <button id="saveBtn">Save Settings</button>

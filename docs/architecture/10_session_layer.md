@@ -192,6 +192,32 @@ waiting*, not authentication — no new session mechanics, no browser automation
 | `while not profile_id: sleep(5)` — unbounded | bounded (120 s), then raises **`VaultEmpty`** — a distinct type, because "no session" and "Etsy said no" have different fixes |
 | unbounded recursion on rejected profiles | depth-bounded; reports the real reason instead of `RecursionError` |
 
+### The role no longer gates which sites sync
+
+Reported by the operator immediately after the first fix: *"if I open Pinterest and
+Etsy in the same browser, the extension doesn't make a difference, it keeps bugging."*
+Correct, and the first fix made it stricter rather than solving it.
+
+The old `PROFILE_ROLE` conflated two unrelated questions into one global:
+
+| Question | Genuinely ambiguous? |
+|---|---|
+| Is this browser's **Etsy** login a buyer or the seller? | **Yes** — both produce cookies on `etsy.com`; only the operator knows |
+| Which **sites** may this browser feed? | **No** — `pinterest.com` cookies can only be Pinterest cookies |
+
+Treating the second as a choice is what forced one browser to serve one platform. Now:
+
+```
+pinterest.com cookies  → always the `pinterest` pool          (no declaration needed)
+etsy.com cookies       → `etsy` or `etsy_private`, per the declared tier
+tier undeclared        → Etsy is skipped with a reason; Pinterest still syncs
+seller tokens          → only when the tier IS etsy_private
+```
+
+So one browser with both sites open works, and the *only* thing the operator must
+declare is the one thing that cannot be inferred. An empty tier is now a legitimate
+answer meaning "not signed in to Etsy" — not an error.
+
 Pinned by `core/test_cookie_vault.py` (11 assertions) and `core/test_vault_status.py`
 (19). **`background.js` changes require reloading the extension** in
 `chrome://extensions` — the service worker caches the old script.

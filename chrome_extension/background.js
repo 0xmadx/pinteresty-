@@ -4,27 +4,42 @@
 let PROFILE_ID = "pending_uuid";
 let PROFILE_ROLE = null;
 
-// The only roles that mean anything downstream. "auto" used to be the default and was
-// a guess dressed as a feature: it matched none of the branches below, so cookies
-// filed under `etsy` while the seller's csrf/shop_id filed under `etsy_private` —
-// splitting one identity in half so neither side could authenticate.
+// The role answers ONE question: what is this browser's Etsy login — a buyer or the
+// seller? That is the only genuinely ambiguous thing, because both produce cookies on
+// etsy.com and only the operator knows which account is signed in.
 //
-// Worse, a browser logged in AS A SELLER had its seller cookies filed into the PUBLIC
-// pool and drawn for competitor scraping, which is exactly what D-29 forbids: the
-// seller account is the one asset here that cannot be replaced.
+// It deliberately does NOT decide which sites may sync. Etsy and Pinterest are
+// different domains with separate cookie jars; a browser with both open has no
+// ambiguity to resolve, so Pinterest always syncs. The old model made the role a
+// global gate, which meant one browser could feed only one platform — the operator
+// hit this immediately with Etsy and Pinterest open side by side.
 //
-// So an unset role now syncs NOTHING. Refuse rather than guess.
-const VALID_ROLES = ["etsy_public", "etsy_private", "pinterest"];
+// What the old "auto" default did, and why it is gone rather than re-routed:
+// it matched no branch, so cookies filed under `etsy` while the seller's csrf/shop_id
+// filed under `etsy_private` — splitting one identity so neither half could
+// authenticate. And a browser signed in AS THE SELLER had its seller cookies filed
+// into the PUBLIC pool and drawn for competitor scraping: D-29 inverted, with the one
+// irreplaceable account doing the risky work. An undeclared Etsy login is not
+// guessable, so it is refused.
+const ETSY_TIERS = ["etsy_public", "etsy_private"];
 
-function roleIsSet(role) {
-    return VALID_ROLES.includes(role);
+/** The declared Etsy tier, or null if the operator has not said. */
+function etsyTier() {
+    return ETSY_TIERS.includes(PROFILE_ROLE) ? PROFILE_ROLE : null;
 }
 
-function warnRoleUnset(context) {
+/** Redis platform for a declared tier. Total over ETSY_TIERS — no fall-through. */
+function etsyPlatform(tier) {
+    return tier === 'etsy_private' ? 'etsy_private' : 'etsy';
+}
+
+function warnTierUnset() {
     console.warn(
-        `[Scraper] Not syncing ${context}: profile role is "${PROFILE_ROLE}". ` +
-        `Open the extension popup and pick a role (${VALID_ROLES.join(" / ")}). ` +
-        `An unset role cannot be routed safely — see docs/architecture/10_session_layer.md S-1.`
+        `[Scraper] Not syncing Etsy cookies: this profile's Etsy account type is ` +
+        `"${PROFILE_ROLE}". Open the extension popup and say whether it is signed in ` +
+        `as a buyer or as your seller account. Guessing could file your seller ` +
+        `session into the public scraping pool (D-29). Pinterest is unaffected and ` +
+        `syncs normally.`
     );
 }
 
@@ -66,24 +81,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "force_sync") {
         console.log("Forced sync requested via UI.");
         
-        let explicitRole = request.profile_role || PROFILE_ROLE;
-        let explicitId = request.profile_id || PROFILE_ID;
+        const explicitRole = request.profile_role || PROFILE_ROLE;
+        const explicitId = request.profile_id || PROFILE_ID;
+        const tier = ETSY_TIERS.includes(explicitRole) ? explicitRole : null;
 
-        if (!roleIsSet(explicitRole)) {
-            warnRoleUnset("on Save");
-            return;
+        // Sync every domain this browser can speak for, not just one. Picking a single
+        // target is what forced the operator to choose between Etsy and Pinterest.
+        const jobs = [{ domain: 'pinterest.com', platform: 'pinterest' }];
+        if (tier) {
+            jobs.push({ domain: 'etsy.com', platform: etsyPlatform(tier) });
+        } else {
+            warnTierUnset();
         }
 
-        let targetDomain = explicitRole === 'pinterest' ? 'pinterest.com' : 'etsy.com';
-
-        chrome.cookies.getAll({ domain: targetDomain }, (cookies) => {
-            if (cookies && cookies.length > 0) {
-                let cookieJson = {};
-                cookies.forEach(c => {
-                    cookieJson[c.name] = c.value;
-                });
-
-                let targetPlatform = explicitRole === 'etsy_public' ? 'etsy' : explicitRole;
+        jobs.forEach(({ domain, platform }) => {
+            chrome.cookies.getAll({ domain }, (cookies) => {
+                if (!cookies || cookies.length === 0) return;   // not signed in here
+                const cookieJson = {};
+                cookies.forEach(c => { cookieJson[c.name] = c.value; });
 
                 syncCookieToBackend({
                     profile_id: explicitId,
@@ -95,10 +110,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     // no error anywhere. That made this Save button produce profiles
                     // that looked valid and could never authenticate (S-3).
                     cookie_json: cookieJson,
-                    platform: targetPlatform,
+                    platform: platform,
                     cookie_name: 'all_cookies'
                 });
-            }
+            });
         });
     }
 });
@@ -109,8 +124,8 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
 
     // --- ETSY COOKIES ---
     if (!removed && cookie.domain.includes('etsy.com')) {
-        if (PROFILE_ROLE === 'pinterest') return; // Strict isolation
-        if (!roleIsSet(PROFILE_ROLE)) { warnRoleUnset("Etsy cookies"); return; }
+        const tier = etsyTier();
+        if (!tier) { warnTierUnset(); return; }
 
         const cookies = await chrome.cookies.getAll({ domain: 'etsy.com' });
         const cookieJson = {};
@@ -121,10 +136,7 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
             if (c.name === 'datadome') dataDomeValue = c.value;
         });
 
-        // Role decides the pool. Only these two reach here, so the mapping is total —
-        // no fall-through default, which is what silently mis-filed seller sessions
-        // into the public pool.
-        const targetPlatform = PROFILE_ROLE === 'etsy_private' ? 'etsy_private' : 'etsy';
+        const targetPlatform = etsyPlatform(tier);
 
         syncCookieToBackend({
             cookie: dataDomeValue, // Legacy fallback
@@ -136,9 +148,9 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
 
     // --- PINTEREST COOKIES ---
     if (!removed && cookie.domain.includes('pinterest.com')) {
-        if (PROFILE_ROLE === 'etsy_public' || PROFILE_ROLE === 'etsy_private') return; // Strict isolation
-        if (!roleIsSet(PROFILE_ROLE)) { warnRoleUnset("Pinterest cookies"); return; }
-
+        // No tier check and no isolation guard: pinterest.com cookies can only ever be
+        // Pinterest cookies. The old guard blocked this whenever an Etsy tier was set,
+        // which is why one browser could not serve both sites.
         console.log(`Detected new cookie for Pinterest: ${cookie.name}! Syncing all Pinterest cookies to backend...`);
         // Fetch all cookies for pinterest.com
         const cookies = await chrome.cookies.getAll({ domain: 'pinterest.com' });
@@ -163,9 +175,9 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
         // Only a declared seller profile may emit seller tokens. Previously this
         // early-returned for two named roles and therefore RAN under the unset "auto"
         // default — sending csrf/shop_id to `etsy_private` while that same profile's
-        // cookies went to `etsy`. Positive test, not a blocklist: unknown roles are
-        // excluded by construction rather than by remembering to list them.
-        if (PROFILE_ROLE !== 'etsy_private') return { requestHeaders: details.requestHeaders };
+        // cookies went to `etsy`. Positive test, not a blocklist: anything that is not
+        // explicitly the seller is excluded by construction.
+        if (etsyTier() !== 'etsy_private') return { requestHeaders: details.requestHeaders };
 
         let csrfToken = null;
         let shopId = null;

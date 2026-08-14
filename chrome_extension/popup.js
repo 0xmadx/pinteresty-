@@ -23,19 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const newName = profileNameInput.value.trim();
         const newRole = profileRoleSelect.value;
         
-        // A role is required. Saving without one used to store "auto", which routed
-        // cookies and seller tokens to different pools and could file a seller session
-        // into the public scraping pool (S-1 / D-29).
-        if (newName && !newRole) {
-            statusDiv.textContent = "Pick an account role first.";
-            statusDiv.style.color = "red";
-            setTimeout(() => {
-                statusDiv.textContent = "";
-                statusDiv.style.color = "green";
-            }, 3000);
-            return;
-        }
-
+        // An empty tier is a legitimate answer — it means "this browser is not signed
+        // in to Etsy", and Pinterest still syncs. What is NOT allowed is guessing,
+        // which is what the old "auto" default did (S-1 / D-29).
         if (newName) {
             chrome.storage.local.set({
                 profile_id: newName,
@@ -43,7 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }, () => {
                 // Force a sync immediately so we don't have to wait for a cookie to change
                 chrome.runtime.sendMessage({ action: "force_sync", profile_id: newName, profile_role: newRole });
-                statusDiv.textContent = "Saved! Refresh Etsy tab to sync.";
+                statusDiv.textContent = newRole
+                    ? "Saved — syncing Etsy + Pinterest."
+                    : "Saved — Pinterest only (no Etsy account set).";
                 setTimeout(() => {
                     statusDiv.textContent = "";
                 }, 3000);
