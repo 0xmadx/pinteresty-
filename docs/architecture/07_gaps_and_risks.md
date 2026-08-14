@@ -839,4 +839,44 @@ exact failure mode `GOAL.md:67` defines as failure.
 
 ---
 
+## Public SERP parser — two defects found live 2026-08-14
+
+Found while verifying the public tier after the session-layer repairs. The fetch is
+healthy (200, ~790 KB, real cards); both defects are in `parse_search_html`.
+
+### PS-1 — `results_per_page` says 48, the page yields 12
+
+`etsy/api/public/api.py:114` selects `div.v2-listing-card`. On a live SERP:
+
+| Selector | Matches |
+|---|---|
+| `div.v2-listing-card` | **12** |
+| `.v2-listing-card` (any tag) | 12 |
+| `[data-listing-id]` (any tag) | 68 — `div` 25, `a` 24, `video` 7, `clg-favorite-button` 12 |
+| cards with the hidden `<form>` the parser needs | **12** |
+
+Etsy server-renders roughly the first screen and hydrates the rest client-side, and no
+headless browser is permitted here (nor wanted). So 12 is what a page actually yields.
+
+**The defect is not the 12 — it is that `results_per_page: 48` ships beside it
+unqualified.** Any saturation or survivor maths that divides by "the page" gets a
+number ~4× wrong, silently, which is the failure mode this system exists to prevent.
+Either label it `rendered_cards` vs Etsy's claimed `results_per_page`, or have the
+parser flag the disagreement. **Do not paper over it with a default.**
+
+### PS-2 — `organic_listing_ids` is always empty, so there is no rank order
+
+`api.py:104` requires `"result_count": N` within 200 characters of `"listing_ids"`.
+Live counts: `result_count` ×13, `listing_ids` ×8, **proximity matches: 0**.
+
+Consequence: the ranked organic id list is never populated. `rank_tracker` therefore
+has no authoritative ordering, and DOM order is not a substitute — **6 of the 12 cards
+on this SERP were ads**, so position in the DOM is not organic rank.
+
+Both are **Phase 1** work (they block the competitor tracker and rank tracking, not
+Settings). Neither is a regression from the session-layer changes: the fetch, the
+session and the card fields all verified working in the same run.
+
+---
+
 *Back to [01_system_overview.md](01_system_overview.md) for the one-page summary.*
