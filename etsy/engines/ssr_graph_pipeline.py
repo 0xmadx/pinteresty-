@@ -67,7 +67,11 @@ def run_bfs(seed_term: str, max_depth: int, max_nodes: int):
     print(f"Seed: '{seed_term}' | Max Depth: {max_depth} | Max Nodes: {max_nodes}\n")
     
     nodes_processed = 0
-    
+
+    reclaimed = db.reclaim_stale()
+    if reclaimed:
+        print(f"[+] Reclaimed {reclaimed} term(s) left claimed by an interrupted run.")
+
     while nodes_processed < max_nodes:
         # 1. Get next unvisited node from frontier
         current_node = db.pop_frontier()
@@ -110,9 +114,18 @@ def run_bfs(seed_term: str, max_depth: int, max_nodes: int):
                     
             if edges:
                 print(f"  [+] Pushed {len(qualified_edges)} highly qualified edges to frontier.")
+            db.complete_frontier(term)
+        elif node_data:
+            # A real answer, just an uninteresting one: the term exists and has no
+            # measurable volume. Answered, not failed — do not retry it forever.
+            db.complete_frontier(term)
+            print(f"  [-] '{term}' has no measurable volume — recorded, not retried")
         else:
-            print(f"  [-] Failed to fetch valid stats for '{term}'")
-            
+            # The fetch itself failed. Hand the claim back so the next run retries it
+            # rather than dropping the term from the crawl without telling anyone.
+            db.release_frontier(term)
+            print(f"  [!] Fetch failed for '{term}' — returned to the frontier")
+
         nodes_processed += 1
         time.sleep(1) # Polite delay between terms
         

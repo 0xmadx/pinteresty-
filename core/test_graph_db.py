@@ -97,7 +97,35 @@ def main():
     print()
     db.push_frontier("new term", 2, "t1", source="etsy")
     check("frontier still works", db.pop_frontier()["term"] == "new term")
+    db.complete_frontier("new term")   # a pop is now a claim; callers must close it
     check("is_visited still works", db.is_visited("mom necklace"))
+
+    # --- a claimed term survives a failed fetch (was: silently lost) --------------------
+    # pop_frontier used to DELETE on pop, so a term whose fetch then failed vanished
+    # from the queue while never reaching `nodes`. Nothing retried it and is_visited()
+    # said False, so the crawl finished with a hole and reported success.
+    db.push_frontier("flaky term", 1, None, source="etsy")
+    claimed = db.pop_frontier(source="etsy")
+    check("claim returns the term", claimed and claimed["term"] == "flaky term", claimed)
+    check("a claimed term is not handed out twice",
+          db.pop_frontier(source="etsy") is None)
+    db.release_frontier("flaky term")
+    again = db.pop_frontier(source="etsy")
+    check("released term is retried", again and again["term"] == "flaky term", again)
+    db.complete_frontier("flaky term")
+    check("completed term leaves the queue", db.pop_frontier(source="etsy") is None)
+
+    # A run killed mid-term leaves a claim behind. Without reclaim it stays claimed
+    # forever — the same silent hole, arriving more slowly.
+    db.push_frontier("orphaned term", 1, None, source="etsy")
+    db.pop_frontier(source="etsy")
+    check("stale claim blocks until reclaimed", db.pop_frontier(source="etsy") is None)
+    check("nothing reclaimed while the claim is fresh", db.reclaim_stale(30) == 0)
+    check("reclaim_stale releases an old claim", db.reclaim_stale(0) == 1)
+    check("and the term is crawlable again",
+          (db.pop_frontier(source="etsy") or {}).get("term") == "orphaned term")
+    db.complete_frontier("orphaned term")
+
     s = db.stats()
     check("stats still counts", s["nodes"] == 1 and s["edges"] == 3, f"got {s}")
 

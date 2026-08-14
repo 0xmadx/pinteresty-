@@ -1,7 +1,7 @@
 import sqlite3
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 # The metric columns that change between crawls. Every write of any of these also lands in
 # the append-only node_observations table, so `nodes` can stay a latest-state/crawl-state
@@ -156,8 +156,16 @@ class GraphDB:
         ]:
             if column not in existing:
                 conn.execute(f"ALTER TABLE nodes ADD COLUMN {column} {decl}")
-        if "source" not in {row[1] for row in conn.execute("PRAGMA table_info(frontier)")}:
+        frontier_cols = {row[1] for row in conn.execute("PRAGMA table_info(frontier)")}
+        if "source" not in frontier_cols:
             conn.execute("ALTER TABLE frontier ADD COLUMN source TEXT")
+        if "claimed_at" not in frontier_cols:
+            # Work in progress. pop_frontier used to DELETE on pop, so a term whose
+            # fetch then failed was gone from the queue and absent from `nodes` — lost
+            # silently, with is_visited() reporting False and nothing ever requeuing
+            # it. A crawl interrupted by a 403 or a crash finished with holes and
+            # reported success.
+            conn.execute("ALTER TABLE frontier ADD COLUMN claimed_at TEXT")
         edge_cols = {row[1] for row in conn.execute("PRAGMA table_info(edges)")}
         for column in ("first_seen", "last_seen"):
             if column not in edge_cols:
@@ -377,21 +385,56 @@ class GraphDB:
             conn.commit()
 
     def pop_frontier(self, source=None):
-        """Shallowest first, so the crawl is genuinely breadth-first. The original popped by
-        insert order, which drifts depth-first once children start landing."""
-        sql = "SELECT term, depth, parent_id, source FROM frontier"
+        """Claim the shallowest unclaimed term. Shallowest first, so the crawl is
+        genuinely breadth-first — the original popped by insert order, which drifts
+        depth-first once children start landing.
+
+        **Claims, does not delete.** Call `complete_frontier(term)` once the node is
+        safely written. If the process dies between the two, the claim goes stale and
+        `reclaim_stale()` puts the term back — at-least-once instead of at-most-once.
+        Deleting on pop meant any failed fetch silently dropped a term from the crawl.
+        """
+        sql = "SELECT term, depth, parent_id, source FROM frontier WHERE claimed_at IS NULL"
         args = []
         if source:
-            sql += " WHERE source = ?"
+            sql += " AND source = ?"
             args.append(source)
         sql += " ORDER BY depth ASC LIMIT 1"
         with sqlite3.connect(self.db_path) as conn:
             row = conn.execute(sql, args).fetchone()
             if row:
-                conn.execute("DELETE FROM frontier WHERE term = ?", (row[0],))
+                conn.execute("UPDATE frontier SET claimed_at = ? WHERE term = ?",
+                             (datetime.utcnow().isoformat(), row[0]))
                 conn.commit()
                 return {"term": row[0], "depth": row[1], "parent_id": row[2], "source": row[3]}
             return None
+
+    def complete_frontier(self, term):
+        """The term's node is written; drop it from the queue. Idempotent."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("DELETE FROM frontier WHERE term = ?", (term,))
+            conn.commit()
+
+    def release_frontier(self, term):
+        """Hand a claimed term straight back — a fetch failed and we know it now."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("UPDATE frontier SET claimed_at = NULL WHERE term = ?", (term,))
+            conn.commit()
+
+    def reclaim_stale(self, older_than_minutes=30):
+        """Release claims from a run that died without releasing them.
+
+        Call at the start of a crawl. Without it a killed run leaves its in-flight
+        terms claimed forever and they never get crawled — the same silent hole the
+        delete-on-pop bug created, just slower.
+        """
+        cutoff = (datetime.utcnow() - timedelta(minutes=older_than_minutes)).isoformat()
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute(
+                "UPDATE frontier SET claimed_at = NULL "
+                "WHERE claimed_at IS NOT NULL AND claimed_at < ?", (cutoff,))
+            conn.commit()
+            return cursor.rowcount
 
     def is_visited(self, term):
         with sqlite3.connect(self.db_path) as conn:

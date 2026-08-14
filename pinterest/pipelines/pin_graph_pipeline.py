@@ -85,6 +85,11 @@ def expand(api, db, term, term_id, depth, max_depth):
 
 def run(presets, country, max_depth, max_nodes, batch=50):
     db = GraphDB()
+    # A previous run that was killed mid-term left its claims in place; without this
+    # those terms stay claimed forever and are never crawled again.
+    reclaimed = db.reclaim_stale()
+    if reclaimed:
+        print(f"Reclaimed {reclaimed} term(s) left claimed by an interrupted run.")
     with PinterestTrendsAPI() as api:
         print(f"Data week: {api.latest_available_date()}  |  seeding...")
         rows_by_term = seed(api, db, presets, country)
@@ -99,16 +104,26 @@ def run(presets, country, max_depth, max_nodes, batch=50):
             term, depth = current["term"], current["depth"]
             term_id = f"pin:{term}"
 
-            row = rows_by_term.get(term)
-            if row:
-                db.add_node(node_from_row(row, depth, current["parent_id"]))
-            else:
-                db.add_node({"term_id": term_id, "term": term, "source": SOURCE,
-                             "node_type": "term", "depth": depth,
-                             "parent_id": current["parent_id"]})
-            pending.append(term)
+            try:
+                row = rows_by_term.get(term)
+                if row:
+                    db.add_node(node_from_row(row, depth, current["parent_id"]))
+                else:
+                    db.add_node({"term_id": term_id, "term": term, "source": SOURCE,
+                                 "node_type": "term", "depth": depth,
+                                 "parent_id": current["parent_id"]})
+                pending.append(term)
 
-            pushed = expand(api, db, term, term_id, depth, max_depth)
+                pushed = expand(api, db, term, term_id, depth, max_depth)
+            except Exception as exc:
+                # Hand the claim back so the next run retries this term. Swallowing the
+                # failure and moving on is what used to leave silent holes in the graph.
+                db.release_frontier(term)
+                print(f"  [!] {term!r} failed ({type(exc).__name__}: {exc}) — returned "
+                      f"to the frontier, not lost")
+                continue
+
+            db.complete_frontier(term)
             processed += 1
             print(f"  [{processed}/{max_nodes}] d{depth} {term!r} -> +{pushed} frontier")
 
