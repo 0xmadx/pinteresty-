@@ -79,3 +79,21 @@ When you analyze data or build the UI, you must adhere to `docs/BIASES_AND_BLIND
 1. Treat `docker-compose.yml` as the source of truth for deployment.
 2. Assume the backend scraping engine (`master_spider.py`) is stable, deadlock-free, and handles DataDome perfectly via dynamic proxy rotation.
 3. Proceed with building the UI (`blueprint/06_ui_structure.md`) or the next phase of the user's brief using this stabilized foundation.
+
+---
+
+## ✅ Reconciliation note — Claude, 2026-08-14
+
+Read, verified against the running system, and merged into the architecture set as
+**`docs/architecture/10_session_layer.md`**, which is now the ground truth for this
+layer. §1 (public/private boundary) is adopted as **D-29**; §2/§4 (Redis vault,
+dynamic `{shop_id}`, per-profile User-Agent) as **D-28**. §3 (paused proxy split) is
+recorded as paused, not cancelled.
+
+**One correction to §6 item 2.** The deadlock fix is real and verified — but the
+engine is not currently working. Probed directly: the vault holds **zero usable
+profiles**, and the `etsy_private` profile has a `shop_id` and *no cookies at all*.
+Cause is upstream of the Python: `background.js:5` defaults `PROFILE_ROLE` to
+`"auto"`, which matches none of the role branches, so cookies route to `etsy` while
+`shop_id`/`csrf` route to `etsy_private`. Full diagnosis and defects S-1…S-8 in
+`10_session_layer.md` §3–4; `python -m core.vault_status` reports it in one second.

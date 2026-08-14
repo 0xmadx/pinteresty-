@@ -344,6 +344,52 @@ Gemini during development — a different purpose from the app calling it at run
 
 ---
 
+## D-28 — Sessions live in a Redis vault, not `.env` (supersedes the cookie-server model)
+
+**Date:** 2026-08-13 (Gemini), verified against the running system 2026-08-14.
+**Context:** `EtsyPrivateAPI.__init__` scraped the dashboard for `operator_shop_id` and
+hardcoded it, while `SessionManager` rotated profiles per request. Profile A's
+`shop_id` sent with Profile B's cookies is an instant 403. `VaultGuardian` then
+rejected profiles lacking a `shop_id` — a circular dependency the system could not
+start from.
+**Chosen:** Authentication as a service, held in Redis.
+  * the Chrome extension POSTs cookies + `x-csrf-token` + `shop_id` + **`user_agent`**
+    to `cookie_server_go/main.go`
+  * private URLs carry a literal `{shop_id}` template, filled from *the profile that
+    was actually drawn* immediately before the request
+  * the profile's **own** User-Agent is applied to the curl_cffi session, so the UA,
+    the TLS fingerprint and the cookies describe one consistent browser
+  * dashboard scraping and `auto_discover_shop_id()` are deleted
+**Rejected:** hardcoding a shop_id; deriving it in Python; a buyer/seller extension
+split plus a proxy router (**paused**, not cancelled); IP-rotation logic in Python —
+IP alignment is infrastructure (residential proxy or one VPS), not a Python feature.
+**Consequence:** `core/cookie_server.py` is dead code and `.env` no longer carries
+cookies. Every doc describing the old model is superseded by `10_session_layer.md`.
+Two new failure modes that did not exist before: a request's identity is
+**non-deterministic**, and an empty pool **blocks forever** rather than raising (S-2).
+
+---
+
+## D-29 — Public unless seller access is mandatory; never a competitor's shop_id
+
+**Date:** 2026-08-13 (Gemini), adopted 2026-08-14.
+**Context:** `etsy_private` authenticates as the operator's **own** seller account.
+Buyer sessions are replaceable; the seller account is the business.
+**Chosen:** A hard split.
+  * `etsy_private` only for what nothing else can answer — search volume, CVR, chart
+    series, trending terms, LLM keywords
+  * `etsy` (buyer) for **everything** else — competitor shops, listings, reviews, SERP
+  * a competitor's `shop_id` **never** enters a private URL: that placeholder is *who
+    we are authenticated as*, not *who we are asking about*
+**Rejected:** using the private tier wherever it happens to be convenient, or reusing
+the seller session for competitor research because it is already open.
+**Consequence:** the competitor tracker (D-25) is a **public**-tier build, which is
+also why it can run at whatever frequency the scheduler wants. It also means the two
+tiers need two Chrome profiles — the extension's role is a single global, so one
+profile cannot serve both.
+
+---
+
 ## Open decisions (not yet made)
 
 | # | Question | Blocked on |

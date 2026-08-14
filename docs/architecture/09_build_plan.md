@@ -86,6 +86,28 @@ week-over-week momentum), `similar_search_terms`, and `market_gap_recommendation
 
 ## 4. Build order
 
+### Phase 0a — Turn the vault green (blocks everything below)
+
+Added 2026-08-14 after verifying the session layer against the running system. The
+access layer was rebuilt onto Redis (D-28) and **the vault currently holds no usable
+profile on any platform**. Until it does, no pipeline can fetch — and because
+`get_valid_account` waits in an unbounded loop, a run does not fail, it **hangs**.
+
+| # | Do | Owner |
+|---|---|---|
+| 0 | `python -m core.vault_status` — the one-second check | ✅ built |
+| 1 | Set the extension profile **role** (it defaults to `"auto"`, which matches no branch — S-1) | operator |
+| 2 | Reload Etsy Shop Manager so cookies *and* the csrf/shop_id hook both fire | operator |
+| 3 | Re-run `vault_status` until green | — |
+
+Full diagnosis, defect list S-1…S-8, and the public/private boundary:
+**`10_session_layer.md`**. The defects there are **operator-owned** — the access layer
+is read-only to agents.
+
+⚠️ **Everything downstream — Settings' verification, the crawl, the trackers, the
+scheduler — is untestable against live data until this is done.** Offline work
+(schema, config, the 441-assertion suite) proceeds regardless.
+
 ### Phase 0 — Settings and the clock
 
 Everything here is worth more the earlier it happens, because it is the input to
@@ -192,6 +214,8 @@ Not the data — anyone can scrape. The **three refusals**:
 
 | # | Item | Owner |
 |---|---|---|
+| **S-1** | **Set the extension profile role — the vault is red and nothing can fetch** | **operator, first** |
+| S-5 | Rotate the hardcoded `super_secret_key_123` before any non-localhost deploy | operator |
 | O-3 | Which signals survive a move to official APIs | operator |
 | O-6 | Etsy public parameter names (`page`, `min`/`max`, `attr_2/3`) — read them off Etsy's filter UI rather than guessing | operator |
 | — | Real fee schedule, COGS, hourly rate | operator → Settings (Phase 0) |

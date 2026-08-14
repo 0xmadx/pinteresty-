@@ -39,8 +39,15 @@ print(list(d['stats']))             # nested keys
 Then **diff the response keys against the keys the code reads.** That one check is the
 highest-value thing in this document.
 
-**You may fetch live data while building.** The cookie server must be running and an
-Etsy Shop Manager tab open, or the private API returns 401 (auth — *not* a rate limit).
+**You may fetch live data while building — check the vault first.** Sessions come from
+Redis now (D-28), and an empty pool makes the call **hang forever**, not fail:
+
+```bash
+.venv/Scripts/python.exe -m core.vault_status     # one second; run it before any long job
+```
+
+A `401` means the profile is not authenticated as a seller — auth, *not* a rate limit.
+See `docs/architecture/10_session_layer.md`.
 
 ---
 
@@ -118,15 +125,34 @@ until the wall clock crossed the hardcoded date mid-session.
 
 ## Rule 6 — The access layer is read-only to you
 
-`core/session_manager.py`, `core/cookie_server.py`, `chrome_extension/`,
-`pinterest/core/client.py`. Read them, document them, depend on them. Do **not**
-extend, refactor or improve them.
+`core/session_manager.py`, `core/cookie_vault.py`, `cookie_server_go/`,
+`chrome_extension/`, `pinterest/core/client.py`. Read them, document them, depend on
+them. Do **not** extend, refactor or improve them.
+
+`10_session_layer.md` lists eight real defects in this layer (S-1…S-8). **They are the
+operator's to fix.** Finding a ninth means documenting it there — not patching it.
 
 **No Playwright, Puppeteer or headless browsers, ever** — the prohibition predates this
 work (`_old_etsy_master_architecture.md:153`). `requests` and `curl_cffi` are fine.
 
 Adding *observation* (counting a 429, naming an error) is acceptable; adding
 *capability* (new auth, new cookie handling, retry/backoff policy) is not.
+
+---
+
+## Rule 7 — Public tier unless seller access is mandatory (D-29)
+
+`etsy_private` is the operator's **own** seller account — the one thing here that
+cannot be replaced. Before writing any fetch, ask which tier owes you the answer:
+
+| You need | Platform |
+|---|---|
+| search volume · CVR · chart series · trending terms · LLM keywords | `etsy_private` |
+| competitor shops · listings · reviews · SERP · saturation | `etsy` |
+
+**Never pass a competitor's `shop_id` into a private URL.** The `{shop_id}` template is
+*whose dashboard we are authenticated as* — substituting a competitor's is wrong data
+*and* a ban signal.
 
 ---
 

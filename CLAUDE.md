@@ -32,15 +32,22 @@ guard in this codebase exists to stop one specific wrong number reaching the ope
 # (etsy/ is a real package now; the sys.path hacks were deleted)
 ```
 
-**Live data works.** Sessions come from `.env`, refreshed by the Chrome extension via
-`core/cookie_server.py`.
+**Sessions come from a Redis vault, not `.env`** (changed 2026-08-13, D-28). The
+Chrome extension POSTs to a **Go** server (`cookie_server_go/main.go`, Docker) which
+writes Redis; `SessionManager` pulls a *random* profile per request and injects its
+cookies, its own User-Agent, its CSRF token, and its `shop_id` into the `{shop_id}`
+URL template. `core/cookie_server.py` is **dead code** — nothing imports it.
 
-- **The cookie server must be running**, and an Etsy Shop Manager tab open, or the
-  private API returns **401**. That is auth, not rate limiting.
-- After the operator restarts it, reload with `load_dotenv(override=True)` before
-  constructing a client — stale env values persist otherwise.
-- **You may fetch live data while building.** Probing the real API is usually faster
-  and more truthful than reasoning about it (see D-24 below).
+**Check the vault before any live run.** It is currently **red**, and an empty vault
+makes pipelines *hang*, not fail (S-2):
+
+```bash
+.venv/Scripts/python.exe -m core.vault_status
+```
+
+- **You may fetch live data while building** — when the vault is green. Probing the
+  real API is faster and more truthful than reasoning about it (D-24).
+- Full detail, defect list and the fix: **`docs/architecture/10_session_layer.md`**.
 
 ```bash
 # Full verification — run before every commit
@@ -96,9 +103,21 @@ time-varying value. The cache (`core/request_cache.py`) is the opposite — it e
 
 ### 6. Do not touch the access layer
 
-`core/session_manager.py`, `core/cookie_server.py`, `chrome_extension/` — read them,
-document them, never extend them. **No Playwright or headless browsers, ever.**
-`requests` / `curl_cffi` are fine.
+`core/session_manager.py`, `core/cookie_vault.py`, `cookie_server_go/`,
+`chrome_extension/` — read them, document them, never extend them. **No Playwright or
+headless browsers, ever.** `requests` / `curl_cffi` are fine.
+
+### 7. Public unless seller access is mandatory (D-29)
+
+`etsy_private` authenticates as **the operator's own seller account** — the one
+unreplaceable asset here. A burned buyer session costs a re-login; a burned seller
+account costs the business.
+
+- **Never** put a competitor's `shop_id` in a private URL. That `{shop_id}` is *who we
+  are*, not *who we are asking about*.
+- Private is only for what nothing else can answer: search volume, CVR, chart series,
+  trending terms, LLM keywords.
+- Competitor shops, listings, reviews, SERP → **public (`etsy`), always.**
 
 ---
 
@@ -106,6 +125,9 @@ document them, never extend them. **No Playwright or headless browsers, ever.**
 
 | Fact | Detail |
 |---|---|
+| **The vault is the session** | Redis, filled by the Go server from the extension. `SessionManager` rotates profiles per request, so two calls in one run may use two identities. |
+| **Extension role defaults to `"auto"`** | …which matches **no** branch, so cookies land in `etsy` while `shop_id`/csrf land in `etsy_private`. The private profile therefore has **no cookies** and cannot authenticate. Current blocker (S-1). |
+| **An empty vault hangs** | `get_valid_account` loops `sleep(5)` forever. Never assume a failed run will return (S-2). |
 | **No quota** | `results-data` reports `quota_data {total:15, remaining:15}` but three consecutive distinct calls left it at 15/15 — this endpoint does not consume it (D-14). `deep_dive_limit` defaults to unlimited. |
 | **401 ≠ 429** | 401 = stale session (restart cookie server). 429 = real throttle; `SessionManager.rate_limited` counts them. Nothing has ever recorded a 429. |
 | **`.env` is untracked** | `git rm --cached` was applied. `registry.json` was also untracked — it held 32 live session cookies. |
@@ -120,6 +142,7 @@ document them, never extend them. **No Playwright or headless browsers, ever.**
 | File | Answers |
 |---|---|
 | `docs/architecture/09_build_plan.md` | **what we are building and in what order** — start here |
+| `docs/architecture/10_session_layer.md` | how sessions really work now (Redis vault), the defect list, and why nothing can run today |
 | `docs/architecture/08_capability_map.md` | every endpoint + parameter, used vs never called |
 | `docs/architecture/07_gaps_and_risks.md` | the defect list; §ROOT CAUSE explains the empty tables |
 | `docs/architecture/bias_audit.md` | the **verified** bias picture |
