@@ -51,7 +51,17 @@
             font-size: 12px;
             color: green;
             text-align: center;
-            height: 14px;
+            min-height: 14px;
+        }
+        .req {
+            color: #c0392b;
+            font-weight: normal;
+        }
+        .hint {
+            font-size: 11px;
+            line-height: 1.4;
+            color: #666;
+            margin: 6px 0 0;
         }
     </style>
 </head>
@@ -60,13 +70,17 @@
     <label for="profileName">Profile Name:</label>
     <input type="text" id="profileName" placeholder="e.g. Seller_Account_1">
     
-    <label for="profileRole">Account Role:</label>
+    <label for="profileRole">Account Role: <span class="req">(required)</span></label>
     <select id="profileRole">
-        <option value="auto">Auto-Detect</option>
-        <option value="etsy_public">Etsy Public Only</option>
-        <option value="etsy_private">Etsy Seller Only</option>
-        <option value="pinterest">Pinterest Only</option>
+        <option value="">— pick one —</option>
+        <option value="etsy_public">Etsy Public (buyer session)</option>
+        <option value="etsy_private">Etsy Seller (your own shop)</option>
+        <option value="pinterest">Pinterest</option>
     </select>
+    <p class="hint">
+        One Chrome profile = one role. A seller-logged-in browser set to
+        <em>Public</em> puts your seller session in the competitor-scraping pool.
+    </p>
 
     <button id="saveBtn">Save Settings</button>
     <div id="status"></div>

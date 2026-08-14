@@ -12,6 +12,7 @@ exactly the situation this tool exists to report. It reads the keys directly.
 Observation only — it never writes to Redis, never mutates a profile, and adds no
 session-handling capability. The access layer is read-only (see the skill, Rule 6).
 """
+import hashlib
 import json
 import time
 
@@ -86,9 +87,30 @@ def _profile_report(client, platform, profile_id, in_valid_set):
         "shop_id": data.get("shop_id"),
         "has_csrf": bool(data.get("csrf_token")),
         "age": age,
+        "identity": session_identity(cookies),
         "problems": problems,
         "warnings": warnings,
     }
+
+
+def session_identity(cookies):
+    """A fingerprint of *which browser session* these cookies are, not which profile
+    name they were filed under.
+
+    `uaid` is Etsy's visitor id and `session-key-www` the login; together they identify
+    one browser. Two profile ids sharing a fingerprint are the SAME session stored
+    twice — which matters because the vault's whole defence is drawing a random
+    profile per request. If the pool is one session under ten names, rotation buys
+    nothing, and a 403 failover retires a name and then retries the identity that was
+    just blocked (S-11).
+    """
+    if not cookies:
+        return None
+    parts = (cookies.get("uaid", ""), cookies.get("session-key-www", ""),
+             cookies.get("_pinterest_sess", ""))
+    if not any(parts):
+        return None
+    return hashlib.md5("|".join(parts).encode()).hexdigest()[:8]
 
 
 def find_shadow_vaults(configured_url, timeout=2):
@@ -187,6 +209,37 @@ def main(verbose=False):
             if degraded:
                 print(f"      ⚠️  {degraded} of them have no user_agent (S-9 — ban risk)")
         print()
+
+    # How many DISTINCT browser sessions back the usable pool, and is the seller
+    # session sitting in the public pool?
+    identities = {}
+    for platform, state in report.items():
+        for p in state["usable"]:
+            if p["identity"]:
+                identities.setdefault(p["identity"], {}).setdefault(platform, []).append(
+                    p["profile_id"])
+
+    for platform, state in report.items():
+        usable = state["usable"]
+        distinct = {p["identity"] for p in usable if p["identity"]}
+        if usable and len(distinct) < len(usable):
+            print(f"⚠️  {platform}: {len(usable)} usable profiles, but only "
+                  f"{len(distinct)} distinct session(s) (S-11).")
+            print(f"    Rotation gives no identity diversity — a 403 failover retires a "
+                  f"name and redraws the same session.")
+
+    leaked = {ident: places for ident, places in identities.items()
+              if "etsy_private" in places and "etsy" in places}
+    if leaked:
+        print()
+        print("🚨 D-29 VIOLATION — the SELLER session is also in the PUBLIC pool:")
+        for ident, places in leaked.items():
+            print(f"    session {ident}")
+            print(f"      as seller : {', '.join(places['etsy_private'])}")
+            print(f"      as public : {', '.join(places['etsy'])}")
+        print("    Competitor scraping will draw the seller account. Remove the public")
+        print("    copies, or the one account you cannot replace is doing the risky work.")
+    print()
 
     if blocked:
         # Before blaming the extension, check we are even reading the right database.

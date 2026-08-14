@@ -23,8 +23,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const newName = profileNameInput.value.trim();
         const newRole = profileRoleSelect.value;
         
+        // A role is required. Saving without one used to store "auto", which routed
+        // cookies and seller tokens to different pools and could file a seller session
+        // into the public scraping pool (S-1 / D-29).
+        if (newName && !newRole) {
+            statusDiv.textContent = "Pick an account role first.";
+            statusDiv.style.color = "red";
+            setTimeout(() => {
+                statusDiv.textContent = "";
+                statusDiv.style.color = "green";
+            }, 3000);
+            return;
+        }
+
         if (newName) {
-            chrome.storage.local.set({ 
+            chrome.storage.local.set({
                 profile_id: newName,
                 profile_role: newRole
             }, () => {

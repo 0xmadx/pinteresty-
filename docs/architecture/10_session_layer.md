@@ -179,6 +179,25 @@ fire against the correct platform.
 
 ---
 
+## 3b. Fixed 2026-08-14 (with the operator's explicit authorisation to touch this layer)
+
+The boundary in §0 was lifted **once**, for these repairs only. They fix *routing and
+waiting*, not authentication — no new session mechanics, no browser automation.
+
+| Was | Now |
+|---|---|
+| `PROFILE_ROLE = "auto"`, labelled "Auto-Detect" in the popup, matching no branch | role removed from the UI; unset syncs **nothing** and logs why. *Refuse rather than guess.* |
+| csrf/shop_id hook early-returned on two named roles, so it **ran** under `auto` | fires only when the role **is** `etsy_private` — a positive test, so unknown roles are excluded by construction |
+| Save button sent `JSON.stringify(cookieJson)` while the other path sent the object | sends the object; the double-encode that produced valid-looking, zero-cookie profiles is gone (S-3) |
+| `while not profile_id: sleep(5)` — unbounded | bounded (120 s), then raises **`VaultEmpty`** — a distinct type, because "no session" and "Etsy said no" have different fixes |
+| unbounded recursion on rejected profiles | depth-bounded; reports the real reason instead of `RecursionError` |
+
+Pinned by `core/test_cookie_vault.py` (11 assertions) and `core/test_vault_status.py`
+(19). **`background.js` changes require reloading the extension** in
+`chrome://extensions` — the service worker caches the old script.
+
+---
+
 ## 4. Defect list (operator-owned — do not let an agent patch these)
 
 | # | Where | Defect | Consequence |
@@ -192,6 +211,8 @@ fire against the correct platform.
 | **S-7** | `core/cookie_server.py` | **dead code** — no module imports it | it still writes `.env`, which nothing reads. Two contradictory session mechanisms in one tree invites reviving the wrong one. |
 | **S-8** | history | `registry.json` (32 live session cookies) is in git history | **sign out of Etsy** to invalidate. Untracking it did not remove it. |
 | **S-9** | Go/extension | **no profile in the vault carries a `user_agent`** — every one of the 20 usable profiles lacks it | `SessionManager` silently falls back to a hardcoded Chrome 124 UA, which is precisely the UA/cookie mismatch Gemini's Change B was built to eliminate. **The fix is present in the code but not in the data.** Re-beam from an extension build that sends `navigator.userAgent`. |
+| **S-11** | the vault's contents | **The pool is not a pool.** The operator runs **2 Etsy accounts** (one public, one seller), but 20 profile ids exist under `etsy` — grouped by cookie identity they are only **3 distinct sessions**, one of them stored 10 times. | Rotation buys **no** identity diversity. Worse, a 403 failover `mark_invalid`s a *name* and then redraws **the same blocked session** under another name — burning through "profiles" while hammering one identity, and looking like working failover the whole time. |
+| **S-12** | the vault's contents | **The seller session is in the public pool.** Confirmed by cookie fingerprint, not inference: `private_seller_1` and the public profile `profile_k4yvt2bsg` are the same browser session. Earlier, six public ids shared the seller's identity. | Direct **D-29** violation — competitor scraping draws the account that cannot be replaced. Detected automatically by `vault_status`. |
 | **S-10** | `background.js` roles | profiles cross-contaminate platforms — the Go log shows *"Received **pinterest** cookies from profile `etsy_seller_1`"* and *"Received **etsy** cookies from profile `pinterest_1`"*; `cookie:pinterest:etsy_seller_1` exists | a seller identity's cookies landing in the Pinterest pool breaks the D-29 tier separation. Same root cause as S-1: role is a single global and the isolation guards test literals it never holds. |
 
 ---
