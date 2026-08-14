@@ -104,6 +104,17 @@ class RedisCookieVault:
                 self.redis_client.srem(valid_set_key, profile_id)
                 return self.get_valid_account(platform, _depth + 1)
              
+        # A profile with no cookies authenticates as nobody. The pool held four of
+        # these on pinterest, and nothing stopped them being drawn: the seller check
+        # below only guards etsy_private, so a public or pinterest request would go out
+        # completely unauthenticated and the failure would look like a site change
+        # rather than a missing session (S-13).
+        if not data.get("cookies_json"):
+            print(f"⚠️ [Vault] Profile {profile_id} on '{platform}' has NO COOKIES. "
+                  f"Rejecting — it cannot authenticate as anyone.")
+            self.redis_client.srem(valid_set_key, profile_id)
+            return self.get_valid_account(platform, _depth + 1)
+
         # Auto-Detect Secondary Layer: Verify private profiles are actually private
         if platform == "etsy_private":
             if not data.get("csrf_token") or not data.get("shop_id"):

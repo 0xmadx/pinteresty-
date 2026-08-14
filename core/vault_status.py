@@ -171,6 +171,127 @@ def scan(platforms=("etsy", "etsy_private", "pinterest")):
     return report
 
 
+def plan_prune(client, config):
+    """Which profiles should go, and why. Computes only — never writes.
+
+    Four rules, in order of how badly the entry misleads:
+
+      1. no cookies              — authenticates as nobody (S-13)
+      2. seller session in `etsy`— D-29: the irreplaceable account doing risky work
+      3. non-seller in etsy_private — a buyer session mis-filed by the old "auto" role
+      4. duplicate of a session already kept — a name, not capacity (S-11)
+
+    Rule 4 keeps the BEST profile per session, not the newest: completeness and pool
+    membership beat recency, because the one verified-working seller profile predates
+    the heartbeat field and would lose a pure freshness contest to a broken sibling.
+    """
+    seller_identity = None
+    private_key = "cookie:etsy_private:"
+    for key in client.scan_iter(f"{private_key}*"):
+        data = client.hgetall(key)
+        if data.get("shop_id") and data.get("csrf_token") and data.get("cookies_json"):
+            try:
+                cookies = json.loads(data["cookies_json"])
+            except (ValueError, TypeError):
+                continue
+            if isinstance(cookies, dict):
+                seller_identity = session_identity(cookies)
+                break
+
+    expected = config.expected_sessions
+    doomed, kept = [], []
+
+    for platform in ("etsy", "etsy_private", "pinterest"):
+        pool = set(client.smembers(f"valid_profiles:{platform}"))
+        entries = []
+        for key in client.scan_iter(f"cookie:{platform}:*"):
+            profile_id = key.split(":", 2)[2]
+            data = client.hgetall(key)
+            try:
+                cookies = json.loads(data.get("cookies_json") or "{}")
+            except (ValueError, TypeError):
+                cookies = {}
+            if not isinstance(cookies, dict):
+                cookies = {}
+            try:
+                updated = float(data.get("last_updated") or 0)
+            except (ValueError, TypeError):
+                updated = 0
+            entries.append({
+                "key": key, "platform": platform, "profile_id": profile_id,
+                "identity": session_identity(cookies), "n_cookies": len(cookies),
+                "in_pool": profile_id in pool, "updated": updated,
+                "complete": bool(cookies) and (
+                    platform != "etsy_private"
+                    or (data.get("csrf_token") and data.get("shop_id"))),
+            })
+
+        survivors = []
+        for e in entries:
+            if not e["n_cookies"]:
+                e["reason"] = "no cookies — authenticates as nobody (S-13)"
+                doomed.append(e)
+            elif platform == "etsy" and seller_identity and e["identity"] == seller_identity:
+                e["reason"] = "SELLER session in the public pool (D-29)"
+                doomed.append(e)
+            elif platform == "etsy_private" and seller_identity and e["identity"] != seller_identity:
+                e["reason"] = "not the seller session — mis-filed by the old 'auto' role"
+                doomed.append(e)
+            else:
+                survivors.append(e)
+
+        # Best first, then everything after the first of each identity is a duplicate.
+        survivors.sort(key=lambda e: (e["complete"], e["in_pool"], e["updated"]),
+                       reverse=True)
+        seen = {}
+        for e in survivors:
+            ident = e["identity"]
+            if ident in seen:
+                e["reason"] = f"duplicate of {seen[ident]} — same session, another name"
+                doomed.append(e)
+            else:
+                seen[ident] = e["profile_id"]
+                kept.append(e)
+
+        want = expected.get(platform)
+        if want is not None and len(seen) > want:
+            # More distinct sessions than accounts. The extras are old logins of the
+            # same account; keep the best `want` and retire the rest.
+            ranked = [e for e in kept if e["platform"] == platform]
+            for e in ranked[want:]:
+                e["reason"] = (f"{len(seen)} sessions but {want} account(s) run — "
+                               f"retiring the least complete")
+                doomed.append(e)
+                kept.remove(e)
+
+    return doomed, kept, seller_identity
+
+
+def apply_prune(client, doomed, backup_path):
+    """Delete, after writing every field of every doomed profile to disk.
+
+    The backup is what makes this reversible in the moment. The real recovery is
+    re-syncing from Chrome — one page load per account — but that requires the
+    operator to be there, and a mistake here should not need them.
+    """
+    import pathlib
+
+    dump = []
+    for e in doomed:
+        dump.append({"key": e["key"], "platform": e["platform"],
+                     "profile_id": e["profile_id"], "reason": e["reason"],
+                     "fields": client.hgetall(e["key"])})
+
+    path = pathlib.Path(backup_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(dump, indent=2), encoding="utf-8")
+
+    for e in doomed:
+        client.srem(f"valid_profiles:{e['platform']}", e["profile_id"])
+        client.delete(e["key"])
+    return path
+
+
 def main(verbose=False):
     config = ScraperConfig()
     print(f"Vault: {config.REDIS_URL}\n")
@@ -267,19 +388,68 @@ def main(verbose=False):
             return 1
 
         print(f"No usable profile for: {', '.join(blocked)}")
-        print("Any pipeline touching these will HANG, not fail (S-2). Fix first:")
-        print("  1. Open the extension popup and set the profile role explicitly")
-        print("     ('auto' is the default and matches no branch — S-1).")
-        print("  2. Reload an Etsy Shop Manager tab so cookies AND the csrf/shop_id")
-        print("     hook both fire for that role.")
-        print("  3. Re-run this check.")
-        print("  See docs/architecture/10_session_layer.md §3")
+        print("Pipelines raise VaultEmpty rather than run on nothing. To fix:")
+        if "etsy" in blocked or "etsy_private" in blocked:
+            print("  · Etsy: open the extension popup and say whether that browser is")
+            print("    signed in as a buyer or as your seller account. Undeclared means")
+            print("    Etsy is skipped on purpose — we will not guess which it is.")
+            print("    Then load any Etsy page to sync.")
+        if "etsy_private" in blocked:
+            print("  · Seller specifically: open SHOP MANAGER. shop_id is only captured")
+            print("    from a URL matching /shop/<digits>/ — cookies and csrf alone are")
+            print("    not enough and the profile will be rejected.")
+        if "pinterest" in blocked:
+            print("  · Pinterest: just load a Pinterest page. No declaration needed.")
+        print("  Then re-run this check.  See docs/architecture/10_session_layer.md")
         return 1
 
     print("Vault is green — live calls will work.")
     return 0
 
 
+def prune_main(apply=False):
+    config = ScraperConfig()
+    client = redis.Redis.from_url(config.REDIS_URL, decode_responses=True)
+    client.ping()
+
+    doomed, kept, seller = plan_prune(client, config)
+    print(f"Vault: {config.REDIS_URL}")
+    print(f"Seller session: {seller or '(none identified)'}\n")
+
+    if not doomed:
+        print("Nothing to prune.")
+        return 0
+
+    by_reason = {}
+    for e in doomed:
+        by_reason.setdefault(e["reason"], []).append(e)
+    for reason, entries in sorted(by_reason.items(), key=lambda kv: -len(kv[1])):
+        print(f"DELETE ({len(entries)}) — {reason}")
+        for e in sorted(entries, key=lambda x: (x["platform"], x["profile_id"])):
+            pool = "in pool" if e["in_pool"] else "       "
+            print(f"    {e['platform']:<14} {e['profile_id']:<26} "
+                  f"{e['n_cookies']:>3} cookies  {pool}")
+        print()
+
+    print("KEEP")
+    for e in sorted(kept, key=lambda x: (x["platform"], x["profile_id"])):
+        print(f"    {e['platform']:<14} {e['profile_id']:<26} "
+              f"{e['n_cookies']:>3} cookies  session {e['identity']}")
+    print(f"\n{len(doomed)} to delete, {len(kept)} to keep.")
+
+    if not apply:
+        print("\nDry run. Re-run with --apply to perform it.")
+        return 0
+
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    path = apply_prune(client, doomed, f"data/vault_backup_{stamp}.json")
+    print(f"\nDeleted {len(doomed)} profiles. Backup: {path}")
+    print("Re-sync from Chrome to repopulate: one page load per account.")
+    return 0
+
+
 if __name__ == "__main__":
     import sys
+    if "--prune" in sys.argv:
+        raise SystemExit(prune_main(apply="--apply" in sys.argv))
     raise SystemExit(main(verbose="-v" in sys.argv))

@@ -37,3 +37,6 @@ test_session.py
 # env backups — they contain the same secrets as .env
 .env.bak*
 .env.*.bak
+
+# vault backups contain LIVE session cookies — never commit
+data/vault_backup_*.json

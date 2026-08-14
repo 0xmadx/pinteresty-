@@ -133,6 +133,25 @@ check("and removes it from the pool",
       ("valid_profiles:etsy_private", "bad") in vault.redis_client.srem_calls,
       vault.redis_client.srem_calls)
 
+# --- S-13: a cookie-less profile is never handed out ----------------------------
+# Four of these were sitting in the live pinterest pool. The seller check below them
+# only guards etsy_private, so these would have gone out unauthenticated.
+for platform in ("etsy", "pinterest"):
+    vault = build(
+        sets={f"valid_profiles:{platform}": ["hollow", "real"]},
+        hashes={
+            f"cookie:{platform}:hollow": {"is_valid": "1"},
+            f"cookie:{platform}:real": {"cookies_json": COOKIES, "is_valid": "1"},
+        },
+    )
+    with quiet():
+        account = vault.get_valid_account(platform)
+    check(f"{platform}: skips the cookie-less profile", account["profile_id"] == "real",
+          account.get("profile_id"))
+    check(f"{platform}: and drops it from the pool",
+          (f"valid_profiles:{platform}", "hollow") in vault.redis_client.srem_calls,
+          vault.redis_client.srem_calls)
+
 # --- a stale heartbeat is purged rather than used -------------------------------
 stale = str(time.time() - 9999)
 vault = build(
