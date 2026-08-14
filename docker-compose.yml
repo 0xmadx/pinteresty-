@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:alpine
+    container_name: scraper-redis
+    ports:
+      # Exposing for local debugging if needed, but internally accessible on 6379
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - scraper_network
+
+  go-api:
+    build: 
+      context: ./cookie_server_go
+    container_name: cookie-server-go
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - API_KEY=super_secret_key_123
+    depends_on:
+      - redis
+    networks:
+      - scraper_network
+
+  python-scraper:
+    build:
+      context: .
+    container_name: python-scraper
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      # Include any other env vars like CAPSOLVER_API_KEY
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+    networks:
+      - scraper_network
+
+volumes:
+  redis_data:
+
+networks:
+  scraper_network:
+    driver: bridge

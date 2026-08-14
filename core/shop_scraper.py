@@ -3,6 +3,8 @@ import urllib.parse
 from bs4 import BeautifulSoup
 import json
 
+from core.guards import soft_parse
+
 def _parse_count(text):
     """'(4.2k)' -> 4200, '(19.8k)' -> 19800, '3,456' -> 3456, '3456 Sales' -> 3456"""
     if not text:
@@ -19,12 +21,18 @@ def _parse_count(text):
     multiplier = {'k': 1_000, 'm': 1_000_000}.get(m.group(2), 1)
     return int(value * multiplier)
 
+from bs4 import BeautifulSoup
+from core.session_manager import SessionManager
+
 class ShopScraper:
     def __init__(self, public_api):
         """
-        Accepts an instance of EtsyPublicAPI to utilize its session and proxy/Datadome settings.
+        Accepts an instance of EtsyPublicAPI for backwards compatibility.
+        Now uses SessionManager to automatically bypass DataDome and inject synced cookies.
         """
         self.api = public_api
+        self.config = self.api.config
+        self.session_manager = SessionManager(self.config)
 
     def get_shop_metrics(self, shop_name):
         """
@@ -32,42 +40,59 @@ class ShopScraper:
         Returns a dict: {'shop_name': str, 'total_sales': int, 'total_reviews': int}
         """
         url = f"https://www.etsy.com/shop/{urllib.parse.quote_plus(shop_name)}"
-        resp = self.api.session.request("GET", url, headers=self.api.headers, cookies=self.api.cookies)
+        
+        # SessionManager will automatically try 'etsy' cookies.
+        # It natively handles the failover loop, headers, and Datadome evasion.
+        try:
+            resp = self.session_manager.get(url, platform="etsy")
+        except ValueError as e:
+            print(f"⚠️ {e}")
+            print("⚠️ No valid 'etsy' cookies. Falling back to 'etsy_private' cookies for public scraping.")
+            try:
+                resp = self.session_manager.get(url, platform="etsy_private")
+            except ValueError as e:
+                print(f"[-] {e}")
+                return None
+        
+        # Keep the session alive: check if Etsy returned an updated datadome cookie
+        if hasattr(resp, 'cookies'):
+            new_datadome = resp.cookies.get('datadome')
+            if new_datadome and self.api:
+                self.api.update_datadome_cookie(new_datadome)
         
         if resp.status_code != 200:
             print(f"[-] Failed to fetch shop page for {shop_name}. Status Code: {resp.status_code}")
             return None
             
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        
+        soup = BeautifulSoup(resp.text, "html.parser")
+            
         # 1. Find Total Sales
         total_sales = None
-        sales_tag = soup.find('a', href=lambda x: x and x.endswith('/sold'))
-        if sales_tag:
-            total_sales = _parse_count(sales_tag.text)
+        sales_tags = soup.select('a[href$="/sold"]')
+        if sales_tags:
+            total_sales = _parse_count(sales_tags[0].text)
             
         # 2. Find Total Reviews
         total_reviews = None
-        # Often found in a specific badge or span with "reviews" text
-        review_tag = soup.find(attrs={"data-buy-box-region": "reviews"})
-        if review_tag:
-            total_reviews = _parse_count(review_tag.text)
+        review_tags = soup.select('[data-buy-box-region="reviews"]')
+        if review_tags:
+            total_reviews = _parse_count(review_tags[0].text)
             
         # Fallback for reviews if data-attribute is missing (e.g., just "(4.2k)")
         if total_reviews is None:
-            header = soup.find('div', class_='shop-home-header')
-            if header:
+            headers = soup.select('div.shop-home-header')
+            if headers:
                 # Look for a string like "(4.2k)"
-                match = re.search(r'\(([\d.,]+[km]?)\)', header.get_text())
+                match = re.search(r'\(([\d.,]+[km]?)\)', headers[0].text)
                 if match:
                     total_reviews = _parse_count(match.group(1))
 
         # Fallback for sales if the shop hides their sold history (the link disappears)
         if total_sales is None:
-            header = soup.find('div', class_='shop-home-header')
-            if header:
+            headers = soup.select('div.shop-home-header')
+            if headers:
                 # Look for "26.8k Sales" or "26.8k sales" across lines
-                text = header.get_text(" ", strip=True).lower()
+                text = headers[0].text.lower()
                 match = re.search(r'([\d.,]+[km]?)\s*sales?', text)
                 if match:
                     total_sales = _parse_count(match.group(1))
@@ -78,7 +103,7 @@ class ShopScraper:
         
         ld_matches = re.finditer(r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>', resp.text, re.IGNORECASE | re.DOTALL)
         for m in ld_matches:
-            try:
+            with soft_parse("shop.ld_json", shop_name=shop_name):
                 data = json.loads(m.group(1).strip())
                 if isinstance(data, list):
                     for item in data:
@@ -87,14 +112,12 @@ class ShopScraper:
                             rating = item.get('aggregateRating', {})
                             if 'reviewCount' in rating:
                                 exact_review_count = int(rating['reviewCount'])
-                        
+
                         # Extract exact active items from ItemList
                         if item.get('@type') == 'ItemList':
                             if 'numberOfItems' in item:
                                 exact_active_listings = int(item['numberOfItems'])
-            except Exception as e:
-                pass
-                        
+
         return {
             "shop_name": shop_name,
             "total_sales": total_sales,

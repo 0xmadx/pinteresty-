@@ -70,7 +70,11 @@ class EndpointManager:
             elif part == "-X" or part == "--request":
                 method = next(it).upper()
                 
+        # Infer auth_level based on URL
+        auth_level = "private" if ("/your/shops/me/" in url or "/api/v3/ajax/shop/" in url or "/api/v3/ajax/bespoke/member/" in url) else "public"
+
         self.endpoints[name] = {
+            "auth_level": auth_level,
             "method": method,
             "url_template": url,
             "headers": headers,

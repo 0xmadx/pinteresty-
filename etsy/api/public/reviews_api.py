@@ -3,7 +3,7 @@ import json
 
 from etsy.api.public.api import EtsyPublicAPI
 
-def get_recent_reviews(listing_id, public_api=None, shop_id=None, csrf_token=None):
+def get_recent_reviews(listing_id, public_api=None, target_shop_id=None, csrf_token=None):
     """
     Fetches the deep dive reviews for a listing to calculate Review Velocity.
     Returns a list of review timestamps (epoch).
@@ -11,22 +11,22 @@ def get_recent_reviews(listing_id, public_api=None, shop_id=None, csrf_token=Non
     if public_api is None:
         public_api = EtsyPublicAPI()
         
-    if not shop_id:
-        # 1. We need the shop_id. We can get this by fetching the listing page.
+    if not target_shop_id:
+        # 1. We need the target_shop_id. We can get this by fetching the listing page.
         url = f"https://www.etsy.com/listing/{listing_id}"
-        resp = public_api.session.request("GET", url, headers=public_api.headers, cookies=public_api.cookies)
+        resp = public_api.session.request("GET", url, headers=public_api.headers, platform="etsy")
         
         if resp.status_code != 200:
             print(f"[-] Failed to fetch listing {listing_id}. Status: {resp.status_code}")
             return []
             
-        # Look for shop_id in the raw HTML
+        # Look for target_shop_id in the raw HTML
         match = re.search(r'shop_id[\"\'\:\s]+(\d+)', resp.text.lower())
         if not match:
-            print(f"[-] Could not extract shop_id for listing {listing_id}")
+            print(f"[-] Could not extract target_shop_id for listing {listing_id}")
             return []
             
-        shop_id = int(match.group(1))
+        target_shop_id = int(match.group(1))
         
         csrf_match = re.search(r'<meta name="csrf-token" content="([^"]+)"', resp.text)
         if csrf_match:
@@ -52,7 +52,7 @@ def get_recent_reviews(listing_id, public_api=None, shop_id=None, csrf_token=Non
                 "Etsy\\Modules\\ListingPage\\Reviews\\DeepDive\\AsyncApiSpec",
                 {
                     "listing_id": int(listing_id),
-                    "shop_id": shop_id,
+                    "shop_id": target_shop_id,
                     "scope": "listingReviews",
                     "page": 1,
                     "sort_option": "Recency", # Change from Relevancy to Recency to get the newest!
@@ -68,7 +68,7 @@ def get_recent_reviews(listing_id, public_api=None, shop_id=None, csrf_token=Non
         "runtime_analysis": False
     }
     
-    review_resp = public_api.session.request("POST", review_url, json=payload, headers=headers, cookies=public_api.cookies)
+    review_resp = public_api.session.request("POST", review_url, json=payload, headers=headers, platform="etsy")
     if review_resp.status_code != 200:
         print(f"[-] Failed to fetch reviews for {listing_id}. Status: {review_resp.status_code}")
         return []
@@ -114,7 +114,7 @@ def get_recent_reviews(listing_id, public_api=None, shop_id=None, csrf_token=Non
             
     return dates
 
-def get_review_details(listing_id, public_api=None, shop_id=None, csrf_token=None):
+def get_review_details(listing_id, public_api=None, target_shop_id=None, csrf_token=None):
     """
     Fetches the deep dive reviews and extracts full text and ratings for sentiment analysis.
     Returns a list of dicts: [{'date': str, 'text': str, 'rating': int}]
@@ -122,16 +122,16 @@ def get_review_details(listing_id, public_api=None, shop_id=None, csrf_token=Non
     if public_api is None:
         public_api = EtsyPublicAPI()
         
-    if not shop_id:
+    if not target_shop_id:
         url = f"https://www.etsy.com/listing/{listing_id}"
-        resp = public_api.session.request("GET", url, headers=public_api.headers, cookies=public_api.cookies)
+        resp = public_api.session.request("GET", url, headers=public_api.headers, platform="etsy")
         
         if resp.status_code != 200:
             return []
             
         match = re.search(r'shop_id[\"\'\:\s]+(\d+)', resp.text.lower())
         if match:
-            shop_id = int(match.group(1))
+            target_shop_id = int(match.group(1))
         
         csrf_match = re.search(r'<meta name="csrf(?:_nonce|-token)" content="([^"]+)"', resp.text)
         if csrf_match:
@@ -154,7 +154,7 @@ def get_review_details(listing_id, public_api=None, shop_id=None, csrf_token=Non
                 "Etsy\\Modules\\ListingPage\\Reviews\\DeepDive\\AsyncApiSpec",
                 {
                     "listing_id": int(listing_id),
-                    "shop_id": shop_id,
+                    "shop_id": target_shop_id,
                     "scope": "listingReviews",
                     "page": 1,
                     "sort_option": "Recency",
@@ -167,7 +167,7 @@ def get_review_details(listing_id, public_api=None, shop_id=None, csrf_token=Non
         "runtime_analysis": False
     }
     
-    review_resp = public_api.session.request("POST", review_url, json=payload, headers=headers, cookies=public_api.cookies)
+    review_resp = public_api.session.request("POST", review_url, json=payload, headers=headers, platform="etsy")
     if review_resp.status_code != 200:
         return []
         

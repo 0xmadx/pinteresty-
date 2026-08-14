@@ -1,11 +1,16 @@
+# Session sync is cookie_server + Chrome extension ONLY — browser-automation deps
+# (playwright, playwright-stealth, capsolver) are prohibited and were removed (F-13/F-14).
 curl_cffi>=0.7.0
 beautifulsoup4>=4.12.0
 lxml>=5.0.0
 pydantic>=2.0.0
-playwright>=1.40.0
-playwright-stealth>=1.0.6
 python-dotenv>=1.0.0
-capsolver>=1.0.0
 pandas>=2.1.0
 plotly>=5.18.0
 numpy>=1.26.0
+# used but previously undeclared (F-13)
+httpx>=0.27.0
+requests>=2.31.0
+fastapi>=0.110.0
+uvicorn>=0.29.0
+redis

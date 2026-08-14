@@ -285,6 +285,63 @@ bias audit and several rounds of review, because every reviewer reasoned about t
 rather than the wire. `parse_results_data` now centralises the shape and accepts both
 spellings. See `09_build_plan.md` §3.
 
+## D-25 — Competitor tracking measures OUTCOMES, not listings
+
+**Context:** The operator proposed a competitor-shop window: track shops, see what they
+list, relate it to watched niches.
+**Chosen:** Track **per-listing review velocity** — *what they listed that then sold* —
+not a feed of what they listed.
+**Rejected:** A listing feed. Listings are cheap and most fail; a feed tells you what a
+competitor **guessed**, and copying guesses is copying noise.
+**Consequence, and it is bigger than the feature looks:** a competitor's launches are
+chosen **independently of our model**, so their outcomes are an unbiased sample. Our own
+`launches` table can only ever contain niches the model already liked, which is B-04 —
+the model cannot discover it was wrong to reject something. Watching competitors
+partially fixes that for free, and the sample grows weekly instead of one launch at a
+time.
+Reviews are the only competitor signal that cannot be faked, and review **dates** are
+already fetched, so velocity per listing is measurable today.
+**Two guards:** track some **mid-tier** shops, not only stars, or this reproduces B-01
+survivorship at the shop level. And shop-level sales deltas cannot attribute a jump to a
+specific listing — per-listing review velocity is what attributes it.
+**Timing:** must start collecting **early**. It is the one item that is worthless if
+started late, so it goes ahead of features that can be added any time.
+
+## D-26 — COGS is per-product; Settings has two tiers
+
+**Context:** D-23 put Settings first, but a single COGS figure is wrong — cost differs
+per item, and the operator sells all three types (D-22).
+**Chosen:** Split Settings.
+  * **Global**, set once: Etsy fee rates, hourly rate, hours available per week.
+  * **Per-product profiles**, named and reusable: COGS, shipping cost, labour minutes —
+    e.g. `"Digital printable"` (0/0/0), `"Ceramic mug"` ($8.50/$4.20/3 min),
+    `"Custom name sign"` ($12/$6/45 min).
+**Rejected:** One global COGS. It would be wrong for every product except one.
+**Consequence:** No redesign needed — `profit.verdict()` already accepts exactly these
+as `product_profile`. Judging a candidate means choosing a profile. For personalized
+goods the labour minutes drive the weekly capacity ceiling, which is usually the binding
+constraint rather than demand.
+**Form:** a **config file plus CLI first**, web page later. The UI is Phase 4 and this
+unblocks real profit numbers immediately.
+
+## D-27 — The LLM classifies and extracts; it never invents a number
+
+**Context:** The operator has Gemini available and asked whether an LLM could supply COGS.
+**Chosen:** LLM use is limited to **classification** and **extraction from a real
+source**:
+  * product-type detection (digital / physical / personalized) — **required by D-22**
+  * occasion/holiday detection from a keyword
+  * pulling a price out of a supplier page the operator pastes
+**Rejected:** Asking an LLM to estimate COGS, demand, or any figure it cannot read from
+a source.
+**Consequence:** An invented cost flows straight into a go/no-go verdict — the
+plausible-wrong-number failure this system exists to prevent, in the most expensive
+place. Anything an LLM produces is tagged as derived and is overridable, exactly like a
+defaulted CVR.
+**Provider:** `core/llm_client.py` already wraps DeepSeek and works. Adding Gemini is a
+second provider in that file, not an MCP. (An MCP would give *Claude Code* access to
+Gemini during development — a different purpose from the app calling it at runtime.)
+
 ---
 
 ## Open decisions (not yet made)

@@ -1,12 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Scraper Cookie Syncer",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Automatically syncs cookies for Etsy and Pinterest to the local Python scraper backend.",
   "permissions": [
     "cookies",
     "alarms",
-    "tabs"
+    "tabs",
+    "webRequest",
+    "storage"
   ],
   "host_permissions": [
     "*://*.etsy.com/*",
@@ -14,5 +16,21 @@
   ],
   "background": {
     "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.etsy.com/*",
+        "*://*.pinterest.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Scraper Profile Settings"
   }
 }

@@ -158,7 +158,7 @@ class MasterNicheFinder:
         pool = [{"key": n["keyword"], "demand": n["volume"], "supply": n["competition"]}
                 for n in scored_niches]
         weights = {"demand": 0.5, "supply": 0.5}
-        verdict = can_discriminate(pool, weights)
+        discrim_verdict = can_discriminate(pool, weights)
 
         # The best outcome is not to shortlist at all. Every candidate discarded here is
         # discarded on demand+supply alone, which cannot discriminate — so when the deep
@@ -172,7 +172,7 @@ class MasterNicheFinder:
                   f"{len(scored_niches)} candidate(s).")
             print(f"      [+] Nothing is discarded on a demand/supply score that cannot "
                   f"discriminate. Ranking happens in step 6 on measured intent and profit.")
-        elif verdict.ok:
+        elif discrim_verdict.ok:
             ranked = score_pool(pool, weights=weights,
                                 pool_id=f"niche_finder:{self.seed}")
             by_key = {r.key: r for r in ranked}
@@ -186,7 +186,7 @@ class MasterNicheFinder:
                                    key=lambda x: x.get("base_opportunity_score", 0),
                                    reverse=True)
             top_3 = scored_niches[:self.deep_dive_limit]
-            print(f"\n  [3] Shortlist (ranked — {verdict.reason}):")
+            print(f"\n  [3] Shortlist (ranked — {discrim_verdict.reason}):")
             for idx, niche in enumerate(top_3):
                 print(f"      #{idx+1} '{niche['keyword']}': "
                       f"{niche['base_opportunity_score']:.3f} "
@@ -202,7 +202,7 @@ class MasterNicheFinder:
                 n["selection"] = "filter"
             top_3 = [n for n in scored_niches if n["keyword"] in chosen]
             print(f"\n  [3] Shortlist (FILTER, not a ranking):")
-            print(f"      [!] {verdict.reason}")
+            print(f"      [!] {discrim_verdict.reason}")
             print(f"      [!] These {len(top_3)} are selected as worth a metered "
                   f"deep-dive call. Their ORDER means nothing. Ranking happens in "
                   f"step 6, once intent and profit exist.")

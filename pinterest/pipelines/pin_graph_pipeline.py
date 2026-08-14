@@ -136,8 +136,9 @@ def flush(api, db, terms):
     these terms never reach the wire at all — they entered the frontier through
     related_terms/prefix_match, which already handed back their series.
 
-    update_node, not add_node: add_node is INSERT OR REPLACE and would blank the discovery
-    stats (seasonality, momentum, depth) written when the node was created.
+    update_node, not add_node: this is a patch of two fields on an existing node, not a
+    (re-)discovery. (add_node no longer blanks unsupplied columns — it COALESCEs against
+    the stored row — but update_node states the intent and skips the full upsert.)
     """
     import json as _json
 

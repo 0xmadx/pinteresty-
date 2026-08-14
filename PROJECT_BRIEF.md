@@ -48,19 +48,18 @@ structured, what they return, how the rest of the system depends on them, where
 they sit in the layering.
 
 **What you must NOT do:** extend, improve, refactor, optimize, or write new code
-for the session handling and data access mechanics —
+for the evasion/access mechanics —
 
-- the session synchronization logic
+- the DataDome / anti-bot bypass logic
 - cookie relay / cookie sync / the Chrome extension
 - `tls_client` fingerprinting, app keys, CSRF/lazy-load intercepts
-- anything whose job is *managing undetected sessions* or *acquiring credentials*
-- **NO PLAYWRIGHT OR BROWSER AUTOMATION:** You are strictly forbidden from writing or running Playwright scripts. Use `core/cookie_server.py` and the existing Chrome Extension for all session logic. NOTE: You ARE allowed to use standard Python `requests` or `tls_client` to fetch data, just no headless browsers.
+- anything whose job is *evading detection* or *acquiring credentials*
 
 So: **document how it works and how the system depends on it — do not make it work
 better or add to it.** Describe, map, diagram, critique its coupling. Don't extend
 its capability.
 
-If a task would require writing new session handling code, **stop and flag it**
+If a task would require writing new evasion/access code, **stop and flag it**
 rather than proceeding. Everything else in the codebase — pipelines, analytics,
 engines, storage, scoring, generators — is fully in scope for both analysis *and*
 design recommendations.
@@ -98,6 +97,14 @@ Create these under `docs/architecture/`. Each is described by the skill
    it does.
 7. **`07_gaps_and_risks.md`** — the contradictions, the missing guards, the
    temporal bug, dead code, and anything fragile. The honest defect list.
+8. **`bias_audit.md`** — **the verified bias report.** `BIASES_AND_BLIND_SPOTS.md`
+   is a set of *hypotheses inferred from docs* — you confirm, correct, or refute
+   each against the real code, and find biases we didn't anticipate. For every
+   function that returns a number used in a decision, run the five questions in
+   that doc's "How to find biases we didn't anticipate" section. Mark each
+   hypothesis CONFIRMED / WORSE / REFUTED / NOT-APPLICABLE with file + line, and
+   add any new biases found. Use the `bias-aware-analysis` skill. **We do not know
+   the real biases yet — this deliverable produces them.**
 
 **The three that matter most are `02_design_approach.md`, `03_data_flow.md`, and
 `06_stack_and_deps.md`** — design approach, data flow, and stack are the operator's

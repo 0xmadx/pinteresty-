@@ -7,13 +7,13 @@ load_dotenv()
 
 @dataclass(frozen=True)
 class ScraperConfig:
-    # CapSolver Settings
-    CAPSOLVER_API_KEY: str = os.environ.get("CAPSOLVER_API_KEY", "")
-    
     # Proxy Settings (Critical for Akamai/DataDome)
     USE_PROXY: bool = os.environ.get("USE_PROXY", "False").lower() in ("true", "1", "t", "yes")
     PROXY_URL: str = os.environ.get("PROXY_URL", "") # Format: http://user:pass@host:port
     
+    # Redis Settings (replaces .env for cookies)
+    REDIS_URL: str = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+
     # Target site
     BASE_URL: str = "https://www.etsy.com"
     SEARCH_ENDPOINT: str = "/search"
@@ -25,21 +25,11 @@ class ScraperConfig:
     # Browser fingerprint to impersonate with curl_cffi
     BROWSER_FINGERPRINT: str = "chrome124"
     
-    # Manual Cookie Override
+    # Manual Cookie Override — refreshed by core/cookie_server.py + the Chrome extension,
+    # the ONLY session-sync mechanism in this project. Browser automation (Playwright et
+    # al.) is prohibited; its dead config was removed 2026-08-11 (F-14).
     DATADOME_COOKIE: str = os.environ.get("DATADOME_COOKIE", "")
-    
-    # Playwright Persistent Context (Use local profile to avoid Windows lock issues)
-    CHROME_EXECUTABLE_PATH: str = r"C:\Users\0xdevy\AppData\Local\Google\Chrome SxS\Application\chrome.exe"
-    # Pointing to a local folder so we don't collide with the user's running browser
-    CHROME_USER_DATA_DIR: str = r"C:\Users\0xdevy\Desktop\eso esty\data\chrome_profile"
-    
-    # Cookie refresh interval (seconds)
-    COOKIE_REFRESH_INTERVAL: int = 3600 # Wait an hour between playwright runs
-    
+
     # Request settings
     REQUEST_TIMEOUT: int = 30
     MAX_RETRIES: int = 3
-    
-    # Playwright Automation Settings
-    PLAYWRIGHT_HEADLESS: bool = False # Keep headful to solve Captcha/DataDome
-    PLAYWRIGHT_TIMEOUT: int = 60000 # Wait 60s for user to solve challenge if needed

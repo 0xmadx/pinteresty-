@@ -15,21 +15,12 @@ class EtsyPublicAPI:
         # Shared cache-with-TTL, replacing the two hand-rolled file caches this client
         # used to keep (which never expired). Injectable so tests pass a temp one.
         self.cache = cache or RequestCache()
-
-        from dotenv import load_dotenv
-        load_dotenv()
-        
-        user_agent = os.getenv("BROWSER_USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36")
         
         self.headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
             'accept-language': 'en-US,en;q=0.9',
-            'user-agent': user_agent
+            'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
         }
-        
-        self.cookies = {}
-        if getattr(self.config, 'DATADOME_COOKIE', None):
-            self.cookies['datadome'] = self.config.DATADOME_COOKIE
 
     def get_public_search(self, query, filters: dict = None):
         """Fetches the public search SERP and extracts supply, ranked organic IDs and card metrics.
@@ -57,7 +48,7 @@ class EtsyPublicAPI:
             if "explicit" not in params:
                 params["explicit"] = "1"
             url = f"https://www.etsy.com/search?{urllib.parse.urlencode(params)}"
-            resp = self.session.request("GET", url, headers=self.headers, cookies=self.cookies)
+            resp = self.session.request("GET", url, headers=self.headers, platform="etsy")
             if resp.status_code != 200:
                 print(f"[-] public search failed: {resp.status_code}")
                 return None
@@ -166,7 +157,7 @@ class EtsyPublicAPI:
         """
         def _fetch():
             url = f"https://www.etsy.com/listing/{listing_id}"
-            resp = self.session.request("GET", url, headers=self.headers, cookies=self.cookies)
+            resp = self.session.request("GET", url, headers=self.headers, platform="etsy")
             if resp.status_code != 200:
                 return None
             html = resp.text

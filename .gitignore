@@ -18,3 +18,18 @@ request_cache.db
 # Contains a captured live Etsy session (32 cookies incl. session-key-*, uaid).
 # Untracked 2026-08-12 — it is credentials, not config. Keep it local.
 etsy/api/private/registry.json
+
+# Redis persistence — holds the cookie vault (cookie:etsy:profile_*, cookies_json).
+# Committing it leaks live sessions, same class as .env and registry.json.
+dump.rdb
+*.rdb
+
+# Scraped payload caches and run artefacts — regenerated, and large.
+pinterest/data/cache/
+etsy/data/cache/
+etsy/data/logs/
+etsy/data/reports/
+**/request_cache.db
+
+# Local probe scripts
+test_session.py
