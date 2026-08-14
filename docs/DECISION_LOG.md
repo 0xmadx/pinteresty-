@@ -285,6 +285,54 @@ bias audit and several rounds of review, because every reviewer reasoned about t
 rather than the wire. `parse_results_data` now centralises the shape and accepts both
 spellings. See `09_build_plan.md` §3.
 
+## D-25 — COGS is per-product, not a global setting
+
+**Context:** Settings was scoped as "fees, COGS, hourly rate". The operator pointed out
+that COGS differs per item — a sticker and a custom sign share nothing.
+**Chosen:** Split Settings into **two tiers**:
+
+- **Global**, set once: Etsy fee rates, hourly rate, hours available per week
+- **Per-product profiles**, saved and named: COGS, shipping cost, labour minutes
+
+**Rejected:** One COGS field (wrong for anyone selling more than one kind of thing),
+and asking for costs on every run (friction that guarantees stale or skipped input).
+**Consequence:** `profit.verdict()` already accepts exactly these as `product_profile`,
+so this is storage plus a picker, not a redesign. For personalized goods the labour
+minutes drive the **weekly capacity ceiling**, which is usually the binding constraint
+rather than demand — so the profile is not cosmetic, it changes the verdict.
+
+**An LLM must never invent these numbers.** Asked "what does a ceramic mug cost", any
+model answers confidently and wrongly, and that figure would flow straight into a
+go/no-go. LLM use here is limited to **classification** (product type, occasion) and
+**extraction** (pull a real price out of a supplier page the operator pastes). Never
+estimation.
+
+## D-26 — Track competitor OUTCOMES, not competitor listings
+
+**Context:** The operator asked for a window showing tracked shops and what they list.
+**Chosen:** Track what competitors list **and whether it worked** — specifically
+per-listing review velocity — rather than a feed of new listings.
+**Rejected:** A listing feed. Listings are cheap and most fail, so "they listed X"
+reports what a competitor *guessed*, and copying guesses is not intelligence.
+**Consequence:** The valuable signal is *"they listed it three weeks ago and it already
+has 12 reviews"* — an outcome, caught early, that no keyword tool can produce.
+
+Two second-order benefits:
+
+1. **It partially solves B-04.** Your own launches only test niches the model already
+   liked, so LEARN can never discover it was wrong to reject something. Competitor
+   launches are chosen independently of your model, giving an **unbiased outcome
+   dataset that grows for free** — far more than 10 self-selected launches.
+2. It pairs with the daily delta: a new listing plus a sales jump is corroboration.
+
+**Risks, carried explicitly:** survivorship again (tracking only winners teaches what
+winners do, so track some mid-tier shops too); attribution (shop-level delta cannot say
+*which* listing sold — per-listing review velocity is what disambiguates); and small n.
+
+**Priority consequence:** this moves **up** the build order. It is worthless if started
+late, because it needs weeks of history before it says anything — the same reason the
+scheduler comes first.
+
 ---
 
 ## Open decisions (not yet made)

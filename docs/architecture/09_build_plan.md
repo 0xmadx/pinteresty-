@@ -88,19 +88,53 @@ week-over-week momentum), `similar_search_terms`, and `market_gap_recommendation
 
 ### Phase 0 — Settings and the clock
 
+Everything here is worth more the earlier it happens, because it is the input to
+everything else or it accumulates over time.
+
 | # | Build | Why |
 |---|---|---|
-| 1 | **Settings page** — fees, COGS, hourly rate, hours/week, tracked shops | D-23. Every profit verdict depends on these and they are currently defaults. Nothing downstream is trustworthy until they are real. |
-| 2 | **Scheduler** — daily shop delta, 3×/week ranks, weekly Pinterest bridge | Every signal is a time-series. Value compounds only with time, and the clock has not started. |
-| 3 | **Seed 2–3 shops + one bridge run** | The daily delta is the only genuinely measured sales number; momentum is `None` until the bridge runs. |
+| 1 | **Settings** — config file + CLI first, web page later | D-23. Every profit verdict depends on these and they are currently defaults. A config file gets real numbers into `profit.py` today rather than after a UI exists. |
+| 2 | **Competitor outcome tracker** — shop inventory + per-listing review velocity | D-26. **Worthless if started late** — it needs weeks of history. Also the only unbiased outcome dataset available (partially solves B-04). |
+| 3 | **Scheduler** — daily shop delta, 3×/week ranks, weekly Pinterest bridge | Every signal is a time-series. Value compounds only with time, and the clock has not started. |
+| 4 | **Seed 2–3 shops + one bridge run** | The daily delta is the only genuinely measured sales number; momentum is `None` until the bridge runs. Track **some mid-tier shops, not only stars** — tracking winners only re-creates survivorship bias. |
+
+#### Settings has two tiers (D-25)
+
+```
+GLOBAL  (set once)              PER-PRODUCT PROFILE  (named, pick one per candidate)
+  etsy fee rates                  "Digital printable"   COGS 0     ship 0     labour 0
+  hourly rate                     "Ceramic mug"         COGS 8.50  ship 4.20  labour 3 min
+  hours available / week          "Custom name sign"    COGS 12    ship 6     labour 45 min
+```
+
+`profit.verdict()` already takes exactly the right-hand shape as `product_profile`, so
+this is storage plus a picker. For personalized goods the labour minutes drive the
+**weekly capacity ceiling**, which is usually what actually binds — so the profile
+changes the verdict, it is not decoration.
+
+⚠️ **No LLM estimates these numbers.** Classification (product type, occasion) and
+extraction (a price off a supplier page the operator pastes) only. A confidently wrong
+COGS flows straight into a go/no-go.
 
 ### Phase 1 — Fill the tables
 
 | # | Build | Why |
 |---|---|---|
-| 4 | **Product-type detection** | Mandatory now that all three types are in scope (D-22). One `is_digital` request answers it. |
-| 5 | **A real crawl** on 3–5 seed keywords | Proves the repaired private tier end to end and gives the UI something to render. |
-| 6 | **Pagination** (`page`) | Parser already reads `total_pages`; nothing requests page 2. 4× the data for one parameter. |
+| 5 | **Product-type detection** | Mandatory now that all three types are in scope (D-22). One `is_digital` request answers it; an LLM classifier is the fallback for ambiguous cases. |
+| 6 | **A real crawl** on 3–5 seed keywords | Proves the repaired private tier end to end and gives the UI something to render. |
+| 7 | **Pagination** (`page`) | Parser already reads `total_pages`; nothing requests page 2. 4× the data for one parameter. ⚠️ the parameter *name* is unverified — see O-6. |
+
+**What the competitor tracker needs (item 2), since it is new:**
+
+| Piece | Status |
+|---|---|
+| Shop totals + daily sales delta | ✅ `shop_observations` |
+| **A shop's listing inventory** | ❌ `ShopScraper` only fetches totals |
+| **Per-listing review velocity** | ⚠️ `reviews_api` returns dates; nothing tracks them over time |
+| **Match their listings → your watched niches** | ⚠️ `term_join.py` already does the matching; nothing calls it for this |
+
+The valuable output is *"they listed it 3 weeks ago and it has 12 reviews already"* —
+not *"they listed something"*.
 
 ### Phase 2 — The spine
 
