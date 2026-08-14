@@ -160,49 +160,11 @@ class EtsyPrivateAPI:
         # Shared cache-with-TTL. The metered endpoints matter most here: a hit saves
         # scarce daily quota, not just latency. Injectable for tests.
         self.cache = cache or RequestCache()
-        # Always dynamically fetch operator_shop_id and CSRF token from the active session
-        try:
-            print("🔍 [EtsyPrivateAPI] Auto-discovering operator_shop_id and CSRF token from active session...")
-            resp = self.session.get("https://www.etsy.com/your/shops/me/dashboard", platform="etsy_private")
-            
-            if resp.status_code == 200:
-                import re
-                
-                # Extract operator_shop_id
-                self.operator_shop_id = None
-                match = re.search(r'shop_id["\s:=]+(\d+)', resp.text)
-                if match:
-                    self.operator_shop_id = match.group(1)
-                    print(f"✅ [EtsyPrivateAPI] Auto-discovered operator_shop_id: {self.operator_shop_id}")
-                else:
-                    raise ValueError("Could not auto-discover operator_shop_id. Are the cookies logged into a Seller account?")
-                    
-                # Extract CSRF token
-                csrf_token = None
-                csrf_match = re.search(r'<meta name="csrf(?:_nonce|-token)" content="([^"]+)"', resp.text)
-                if csrf_match:
-                    csrf_token = csrf_match.group(1)
-                    print(f"✅ [EtsyPrivateAPI] Auto-discovered CSRF token.")
-                else:
-                    raise ValueError("Could not auto-discover CSRF token.")
-                    
-            else:
-                raise ValueError(f"Failed to load dashboard. Status code: {resp.status_code}")
-            
-            self.headers = {
-                "x-csrf-token": csrf_token,
-                "accept": "*/*",
-                "content-type": "application/json"
-            }
-            
-            # Cookies are managed strictly by SessionManager
-            self.cookies = None
-            
-        except Exception as e:
-            print(f"Failed to initialize API: {e}")
-            self.cookies = None
-            self.headers = {}
-            self.operator_shop_id = None
+        
+        self.headers = {
+            "accept": "*/*",
+            "content-type": "application/json"
+        }
 
     def get_results_data(self, query):
         """Fetches the master payload (volume, supply, cvr bucket, median price, top 20 listings).
@@ -214,7 +176,7 @@ class EtsyPrivateAPI:
         """
         def _fetch():
             encoded_query = urllib.parse.quote_plus(query)
-            url = f"https://www.etsy.com/api/v3/ajax/bespoke/shop/{self.operator_shop_id}/marketplace-insights/results-data?query={encoded_query}&search_term_hash=&search_trigger=similar_term"
+            url = f"https://www.etsy.com/api/v3/ajax/bespoke/shop/{{shop_id}}/marketplace-insights/results-data?query={encoded_query}&search_term_hash=&search_trigger=similar_term"
             resp = self.session.request("GET", url, headers=self.headers, platform="etsy_private")
             if resp.status_code == 200:
                 return resp.json()
@@ -226,7 +188,7 @@ class EtsyPrivateAPI:
 
     def get_chart_series(self, terms, days=365):
         """Fetches the time-series chart data (burns quota if cold!)"""
-        url = f"https://www.etsy.com/api/v3/ajax/bespoke/shop/{self.operator_shop_id}/marketplace-insights/chart-series-data"
+        url = f"https://www.etsy.com/api/v3/ajax/bespoke/shop/{{shop_id}}/marketplace-insights/chart-series-data"
         payload = {
             "search_terms": terms if isinstance(terms, list) else [terms],
             "days": days,
@@ -254,7 +216,7 @@ class EtsyPrivateAPI:
             source="etsy_private")
 
     def _fetch_similar_keywords(self, keyword, max_retries, iterations):
-        enqueue_url = f"https://www.etsy.com/api/v3/ajax/shop/{self.operator_shop_id}/marketplace-insights/llm-exploratory-keywords/search/enqueue"
+        enqueue_url = f"https://www.etsy.com/api/v3/ajax/shop/{{shop_id}}/marketplace-insights/llm-exploratory-keywords/search/enqueue"
         payload = {"keyword": keyword}
 
         all_results = []
@@ -287,7 +249,7 @@ class EtsyPrivateAPI:
                 print("[-] No runId/threadId returned from enqueue.")
                 continue
                 
-            poll_url = f"https://www.etsy.com/api/v3/ajax/shop/{self.operator_shop_id}/marketplace-insights/llm-exploratory-keywords/search/poll"
+            poll_url = f"https://www.etsy.com/api/v3/ajax/shop/{{shop_id}}/marketplace-insights/llm-exploratory-keywords/search/poll"
             poll_payload = {
                 "run_id": run_id,
                 "thread_id": thread_id,
@@ -337,7 +299,7 @@ class EtsyPrivateAPI:
         more often buys nothing — the same reasoning that fixes the Pinterest T-3 keys.
         """
         def _fetch():
-            url = f"https://www.etsy.com/api/v3/ajax/bespoke/shop/{self.operator_shop_id}/marketplace-insights/trending-search-terms-v2?taxonomy_id={taxonomy_id}"
+            url = f"https://www.etsy.com/api/v3/ajax/bespoke/shop/{{shop_id}}/marketplace-insights/trending-search-terms-v2?taxonomy_id={taxonomy_id}"
             resp = self.session.request("GET", url, headers=self.headers, platform="etsy_private")
             if resp.status_code == 200:
                 return resp.json()

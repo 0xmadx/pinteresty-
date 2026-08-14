@@ -14,7 +14,7 @@ class SessionManager:
         self.vault = RedisCookieVault(config)
         self.rate_limited = 0
 
-    def _build_session(self) -> requests.Session:
+    def _build_session(self, user_agent=None) -> requests.Session:
         # Impersonate Chrome 124 to pass TLS fingerprinting checks (Akamai/DataDome)
         session = requests.Session(impersonate=self.config.BROWSER_FINGERPRINT)
         
@@ -22,11 +22,11 @@ class SessionManager:
         if self.config.USE_PROXY and self.config.PROXY_URL:
             session.proxies = {"http": self.config.PROXY_URL, "https": self.config.PROXY_URL}
             
-        # Hardcoded Chrome 124 Headers to match curl_cffi impersonation perfectly
-        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        # Use provided User-Agent from the actual browser, fallback to hardcoded Chrome 124
+        ua_to_use = user_agent if user_agent else "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
         
         session.headers.update({
-            "User-Agent": user_agent,
+            "User-Agent": ua_to_use,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "Accept-Language": "en-US,en;q=0.9",
             "Sec-Ch-Ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
@@ -50,8 +50,10 @@ class SessionManager:
             # This will raise ValueError if no valid accounts are found for the platform
             account = self.vault.get_valid_account(platform)
                 
-            # 2. Build a fresh session to ensure clean state
-            session = self._build_session()
+            # 2. Build a fresh session with the profile's specific User-Agent to match
+            # the browser where the cookies were actually generated.
+            profile_ua = account.get("user_agent")
+            session = self._build_session(user_agent=profile_ua)
             
             # 3. Inject cookies from Redis
             redis_cookies = account.get("cookies_json", {})
@@ -67,11 +69,28 @@ class SessionManager:
                     domain = ".etsy.com" if "etsy" in platform else ".pinterest.com" if "pinterest" in platform else ""
                     session.cookies.set(k, v, domain=domain)
                     
+            # 5. Inject CSRF Token and format Shop ID (ONLY for Private API)
+            formatted_url = url
+            if platform == "etsy_private":
+                shop_id = account.get("shop_id")
+                csrf_token = account.get("csrf_token")
+                
+                if "{shop_id}" in url:
+                    if not shop_id:
+                        raise ValueError(f"Profile {account['profile_id']} is missing shop_id! Vault Guardian should have caught this.")
+                        
+                    # Inject shop_id into the URL template
+                    formatted_url = url.format(shop_id=shop_id)
+                
+                if csrf_token:
+                    # Update session headers for this specific profile
+                    session.headers.update({"x-csrf-token": csrf_token})
+                    
             # Execute
             if method.upper() == 'GET':
-                response = session.get(url, **kwargs)
+                response = session.get(formatted_url, **kwargs)
             else:
-                response = session.post(url, **kwargs)
+                response = session.post(formatted_url, **kwargs)
                 
             # Check for bot block or auth failure
             # Note: Do not invalidate merely because 'datadome' is in the text, as Etsy includes DataDome JS on valid pages.
@@ -108,37 +127,4 @@ class SessionManager:
 
     def request(self, method, url, cookies=None, platform="etsy", **kwargs):
         return self._execute_with_retry(method, url, cookies=cookies, platform=platform, **kwargs)
-
-    def auto_discover_shop_id(self, platform="etsy_private") -> str:
-        """
-        Navigates to the Etsy dashboard and scrapes the shop_id from the HTML.
-        Updates the Redis vault with the discovered shop_id for this profile.
-        Returns the shop_id or raises an Exception if it cannot be found.
-        """
-        print("🔍 [Auto-Discover] Fetching Etsy Dashboard to extract shop_id...")
-        resp = self.get("https://www.etsy.com/your/shops/me/dashboard", platform=platform)
-        
-        if resp.status_code != 200:
-            raise Exception(f"Failed to fetch dashboard (status: {resp.status_code})")
-            
-        import re
-        html = resp.text
-        
-        # Look for patterns like shop_id="123456" or "shop_id": 123456
-        match = re.search(r'shop_id["\s:=]+(\d+)', html)
-        if not match:
-            raise Exception("Could not find shop_id in the Etsy dashboard HTML. Are the cookies logged into a Seller account?")
-            
-        shop_id = match.group(1)
-        
-        # To save to Redis, we need the active profile.
-        # Since _execute_with_retry transparently fetches an account but doesn't return which one it used, 
-        # we can just fetch the active valid account directly for this operation.
-        account = self.vault.get_valid_account(platform)
-        profile_id = account["profile_id"]
-        
-        self.vault.set_shop_id(platform, profile_id, shop_id)
-        
-        # Return the shop_id so the scraper can immediately use it
-        return shop_id
 

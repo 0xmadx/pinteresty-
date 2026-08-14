@@ -46,6 +46,7 @@ type Payload struct {
 	CookieJSON interface{} `json:"cookie_json"`
 	ShopID     string      `json:"shop_id"`
 	CSRFToken  string      `json:"csrf_token"`
+	UserAgent  string      `json:"user_agent"`
 }
 
 func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
@@ -126,6 +127,9 @@ func updateCookieHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		mapping["cookies_json"] = cookieStr
+		if p.UserAgent != "" {
+			mapping["user_agent"] = p.UserAgent
+		}
 		log.Printf("🔄 [Go Server] Received %s cookies from profile '%s'! Updating Redis...\n", p.Platform, p.ProfileID)
 	} else if p.Platform == "etsy_private" {
 		if cookieStr != "" {
@@ -136,6 +140,9 @@ func updateCookieHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if p.ShopID != "" {
 			mapping["shop_id"] = p.ShopID
+		}
+		if p.UserAgent != "" {
+			mapping["user_agent"] = p.UserAgent
 		}
 		log.Printf("🔄 [Go Server] Received Etsy Private data from profile '%s'! Updating Redis...\n", p.ProfileID)
 	} else {
