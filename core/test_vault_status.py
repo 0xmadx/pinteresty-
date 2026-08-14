@@ -110,5 +110,29 @@ check("S-1 signature (tokens, no cookies) blocks",
 r = report(platform="etsy", cookies_json=COOKIES)
 check("public tier needs no shop_id", r["problems"] == [], r["problems"])
 
+# --- session identity: names are not accounts ------------------------------------
+from core.vault_status import session_identity  # noqa: E402
+from core.settings import ScraperConfig  # noqa: E402
+
+same_a = {"uaid": "U1", "session-key-www": "S1", "datadome": "d-one"}
+same_b = {"uaid": "U1", "session-key-www": "S1", "datadome": "d-two"}
+other = {"uaid": "U2", "session-key-www": "S2"}
+check("one session under two names fingerprints identically",
+      session_identity(same_a) == session_identity(same_b))
+# datadome rotates constantly; if it fed the fingerprint, every refresh would look
+# like a brand-new account and the duplicate detection would never fire.
+check("a different login fingerprints differently",
+      session_identity(same_a) != session_identity(other))
+check("no cookies has no identity", session_identity({}) is None)
+check("cookies without identifying keys have no identity",
+      session_identity({"datadome": "x"}) is None)
+
+cfg = ScraperConfig(EXPECTED_SESSIONS="etsy=1,etsy_private=1,pinterest=2")
+check("expected inventory parses", cfg.expected_sessions ==
+      {"etsy": 1, "etsy_private": 1, "pinterest": 2}, cfg.expected_sessions)
+check("malformed entries are skipped, not fatal",
+      ScraperConfig(EXPECTED_SESSIONS="etsy=1,junk,pinterest=x").expected_sessions
+      == {"etsy": 1})
+
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)

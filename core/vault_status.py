@@ -219,14 +219,26 @@ def main(verbose=False):
                 identities.setdefault(p["identity"], {}).setdefault(platform, []).append(
                     p["profile_id"])
 
+    expected = config.expected_sessions
     for platform, state in report.items():
         usable = state["usable"]
         distinct = {p["identity"] for p in usable if p["identity"]}
+        want = expected.get(platform)
+
         if usable and len(distinct) < len(usable):
-            print(f"⚠️  {platform}: {len(usable)} usable profiles, but only "
+            print(f"⚠️  {platform}: {len(usable)} usable profile names, but only "
                   f"{len(distinct)} distinct session(s) (S-11).")
             print(f"    Rotation gives no identity diversity — a 403 failover retires a "
                   f"name and redraws the same session.")
+
+        if want is None:
+            continue
+        if len(distinct) > want:
+            print(f"    ({platform}: {len(distinct)} sessions vs {want} account(s) you "
+                  f"run — {len(distinct) - want} stale or duplicated.)")
+        elif len(distinct) < want:
+            print(f"🚨 {platform}: only {len(distinct)} of your {want} account(s) are "
+                  f"syncing. One is signed out, or its browser has no role set.")
 
     leaked = {ident: places for ident, places in identities.items()
               if "etsy_private" in places and "etsy" in places}

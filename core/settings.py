@@ -33,3 +33,25 @@ class ScraperConfig:
     # Request settings
     REQUEST_TIMEOUT: int = 30
     MAX_RETRIES: int = 3
+
+    # How many REAL accounts the operator runs, per platform (2026-08-14).
+    # The vault counts profile *names*, and a browser re-saved under six names looks
+    # like six profiles while being one session — so the name count says nothing about
+    # capacity or identity diversity. These are the truth the count is measured
+    # against: fewer distinct sessions than this means an account stopped syncing;
+    # more means duplicates are accumulating.
+    EXPECTED_SESSIONS: str = os.environ.get(
+        "EXPECTED_SESSIONS", "etsy=1,etsy_private=1,pinterest=2")
+
+    @property
+    def expected_sessions(self) -> dict:
+        out = {}
+        for pair in self.EXPECTED_SESSIONS.split(","):
+            if "=" not in pair:
+                continue
+            platform, _, count = pair.partition("=")
+            try:
+                out[platform.strip()] = int(count)
+            except ValueError:
+                continue
+        return out
