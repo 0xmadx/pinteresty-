@@ -81,7 +81,52 @@ Therefore:
 
 ---
 
-## 3. Verified state, 2026-08-14 — **the vault is not usable**
+## 3a. The vault was never empty — Python was reading the wrong Redis (D-30)
+
+**Resolved 2026-08-14.** The first pass of §3 below concluded the vault held no
+profiles. That was true of the database Python was connected to, and false of the
+system. `docker logs cookie-server-go` showed the extension beaming profiles minutes
+earlier. Two Redis servers share port 6379 on this machine:
+
+```
+PID 2544   0.0.0.0:6379     Docker port proxy → scraper-redis   ← the Go server writes HERE
+PID 5036   127.0.0.1:6379   a native Windows Redis (dump.rdb)   ← Python was reading HERE
+```
+
+Windows resolves `localhost` to `127.0.0.1` first, and the more specific loopback bind
+wins. So `redis://localhost:6379/0` reached a **stale leftover** holding 8 keys, while
+the real vault — 53 keys, 38 valid profiles — sat one interface away.
+
+**This is the project's failure mode in a new costume.** Not a crash: a plausible,
+fully-consistent wrong answer. Everything downstream was correct; the connection was
+pointed at the wrong database, and every symptom pointed convincingly at auth.
+
+| Fix | Status |
+|---|---|
+| `REDIS_URL` → `redis://172.31.144.1:6379/0` in `.env` (backup: `.env.bak.20260814`) | ✅ done |
+| `vault_status` probes sibling addresses and **reports a fuller vault elsewhere** before blaming anything else | ✅ done |
+| Stop the stray native Redis so `localhost` is unambiguous again | ⚠️ **operator** — the current address is a vEthernet IP and may change on reboot |
+
+⚠️ **`172.31.144.1` is a Hyper-V/WSL interface address, not a stable one.** If the vault
+suddenly reads empty after a reboot, this is why — run `vault_status`, it will say so.
+The durable fix is stopping PID 5036.
+
+### Verified live after the fix
+
+```
+✅ etsy          11 usable / 20 known
+✅ etsy_private   1 usable / 16 known      ← private_seller_1
+✅ pinterest      8 usable / 14 known
+
+get_results_data("mom necklace")
+  volume 12,867 · supply 351,677 · CVR 0.000256 · $17.10–$20.90 · wow +10.5% · 20 cards
+```
+
+**The private tier works end to end.** Quota still reports 15/15 after the call (D-14).
+
+---
+
+## 3. Verified state before the fix — kept, because the reasoning matters
 
 Gemini's handoff closes with *"assume the backend scraping engine is stable,
 deadlock-free, and handles DataDome perfectly."* The architecture is indeed
@@ -102,6 +147,11 @@ cookie:etsy_private:profile_d7u07ruia  is_valid=0   0 cookies  shop_id=56057851 
 Read that last line carefully: **the private profile holds a shop_id and nothing else.
 Zero cookies, no CSRF token.** It could not have authenticated even when it was marked
 valid.
+
+> **Update:** the *conclusion* was wrong (see §3a — wrong database), but the **root
+> cause below is real and confirmed at scale** in the true vault: **13 of 16
+> `etsy_private` profiles hold a csrf_token and shop_id with ZERO cookies.** Exactly
+> the split predicted. Only `private_seller_1` is complete.
 
 ### Root cause — the extension's profile role defaults to `"auto"`, which matches nothing
 
@@ -141,6 +191,8 @@ fire against the correct platform.
 | **S-6** | `session_manager.py:83` | `url.format(shop_id=...)` | works today (all private URLs pre-interpolate their other fields), but any future literal `{` in a URL raises `KeyError`. `.replace()` would be safe. |
 | **S-7** | `core/cookie_server.py` | **dead code** — no module imports it | it still writes `.env`, which nothing reads. Two contradictory session mechanisms in one tree invites reviving the wrong one. |
 | **S-8** | history | `registry.json` (32 live session cookies) is in git history | **sign out of Etsy** to invalidate. Untracking it did not remove it. |
+| **S-9** | Go/extension | **no profile in the vault carries a `user_agent`** — every one of the 20 usable profiles lacks it | `SessionManager` silently falls back to a hardcoded Chrome 124 UA, which is precisely the UA/cookie mismatch Gemini's Change B was built to eliminate. **The fix is present in the code but not in the data.** Re-beam from an extension build that sends `navigator.userAgent`. |
+| **S-10** | `background.js` roles | profiles cross-contaminate platforms — the Go log shows *"Received **pinterest** cookies from profile `etsy_seller_1`"* and *"Received **etsy** cookies from profile `pinterest_1`"*; `cookie:pinterest:etsy_seller_1` exists | a seller identity's cookies landing in the Pinterest pool breaks the D-29 tier separation. Same root cause as S-1: role is a single global and the isolation guards test literals it never holds. |
 
 ---
 

@@ -38,12 +38,17 @@ writes Redis; `SessionManager` pulls a *random* profile per request and injects 
 cookies, its own User-Agent, its CSRF token, and its `shop_id` into the `{shop_id}`
 URL template. `core/cookie_server.py` is **dead code** — nothing imports it.
 
-**Check the vault before any live run.** It is currently **red**, and an empty vault
-makes pipelines *hang*, not fail (S-2):
+**Check the vault before any live run** — an empty pool makes pipelines *hang*, not
+fail (S-2):
 
 ```bash
 .venv/Scripts/python.exe -m core.vault_status
 ```
+
+⚠️ **Two Redis servers share port 6379** on this machine (D-30). `localhost` reaches a
+stale native one; the real vault is the Docker container at the address in `.env`. If
+the vault suddenly reads empty, that is the first suspect — `vault_status` detects it
+and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest.
 
 - **You may fetch live data while building** — when the vault is green. Probing the
   real API is faster and more truthful than reasoning about it (D-24).

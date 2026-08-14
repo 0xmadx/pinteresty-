@@ -88,25 +88,29 @@ week-over-week momentum), `similar_search_terms`, and `market_gap_recommendation
 
 ### Phase 0a — Turn the vault green (blocks everything below)
 
-Added 2026-08-14 after verifying the session layer against the running system. The
-access layer was rebuilt onto Redis (D-28) and **the vault currently holds no usable
-profile on any platform**. Until it does, no pipeline can fetch — and because
-`get_valid_account` waits in an unbounded loop, a run does not fail, it **hangs**.
+Added 2026-08-14 after verifying the session layer against the running system, and
+**closed the same day**. The access layer was rebuilt onto Redis (D-28); the vault
+appeared empty, but Python was reading a *different Redis on the same port* (D-30).
+Repointed, the vault is green and the private tier is verified live.
+
+Still true and worth remembering: `get_valid_account` waits in an unbounded loop, so a
+genuinely empty pool **hangs** a run rather than failing it.
 
 | # | Do | Owner |
 |---|---|---|
 | 0 | `python -m core.vault_status` — the one-second check | ✅ built |
-| 1 | Set the extension profile **role** (it defaults to `"auto"`, which matches no branch — S-1) | operator |
-| 2 | Reload Etsy Shop Manager so cookies *and* the csrf/shop_id hook both fire | operator |
-| 3 | Re-run `vault_status` until green | — |
+| 1 | Point `REDIS_URL` at the container vault, not the shadowed `localhost` (D-30) | ✅ done |
+| 2 | **Vault green + live private call verified** — `mom necklace` → 12,867 / 351,677 / 20 cards | ✅ **2026-08-14** |
+| 3 | Stop the stray native Redis so `localhost` is stable across reboots | operator |
+| 4 | Re-beam profiles from an extension build that sends `user_agent` (S-9 — the UA fix exists in code, not in the data) | operator |
+| 5 | Set the extension profile **role** explicitly — 13 of 16 private profiles still have tokens but no cookies (S-1) | operator |
 
 Full diagnosis, defect list S-1…S-8, and the public/private boundary:
 **`10_session_layer.md`**. The defects there are **operator-owned** — the access layer
 is read-only to agents.
 
-⚠️ **Everything downstream — Settings' verification, the crawl, the trackers, the
-scheduler — is untestable against live data until this is done.** Offline work
-(schema, config, the 441-assertion suite) proceeds regardless.
+✅ **Live data is available again.** Phase 0 and Phase 1 can now be built *and
+verified* rather than built blind.
 
 ### Phase 0 — Settings and the clock
 

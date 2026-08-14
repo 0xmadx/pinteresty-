@@ -33,3 +33,7 @@ etsy/data/reports/
 
 # Local probe scripts
 test_session.py
+
+# env backups — they contain the same secrets as .env
+.env.bak*
+.env.*.bak

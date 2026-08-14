@@ -39,7 +39,11 @@ def _profile_report(client, platform, profile_id, in_valid_set):
         except (ValueError, TypeError):
             data["_unparseable"] = True
 
-    problems = []
+    # Blocking = this profile cannot serve a request, or will be gone before it does.
+    # Warning  = it works, but degrades a defence. Conflating the two makes the tool
+    # cry wolf, which is how a green vault gets reported as red.
+    problems, warnings = [], []
+
     if not in_valid_set:
         problems.append("not in valid pool")
     if data.get("is_valid") == "0":
@@ -50,8 +54,12 @@ def _profile_report(client, platform, profile_id, in_valid_set):
         problems.append("cookies_json double-encoded — S-3, popup Save button")
     if data.get("_unparseable"):
         problems.append("cookies_json unparseable")
+
     if not data.get("user_agent"):
-        problems.append("no user_agent (written before UA sync, or by an old server)")
+        # SessionManager falls back to a hardcoded Chrome 124 UA, so the request still
+        # goes out — but the UA no longer matches the browser that made the cookies,
+        # which is exactly the mismatch DataDome looks for.
+        warnings.append("no user_agent — falls back to hardcoded UA (ban risk)")
 
     age = None
     last_updated = data.get("last_updated")
@@ -59,11 +67,13 @@ def _profile_report(client, platform, profile_id, in_valid_set):
         try:
             age = time.time() - float(last_updated)
             if age > HEARTBEAT_MAX_AGE:
-                problems.append(f"heartbeat stale ({int(age)}s) — will be purged")
+                problems.append(f"heartbeat stale ({int(age)}s) — purged on next draw")
         except (ValueError, TypeError):
-            problems.append("last_updated unreadable")
+            warnings.append("last_updated unreadable")
     else:
-        problems.append("no heartbeat — never seen by the current Go server")
+        # cookie_vault only purges when last_updated is present, so no heartbeat means
+        # this profile is never aged out. Old, but usable.
+        warnings.append("no heartbeat — written by an older server; never auto-purged")
 
     if platform == "etsy_private":
         missing = [f for f in PRIVATE_REQUIRED if not data.get(f)]
@@ -77,7 +87,46 @@ def _profile_report(client, platform, profile_id, in_valid_set):
         "has_csrf": bool(data.get("csrf_token")),
         "age": age,
         "problems": problems,
+        "warnings": warnings,
     }
+
+
+def find_shadow_vaults(configured_url, timeout=2):
+    """Is another Redis answering on the same port, holding a fuller vault?
+
+    Two Redis servers can share port 6379 on Windows: a native one bound to
+    127.0.0.1 and Docker's proxy bound to 0.0.0.0. `localhost` resolves to loopback
+    first, so the native one wins and Python silently reads a *different database*
+    than the Go server writes to. That produces the worst possible symptom — an
+    empty vault that looks like an auth problem (D-30).
+
+    Returns candidates that hold more profiles than the configured URL does.
+    """
+    import socket
+    from urllib.parse import urlparse
+
+    parsed = urlparse(configured_url)
+    port = parsed.port or 6379
+
+    def profile_count(url):
+        try:
+            client = redis.Redis.from_url(url, decode_responses=True,
+                                          socket_connect_timeout=timeout)
+            return sum(len(client.smembers(f"valid_profiles:{p}"))
+                       for p in ("etsy", "etsy_private", "pinterest"))
+        except Exception:
+            return None
+
+    here = profile_count(configured_url) or 0
+    candidates = []
+    for host in {"127.0.0.1", "host.docker.internal", socket.gethostbyname(socket.gethostname())}:
+        url = f"redis://{host}:{port}/0"
+        if url == configured_url:
+            continue
+        found = profile_count(url)
+        if found is not None and found > here:
+            candidates.append((url, found))
+    return sorted(candidates, key=lambda c: -c[1])
 
 
 def scan(platforms=("etsy", "etsy_private", "pinterest")):
@@ -100,7 +149,7 @@ def scan(platforms=("etsy", "etsy_private", "pinterest")):
     return report
 
 
-def main():
+def main(verbose=False):
     config = ScraperConfig()
     print(f"Vault: {config.REDIS_URL}\n")
     try:
@@ -117,16 +166,41 @@ def main():
         print(f"{mark} {platform:<14} {usable} usable / {len(state['profiles'])} known")
         if not usable:
             blocked.append(platform)
+        # Only the broken ones in full; usable profiles are summarised, since a healthy
+        # vault holds dozens and the point of this tool is to surface what is wrong.
         for p in state["profiles"]:
+            if not p["problems"] and not verbose:
+                continue
             age = f"{int(p['age'])}s ago" if p["age"] is not None else "no heartbeat"
             print(f"      {p['profile_id']}  cookies={p['n_cookies']}"
                   f"  shop_id={p['shop_id'] or '-'}  csrf={'y' if p['has_csrf'] else 'n'}"
                   f"  {age}")
             for problem in p["problems"]:
-                print(f"        · {problem}")
+                print(f"        ✗ {problem}")
+            for warning in p["warnings"]:
+                print(f"        · {warning}")
+        if usable:
+            names = ", ".join(p["profile_id"] for p in state["usable"][:6])
+            more = f" +{usable - 6} more" if usable > 6 else ""
+            print(f"      usable: {names}{more}")
+            degraded = sum(1 for p in state["usable"] if p["warnings"])
+            if degraded:
+                print(f"      ⚠️  {degraded} of them have no user_agent (S-9 — ban risk)")
         print()
 
     if blocked:
+        # Before blaming the extension, check we are even reading the right database.
+        shadows = find_shadow_vaults(config.REDIS_URL)
+        if shadows:
+            url, count = shadows[0]
+            print("🔎 A DIFFERENT Redis on this port holds a fuller vault:")
+            print(f"      {url}  → {count} valid profiles")
+            print(f"      (configured: {config.REDIS_URL})")
+            print("   Two servers share the port; `localhost` resolves to the wrong one.")
+            print(f"   Point REDIS_URL at the address above, or stop the stray server.")
+            print("   See docs/architecture/10_session_layer.md §3a (D-30)")
+            return 1
+
         print(f"No usable profile for: {', '.join(blocked)}")
         print("Any pipeline touching these will HANG, not fail (S-2). Fix first:")
         print("  1. Open the extension popup and set the profile role explicitly")
@@ -142,4 +216,5 @@ def main():
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import sys
+    raise SystemExit(main(verbose="-v" in sys.argv))

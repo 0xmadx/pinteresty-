@@ -390,6 +390,34 @@ profile cannot serve both.
 
 ---
 
+## D-30 — A diagnostic must verify it is reading the right database, and must not cry wolf
+
+**Date:** 2026-08-14.
+**Context:** `vault_status` reported zero usable profiles on all three platforms and
+recommended fixing the Chrome extension. The vault was in fact full — 38 valid
+profiles. Two Redis servers share port 6379 (Docker's proxy on `0.0.0.0`, a native
+Windows Redis on `127.0.0.1`); `localhost` resolves to loopback first, so Python read a
+stale leftover while the Go server wrote to the container. Every symptom pointed
+convincingly at authentication. **This is the plausible-wrong-number failure in
+infrastructure form** — nothing crashed, nothing was inconsistent, the answer was
+simply about a different database.
+**Chosen:** Two rules for any status/diagnostic tool here.
+  1. **Confirm the source before diagnosing the contents.** `vault_status` probes
+     sibling addresses on the same port and, if one holds a fuller vault, reports
+     *that* instead of blaming anything downstream. "Empty" and "looking in the wrong
+     place" are different findings and must never share an output.
+  2. **Separate blocking from warning.** The first version treated a missing
+     `user_agent` and a missing heartbeat as blocking and declared 20 working profiles
+     unusable. A tool that cries wolf gets ignored, and then the real outage is missed.
+     `core/test_vault_status.py` pins the classification (19 assertions).
+**Rejected:** hardcoding the container IP without detection — `172.31.144.1` is a
+vEthernet address that can change on reboot, which would silently recreate the bug.
+**Consequence:** Generalises beyond Redis. Any "the data is missing" report must first
+establish it is looking where the data is written — the same discipline as D-24, one
+layer down.
+
+---
+
 ## Open decisions (not yet made)
 
 | # | Question | Blocked on |
