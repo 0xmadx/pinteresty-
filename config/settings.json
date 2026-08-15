@@ -21,7 +21,17 @@
     }
   },
   "confirmed": [],
-  "product_profiles": {},
+  "product_profiles": {
+    "Felt decor": {
+      "product_type": "physical",
+      "cogs": 4.0,
+      "shipping_cost": 4.5,
+      "shipping_charged": 5.0,
+      "labor_minutes": 12.0,
+      "notes": null,
+      "updated": "2026-08-15T06:31:51.977167+00:00"
+    }
+  },
   "tracked_shops": [
     {
       "name": "shopflowerlane",

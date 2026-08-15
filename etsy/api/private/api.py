@@ -1,3 +1,4 @@
+import re
 import json
 import time
 import urllib.parse
@@ -7,6 +8,24 @@ from core.request_cache import (RequestCache, TTL_METERED, TTL_TREND_SERIES)
 from core.session_manager import SessionManager
 from core.endpoints_manager import EndpointManager
 from core.settings import ScraperConfig
+
+def _money(value):
+    """"$17.10" -> 17.10. None when there is no number to read.
+
+    Etsy ships the median price band as formatted strings. Returning None rather than
+    0.0 on failure matters: 0.0 would be a free product, which passes every margin
+    floor and turns an unreadable price into a guaranteed `go` (N-02).
+    """
+    if value is None or isinstance(value, (int, float)):
+        return value
+    cleaned = re.sub(r"[^\d.]", "", str(value))
+    if not cleaned or cleaned.count(".") > 1:
+        return None
+    try:
+        return float(cleaned)
+    except ValueError:
+        return None
+
 
 def _pick(d, *names, default=None):
     """First present key out of several spellings."""
@@ -57,8 +76,21 @@ def parse_results_data(payload):
         "supply": _pick(stats, "avg_total_listings", "avgTotalListings"),
         "cvr": _pick(stats, "query_cvr", "queryCvr"),
         "cvr_bucket": stats.get("cvr"),
-        "price_low": _pick(median, "median_price_low", "medianPriceLow"),
-        "price_high": _pick(median, "median_price_high", "medianPriceHigh"),
+        # Floats, because the profit model multiplies these. Etsy sends the median band
+        # as FORMATTED STRINGS ("$17.10"), the same shape trap as review counts arriving
+        # as "1459" — a consumer doing arithmetic on it raises, and one doing string
+        # work on it silently produces nonsense. Coerced here rather than at the caller
+        # so there is one place that knows the wire shape.
+        "price_low": _money(_pick(median, "median_price_low", "medianPriceLow")),
+        "price_high": _money(_pick(median, "median_price_high", "medianPriceHigh")),
+        # The formatted originals, for display without re-formatting.
+        "price_low_text": _pick(median, "median_price_low", "medianPriceLow"),
+        "price_high_text": _pick(median, "median_price_high", "medianPriceHigh"),
+        # A DIFFERENT, wider band Etsy also ships as floats. Kept distinct rather than
+        # used as a fallback: median 17.10-20.90 against bar 12.67-25.33 for the same
+        # term are not interchangeable, and substituting one would move the margin.
+        "price_bar_low": _pick(median, "median_price_bar_low_float", "medianPriceBarLowFloat"),
+        "price_bar_high": _pick(median, "median_price_bar_high_float", "medianPriceBarHighFloat"),
         # Etsy's OWN week-over-week momentum — free, and previously unread.
         "wow_change": wow.get("value"),
         "wow_direction": wow.get("trend_direction"),
