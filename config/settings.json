@@ -30,6 +30,15 @@
       "labor_minutes": 12.0,
       "notes": null,
       "updated": "2026-08-15T06:31:51.977167+00:00"
+    },
+    "Digital printable": {
+      "product_type": "digital",
+      "cogs": 0.0,
+      "shipping_cost": 0.0,
+      "shipping_charged": 0.0,
+      "labor_minutes": 0.0,
+      "notes": null,
+      "updated": "2026-08-15T07:13:41.518807+00:00"
     }
   },
   "tracked_shops": [
