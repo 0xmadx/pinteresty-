@@ -226,6 +226,33 @@ class MarketDatabase:
                     # be loud. The only expected error was the one we just ruled out.
                     cursor.execute(f"ALTER TABLE listings ADD COLUMN {column} {decl}")
 
+            # Competitor outcome tracking (D-25) extends `listing_observations` rather
+            # than creating a second table for the same concept. That table already
+            # holds one listing over time, already carries `total_reviews`, and a
+            # parallel table would give the system two answers to "how many reviews
+            # does this listing have" — the shape of every expensive bug here.
+            #
+            # `first_seen_at` is named for what it is: the first time WE looked, not
+            # when the listing was created. Etsy does not publish a creation date on the
+            # shop page, so "listed 3 weeks ago" is only true of listings we watched
+            # appear. Calling it `listed_at` would invent a fact, and a wrong age makes
+            # every velocity built on it wrong.
+            observed = {row[1] for row in
+                        cursor.execute("PRAGMA table_info(listing_observations)")}
+            for column, decl in [
+                ("title", "TEXT"),
+                ("rating", "REAL"),
+                ("is_ad", "INTEGER"),
+                ("first_seen_at", "TEXT"),
+                ("matched_term", "TEXT"),
+                # Not plain `basis`: the table already has sales_basis and views_basis,
+                # and a bare `basis` beside them would read as "the row's basis".
+                ("sighting_basis", "TEXT"),
+            ]:
+                if column not in observed:
+                    cursor.execute(
+                        f"ALTER TABLE listing_observations ADD COLUMN {column} {decl}")
+
             conn.commit()
 
     # --- KEYWORDS API ---
@@ -559,3 +586,72 @@ class MarketDatabase:
                 'WHERE shop_name = ? AND sales_per_day IS NOT NULL '
                 'ORDER BY collected_at DESC LIMIT 1', (shop_name,)).fetchone()
             return row[0] if row else None
+
+    # -- competitor listings over time (D-25) ------------------------------------------
+
+    def record_listing_observation(self, listing_id, shop_name=None, title=None,
+                                   price=None, total_reviews=None, rating=None,
+                                   is_ad=None, matched_term=None, collected_at=None):
+        """Append one competitor-tracking reading of a listing. Never overwrites.
+
+        Writes the same table as `record_listing` — deliberately. That one records the
+        badge/sales side of a listing; this one records the outcome side. Two tables
+        would give the system two answers to "how many reviews does this listing have".
+        Both use `total_reviews` for exactly that reason.
+
+        `first_seen_at` carries forward from the earliest row held, so observed age
+        survives even though each row is independent. It is OUR first sighting, not the
+        listing's creation date.
+
+        `total_reviews=None` means the count did not parse, which is not zero reviews
+        (N-02). Stored as 0 it would look like a brand-new listing and make the next
+        velocity reading enormous.
+        """
+        collected_at = collected_at or datetime.now(timezone.utc).isoformat()
+        with self.get_connection() as conn:
+            row = conn.execute(
+                'SELECT first_seen_at, collected_at FROM listing_observations '
+                'WHERE listing_id = ? ORDER BY collected_at ASC LIMIT 1',
+                (str(listing_id),)).fetchone()
+            if row:
+                first_seen_at = row[0] or row[1]
+                basis = "repeat_sighting"
+            else:
+                first_seen_at = collected_at
+                basis = "first_sighting"
+
+            # INSERT OR IGNORE, not REPLACE: re-reading the same listing at the same
+            # timestamp must not overwrite a row another writer already placed there.
+            conn.execute('''
+                INSERT OR IGNORE INTO listing_observations (
+                    listing_id, collected_at, shop_name, title, price, total_reviews,
+                    rating, is_ad, first_seen_at, matched_term, sighting_basis
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            ''', (str(listing_id), collected_at, shop_name, title, price, total_reviews,
+                  rating, None if is_ad is None else int(bool(is_ad)),
+                  first_seen_at, matched_term, basis))
+            conn.commit()
+        return {"listing_id": str(listing_id), "collected_at": collected_at,
+                "first_seen_at": first_seen_at, "sighting_basis": basis}
+
+    def get_listing_history(self, listing_id):
+        with self.get_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                'SELECT * FROM listing_observations WHERE listing_id = ? '
+                'ORDER BY collected_at ASC', (str(listing_id),)).fetchall()
+            return [dict(r) for r in rows]
+
+    def tracked_listings(self, shop_name=None):
+        """Latest reading per listing. The shop's current inventory, as we last saw it."""
+        sql = ('SELECT lo.* FROM listing_observations lo '
+               'JOIN (SELECT listing_id, MAX(collected_at) AS mx '
+               '      FROM listing_observations GROUP BY listing_id) latest '
+               '  ON lo.listing_id = latest.listing_id AND lo.collected_at = latest.mx')
+        args = []
+        if shop_name:
+            sql += ' WHERE lo.shop_name = ?'
+            args.append(shop_name)
+        with self.get_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            return [dict(r) for r in conn.execute(sql, args).fetchall()]

@@ -40,3 +40,6 @@ test_session.py
 
 # vault backups contain LIVE session cookies — never commit
 data/vault_backup_*.json
+
+# conversation transcript dumps, not source
+look her/

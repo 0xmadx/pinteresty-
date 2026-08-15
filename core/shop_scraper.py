@@ -41,18 +41,12 @@ class ShopScraper:
         """
         url = f"https://www.etsy.com/shop/{urllib.parse.quote_plus(shop_name)}"
         
-        # SessionManager will automatically try 'etsy' cookies.
-        # It natively handles the failover loop, headers, and Datadome evasion.
-        try:
-            resp = self.session_manager.get(url, platform="etsy")
-        except ValueError as e:
-            print(f"⚠️ {e}")
-            print("⚠️ No valid 'etsy' cookies. Falling back to 'etsy_private' cookies for public scraping.")
-            try:
-                resp = self.session_manager.get(url, platform="etsy_private")
-            except ValueError as e:
-                print(f"[-] {e}")
-                return None
+        # Public tier only. There used to be a fallback to `etsy_private` cookies when
+        # the buyer pool was empty — which is exactly the trade D-29 forbids: it spends
+        # the one irreplaceable seller account on competitor scraping, the riskiest work
+        # in the system, precisely when sessions are already scarce. Better to fetch
+        # nothing than to fetch it as the seller.
+        resp = self.session_manager.get(url, platform="etsy")
         
         # Keep the session alive: check if Etsy returned an updated datadome cookie
         if hasattr(resp, 'cookies'):
@@ -124,3 +118,70 @@ class ShopScraper:
             "total_reviews": exact_review_count if exact_review_count is not None else total_reviews,
             "active_listings": exact_active_listings
         }
+
+    def get_shop_listings(self, shop_name, page=1):
+        """One page of a shop's listings — the inventory `get_shop_metrics` cannot give.
+
+        Shop totals answer "is this shop growing"; they cannot answer WHICH listing
+        grew. That attribution needs per-listing readings over time (D-25), and this is
+        the fetch that feeds them.
+
+        Public tier only — a competitor's shop page is public, so per D-29 the seller
+        session must never be spent on it.
+
+        Every field is None when it did not parse. A review count that failed to parse
+        is unknown, not zero: stored as 0 it would look like a brand-new listing and
+        make its next velocity reading enormous (N-02).
+        """
+        url = (f"https://www.etsy.com/shop/{urllib.parse.quote_plus(shop_name)}"
+               f"?page={int(page)}")
+        resp = self.session_manager.get(url, platform="etsy")
+        if resp.status_code != 200:
+            print(f"[-] Failed to fetch listings for {shop_name}: {resp.status_code}")
+            return None
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        listings, seen = [], set()
+
+        # Shop pages carry listing ids on several elements (the card, its link, its
+        # favourite button), so the same listing appears repeatedly. Dedupe on the id
+        # and keep the first card that actually has a title.
+        for card in soup.select("[data-listing-id]"):
+            listing_id = card.get("data-listing-id")
+            if not listing_id or listing_id in seen:
+                continue
+
+            title_el = (card.select_one(".v2-listing-card__title")
+                        or card.select_one("h3")
+                        or card.select_one("[data-listing-card-listing-title]"))
+            title = title_el.get_text(strip=True) if title_el else None
+            if not title:
+                continue                      # not a real card, just an id-bearing child
+            seen.add(listing_id)
+
+            text = card.get_text(" ", strip=True)
+            stars = card.select_one("clg-static-review-stars")
+            review_count = None
+            rating = None
+            if stars:
+                rating = float(stars["rating"]) if stars.get("rating") else None
+                review_count = _parse_count(stars.get("review-count-text") or "")
+
+            price = None
+            price_el = card.select_one(".currency-value")
+            if price_el:
+                with soft_parse("shop.listing_price", shop_name=shop_name,
+                                listing_id=listing_id):
+                    price = float(price_el.get_text(strip=True).replace(",", ""))
+
+            listings.append({
+                "listing_id": listing_id,
+                "title": title,
+                "price": price,
+                "review_count": review_count,
+                "rating": rating,
+                "is_ad": "Ad from shop" in text,
+                "shop_name": shop_name,
+            })
+
+        return listings
