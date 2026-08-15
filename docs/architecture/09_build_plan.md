@@ -82,6 +82,17 @@ Three fields nobody had ever read came with it: `wow_data` (Etsy's **own**
 week-over-week momentum), `similar_search_terms`, and `market_gap_recommendations`
 (Etsy's own gap analysis).
 
+> **Correction, 2026-08-15.** Two of those three are dead. Probed on `felt garland`,
+> `mom necklace` and `christmas ornament`, `similar_search_terms` returned
+> `total_results_count: 0` every time and `market_gap_recommendations` was `null`. The
+> keys exist in the response schema; Etsy returns nothing in them. Only `wow_data`
+> carries a real value.
+>
+> This is D-24 applied to a claim *this document* made. "Present in the response" was
+> read as "populated", and the difference was never checked — the same shortcut that
+> made the camelCase bug survive three explanations. The 🎯 gap feature must be built
+> from measured supply and demand, not handed over by Etsy.
+
 ---
 
 ## 4. Build order
@@ -233,10 +244,33 @@ not *"they listed something"*.
 | # | Build | Why |
 |---|---|---|
 | 7 | **TIME loop** — `moments` → Etsy `holiday` filter → `list_by` | The calendar's engine. Both halves exist. |
-| 8 | **DISCOVER front door** — `get_trending_terms` + Pinterest wide | Landing page needs candidates without a keyword typed. |
+| 8 | ~~**DISCOVER front door**~~ | ✅ **done 2026-08-15** — `discover.py`, 18 assertions. 28 candidates, no keyword typed. Two findings below. |
 | 9 | **Forecast** — `predicted_days=56` + the missing `split_forecast()` | The ⚪ WATCHING row. Pinterest ships a 91-day forecast nobody uses. |
 | 10 | **Demand-in-bracket** | 🎯 "gap found" can never fire without it. |
 | 11 | **Filter registry** — product-type gated, gates the *request* | Stops asking digital products about shipping; replaces 150 lines of pasted calls. |
+
+#### What DISCOVER turned up
+
+**Only 7 of 15 probed taxonomy ids are populated** — 1, 66, 199, 323, 891, 1429, 1633.
+Jewelry, Clothing and Craft Supplies return nothing, so the id list is a parameter
+rather than a constant, and two of my guesses about which id was which category were
+wrong.
+
+**The list is Etsy's picks, not the top of the market.** Etsy chose these by criteria
+it does not publish, so every candidate carries `basis="etsy_curated"`. Treating it as
+"what is trending" rather than "what Etsy is promoting" would inherit someone else's
+agenda as market truth — B-01 applied to candidate generation instead of survivors.
+
+⚠️ **The seasonal join produced nothing, and that is honest.** None of the 28 trending
+terms matched any of Pinterest's 13 moments. "back to school" (211k) and "fall png"
+(44k) are plainly seasonal, but Pinterest's calendar is **holiday-centric** — there is
+no back-to-school or autumn moment in it. The join returns `evergreen` rather than
+reaching for the nearest holiday, which would attach a September deadline to a term
+that does not have one.
+
+**Open:** the moment source is the limit here, not the join. Either a second seasonal
+source is needed, or moments must be derived from the terms' own series (a
+back-to-school curve is visible in the data even when nobody names the moment).
 
 ### Phase 3 — Pinterest's unused half
 
