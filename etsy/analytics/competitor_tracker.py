@@ -145,6 +145,64 @@ def rank_by_outcome(db, shop_name=None, min_velocity=None):
     return out
 
 
+def sweep_shop(db, scraper, shop_name, watched_terms=None, max_review_fetches=20,
+               collected_at=None, shop_total_reviews=None):
+    """One tracking pass over a shop. Two tiers, because the wire forces it.
+
+        1 request   the shop grid → ids, titles, prices (what they have listed)
+        N requests  one per listing → its own review count (whether it worked)
+
+    Shop pages carry no per-listing review counts, so the outcome signal cannot be
+    batched out of the grid. `max_review_fetches` caps the cost and spends it where it
+    is worth most: listings never seen before, then the ones checked longest ago.
+
+    A listing whose review fetch is skipped or fails is still recorded, with
+    `total_reviews=None`. That is deliberate — the sighting is real and starts the
+    clock on `first_seen_at`, and recording 0 would fake a brand-new listing and make
+    its next reading enormous (N-02).
+    """
+    listings = scraper.get_shop_listings(shop_name)
+    if listings is None:
+        return {"shop": shop_name, "error": "listing fetch failed", "recorded": 0}
+
+    known = {row["listing_id"]: row for row in db.tracked_listings(shop_name)}
+    # Unseen first — a new launch is the whole point of watching. Then stalest.
+    ordered = sorted(listings,
+                     key=lambda l: (l["listing_id"] in known,
+                                    (known.get(l["listing_id"]) or {}).get("collected_at") or ""))
+
+    recorded, fetched, new, refused = 0, 0, [], 0
+    for listing in ordered:
+        outcome = None
+        if fetched < max_review_fetches:
+            # The shop total is passed so a listing page returning the SHOP's review
+            # count instead of its own can be caught and refused rather than recorded
+            # as a spectacular fake winner. See ShopScraper.get_listing_outcome.
+            outcome = scraper.get_listing_outcome(
+                listing["listing_id"], shop_total_reviews=shop_total_reviews)
+            fetched += 1
+            if outcome and outcome.get("basis") == "refused_shop_total_contamination":
+                refused += 1
+        if listing["listing_id"] not in known:
+            new.append(listing["listing_id"])
+
+        result = db.record_listing_observation(
+            listing["listing_id"], shop_name=shop_name, title=listing.get("title"),
+            price=listing.get("price"),
+            total_reviews=(outcome or {}).get("total_reviews"),
+            rating=(outcome or {}).get("rating"), is_ad=listing.get("is_ad"),
+            matched_term=match_title_to_term(listing.get("title"), watched_terms),
+            collected_at=collected_at)
+        recorded += 1
+
+    return {"shop": shop_name, "seen": len(listings), "recorded": recorded,
+            "review_counts_fetched": fetched,
+            "review_counts_refused": refused, "new_listings": new,
+            # On the first sweep every listing is "new", which is an artefact of when
+            # tracking started rather than anything the shop did.
+            "is_baseline": not known}
+
+
 def match_title_to_term(title, watched_terms):
     """Which watched niche does this listing title belong to? None if none.
 

@@ -143,5 +143,42 @@ fresh = new_listings(db, "S", since="2026-08-05T00:00:00+00:00")
 check("new_listings finds only what appeared after the cutoff",
       [r["listing_id"] for r in fresh] == ["new"], [r["listing_id"] for r in fresh])
 
+# --- the shop-total contamination guard ------------------------------------------
+# Etsy fills Product.aggregateRating.reviewCount with the SHOP's total on some listing
+# pages and the listing's own on others. Measured live: 7 of 12 shopflowerlane listings
+# returned 4580 against a shop showing 4.6k. Recorded, each would have looked like a
+# listing that had accumulated the shop's entire review history overnight.
+class FakeScraper:
+    SHOP_TOTAL_CONTAMINATION_RATIO = 0.9
+
+    def __init__(self, counts):
+        self.counts = counts
+
+    def get_listing_outcome(self, listing_id, shop_total_reviews=None):
+        count = self.counts[listing_id]
+        if shop_total_reviews and count >= shop_total_reviews * self.SHOP_TOTAL_CONTAMINATION_RATIO:
+            return {"listing_id": listing_id, "total_reviews": None, "rating": None,
+                    "basis": "refused_shop_total_contamination", "raw_review_count": count}
+        return {"listing_id": listing_id, "total_reviews": count, "rating": 5.0,
+                "basis": "measured"}
+
+
+sc = FakeScraper({"a": 4580, "b": 65})
+check("a count at the shop's total is refused",
+      sc.get_listing_outcome("a", shop_total_reviews=4600)["total_reviews"] is None)
+check("and the refusal is named",
+      sc.get_listing_outcome("a", shop_total_reviews=4600)["basis"]
+      == "refused_shop_total_contamination")
+check("the raw value is kept for diagnosis",
+      sc.get_listing_outcome("a", shop_total_reviews=4600)["raw_review_count"] == 4580)
+check("a genuine per-listing count passes",
+      sc.get_listing_outcome("b", shop_total_reviews=4600)["total_reviews"] == 65)
+# Proximity, not equality: the shop page rounds 4.6k while the listing block says 4580.
+check("proximity catches it even though the numbers differ",
+      sc.get_listing_outcome("a", shop_total_reviews=4600)["total_reviews"] is None)
+# 253 of 1400 is 18% — genuine values sit far below the line, so this is not delicate.
+check("a large but plausible count still passes",
+      FakeScraper({"c": 253}).get_listing_outcome("c", shop_total_reviews=1400)["total_reviews"] == 253)
+
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)

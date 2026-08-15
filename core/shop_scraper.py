@@ -48,12 +48,12 @@ class ShopScraper:
         # nothing than to fetch it as the seller.
         resp = self.session_manager.get(url, platform="etsy")
         
-        # Keep the session alive: check if Etsy returned an updated datadome cookie
-        if hasattr(resp, 'cookies'):
-            new_datadome = resp.cookies.get('datadome')
-            if new_datadome and self.api:
-                self.api.update_datadome_cookie(new_datadome)
-        
+        # A datadome-refresh hook used to live here, writing the rotated cookie back
+        # onto the API object. It called a method that does not exist — every shop
+        # fetch raised AttributeError — and it would be pointless now regardless:
+        # cookies come from the Redis vault per request, not from an object that
+        # outlives the call (D-28). The extension refreshes them at the source.
+
         if resp.status_code != 200:
             print(f"[-] Failed to fetch shop page for {shop_name}. Status Code: {resp.status_code}")
             return None
@@ -118,6 +118,74 @@ class ShopScraper:
             "total_reviews": exact_review_count if exact_review_count is not None else total_reviews,
             "active_listings": exact_active_listings
         }
+
+    # A listing's Product.aggregateRating.reviewCount at or above this share of the
+    # shop's own total is indistinguishable from the shop figure, so it is refused.
+    SHOP_TOTAL_CONTAMINATION_RATIO = 0.9
+
+    def get_listing_outcome(self, listing_id, shop_total_reviews=None):
+        """One listing's own review count and rating, from its LD+JSON Product block.
+
+        Verified on the wire 2026-08-15, and the wire is stranger than it looks:
+
+        1. The shop grid carries NO per-listing review counts — zero
+           `clg-static-review-stars` elements on a shop page — so this signal costs one
+           request per listing and cannot be batched out of the grid.
+
+        2. **`Product.aggregateRating.reviewCount` is not always the listing's.** On
+           some pages it is (1, 65, 253); on others Etsy fills it with the SHOP's total.
+           Measured: shopflowerlane returned 4580 on 7 of 12 listings against a shop
+           showing 4.6k; ARTOFJOYStudio returned 1383 on 2 of 12 against 1.4k. Same
+           field, same block, same request — the page simply differs.
+
+        That second one is the dangerous shape: a large, confident, wrong number. Taken
+        at face value it hands seven listings the shop's entire review history, and the
+        next sweep reads their "velocity" as the shop's growth. Every one of them would
+        look like a runaway winner.
+
+        So a count at or above `SHOP_TOTAL_CONTAMINATION_RATIO` of the shop total is
+        refused. Proximity rather than equality because the shop page rounds (4.6k ->
+        4600 against an exact 4580). The genuine values sit far below the line — 253 of
+        1400, 65 of 4600 — so the separation is not delicate. Pass
+        `shop_total_reviews` to enable the check; without it the value cannot be
+        judged and is returned unguarded.
+
+        Returns None when the block is absent — unknown, never zero (N-02).
+        """
+        url = f"https://www.etsy.com/listing/{urllib.parse.quote_plus(str(listing_id))}/"
+        resp = self.session_manager.get(url, platform="etsy")
+        if resp.status_code != 200:
+            return None
+
+        for match in re.finditer(
+                r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
+                resp.text, re.IGNORECASE | re.DOTALL):
+            with soft_parse("listing.ld_json", listing_id=listing_id):
+                data = json.loads(match.group(1).strip())
+                for item in (data if isinstance(data, list) else [data]):
+                    if not isinstance(item, dict) or item.get("@type") != "Product":
+                        continue
+                    rating = item.get("aggregateRating") or {}
+                    if "reviewCount" not in rating:
+                        continue           # a listing with no reviews yet omits it
+
+                    count = int(rating["reviewCount"])
+                    if (shop_total_reviews
+                            and count >= shop_total_reviews * self.SHOP_TOTAL_CONTAMINATION_RATIO):
+                        return {
+                            "listing_id": str(listing_id),
+                            "total_reviews": None,
+                            "rating": None,
+                            "basis": "refused_shop_total_contamination",
+                            "raw_review_count": count,
+                        }
+                    return {
+                        "listing_id": str(listing_id),
+                        "total_reviews": count,
+                        "rating": float(rating["ratingValue"]) if rating.get("ratingValue") else None,
+                        "basis": "measured",
+                    }
+        return None
 
     def get_shop_listings(self, shop_name, page=1):
         """One page of a shop's listings — the inventory `get_shop_metrics` cannot give.
