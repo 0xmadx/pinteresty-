@@ -120,9 +120,39 @@ everything else or it accumulates over time.
 | # | Build | Why |
 |---|---|---|
 | 1 | ~~**Settings** — config file + CLI~~ | ✅ **done 2026-08-14** — `core/settings_store.py`, `config/settings.json`, 28 assertions. See below. |
-| 2 | **Competitor outcome tracker** — shop inventory + per-listing review velocity | D-25. **Worthless if started late** — it needs weeks of history. Also the only unbiased outcome dataset available (partially solves B-04). |
-| 3 | **Scheduler** — daily shop delta, 3×/week ranks, weekly Pinterest bridge | Every signal is a time-series. Value compounds only with time, and the clock has not started. |
-| 4 | **Seed 2–3 shops + one bridge run** | The daily delta is the only genuinely measured sales number; momentum is `None` until the bridge runs. Track **some mid-tier shops, not only stars** — tracking winners only re-creates survivorship bias. |
+| 2 | ~~**Competitor outcome tracker**~~ | ✅ **done 2026-08-15** — `competitor_tracker.py`, 31 assertions (`ea425a1`, `e6b17b5`) |
+| 3 | ~~**Scheduler**~~ | ✅ **done 2026-08-15** — `core/scheduler.py`, 22 assertions |
+| 4 | **Seed shops + one bridge run** | ⚠️ **partly done** — 2 shops seeded, 228 observations. Both are **stars**; a mid-tier shop is still missing and `settings_store` warns about it (B-01). Pinterest bridge not yet run. |
+
+#### What the wire taught us building item 2
+
+Two findings no document could have supplied, both caught only by probing:
+
+* **Shop pages carry no per-listing review counts.** Zero `clg-static-review-stars`
+  on a shop grid, so the outcome signal costs one request *per listing* and cannot be
+  batched out of the inventory sweep. `sweep_shop` is two-tier for this reason.
+* **`Product.aggregateRating.reviewCount` is not always the listing's.** On some pages
+  it holds the **shop's** total — measured, 7 of 12 shopflowerlane listings returned
+  4580 against a shop showing 4.6k. Recorded as-is, each would have looked like a
+  listing that gained the shop's entire review history overnight: seven fabricated
+  runaway winners inside the one dataset built to be unbiased. Counts at or above 90%
+  of the shop total are now refused.
+
+#### Scheduler design decisions
+
+* **Due-ness is measured from the last *successful* run, and persisted.** "Next run =
+  now + 24h" silently drops every window the machine was asleep for, and afterwards the
+  absence is indistinguishable from a day the shop did not change.
+* **Refused ≠ failed.** A missing session means *open Chrome*; a failure means the site
+  or the code broke. Collapsing them sends the operator hunting a bug that is not there.
+* **One job failing never stops the others** — losing the Pinterest bridge is no reason
+  to skip the shop delta.
+* **No daemon.** `--once` runs what is due and exits, for Task Scheduler or cron.
+
+```bash
+.venv/Scripts/python.exe -m core.scheduler --list
+.venv/Scripts/python.exe -m core.scheduler --once
+```
 
 #### Settings has two tiers (D-26)
 

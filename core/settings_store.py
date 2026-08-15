@@ -57,6 +57,15 @@ def _defaults():
         # Dotted paths the operator has explicitly confirmed. Absent = still a guess.
         "confirmed": [],
         "product_profiles": {},
+        # Competitor shops to sweep (D-25). `tier` is the operator's own note, and it
+        # exists to make survivorship visible: a list of nothing but stars teaches what
+        # winners do, not what works (B-01). Nothing enforces a mix — it cannot be
+        # measured from the outside — but an all-star list should be obvious at a
+        # glance rather than buried in a config.
+        "tracked_shops": [],
+        # Niches being considered. Competitor listings are matched against these so a
+        # rival launching into one is visible.
+        "watched_terms": [],
     }
 
 
@@ -80,6 +89,8 @@ class Settings:
             merged["global"].setdefault(section, {}).update(values)
         merged["confirmed"] = data.get("confirmed", [])
         merged["product_profiles"] = data.get("product_profiles", {})
+        merged["tracked_shops"] = data.get("tracked_shops", [])
+        merged["watched_terms"] = data.get("watched_terms", [])
         return cls(merged, path)
 
     def save(self):
@@ -190,6 +201,46 @@ class Settings:
     def profiles(self):
         return dict(self.data["product_profiles"])
 
+    # -- what the scheduler sweeps ----------------------------------------------------
+    def add_shop(self, name, tier=None, notes=None):
+        """Track a competitor shop. `tier` is a free-text note, e.g. 'star', 'mid'."""
+        shops = [s for s in self.data["tracked_shops"] if s["name"] != name]
+        shops.append({"name": name, "tier": tier, "notes": notes,
+                      "added": datetime.now(timezone.utc).isoformat()})
+        self.data["tracked_shops"] = shops
+        return shops
+
+    def shops(self):
+        return list(self.data["tracked_shops"])
+
+    def shop_names(self):
+        return [s["name"] for s in self.data["tracked_shops"]]
+
+    def add_term(self, term):
+        if term not in self.data["watched_terms"]:
+            self.data["watched_terms"].append(term)
+        return self.data["watched_terms"]
+
+    def terms(self):
+        return list(self.data["watched_terms"])
+
+    def survivorship_warning(self):
+        """Is the tracked set all winners? Returns a warning string, or None.
+
+        Not a blocker — the operator may have good reason — but an all-star roster
+        silently answers "what do successful shops do" while appearing to answer "what
+        works", which is B-01 rebuilt inside the one dataset meant to escape it.
+        """
+        shops = self.shops()
+        if len(shops) < 2:
+            return None
+        tiers = [(s.get("tier") or "").lower() for s in shops]
+        if any(t in ("mid", "mid-tier", "small", "new") for t in tiers):
+            return None
+        return (f"All {len(shops)} tracked shops are stars or untiered. Tracking only "
+                f"winners teaches what winners do, not what works (B-01). Add a shop "
+                f"in the low hundreds of sales so failures are visible too.")
+
 
 def load(path=DEFAULT_PATH):
     return Settings.load(path)
@@ -252,6 +303,20 @@ def main(argv=None):
     pa.add_argument("--notes")
     psub.add_parser("list")
 
+    sh = sub.add_parser("shop")
+    shsub = sh.add_subparsers(dest="shcmd")
+    sha = shsub.add_parser("add")
+    sha.add_argument("name")
+    sha.add_argument("--tier", help="star / mid / small — your own note (see B-01)")
+    sha.add_argument("--notes")
+    shsub.add_parser("list")
+
+    tm = sub.add_parser("term")
+    tmsub = tm.add_subparsers(dest="tmcmd")
+    tma = tmsub.add_parser("add")
+    tma.add_argument("term")
+    tmsub.add_parser("list")
+
     args = parser.parse_args(argv)
     settings = Settings.load(args.path)
 
@@ -265,6 +330,28 @@ def main(argv=None):
         remaining = settings.basis()["unconfirmed"]
         print(f"{len(remaining)} verdict-critical value(s) still unconfirmed."
               if remaining else "All verdict-critical values are now confirmed.")
+        return 0
+    if args.cmd == "shop":
+        if args.shcmd == "add":
+            settings.add_shop(args.name, args.tier, args.notes)
+            settings.save()
+            print(f"Tracking {args.name!r}"
+                  f"{f' ({args.tier})' if args.tier else ''}.")
+            warning = settings.survivorship_warning()
+            if warning:
+                print(f"\n⚠️  {warning}")
+            return 0
+        for shop in settings.shops():
+            print(f"{shop['name']:<24} tier={shop.get('tier') or '-'}")
+        return 0
+    if args.cmd == "term":
+        if args.tmcmd == "add":
+            settings.add_term(args.term)
+            settings.save()
+            print(f"Watching {args.term!r}. {len(settings.terms())} term(s) total.")
+            return 0
+        for term in settings.terms():
+            print(term)
         return 0
     if args.cmd == "profile":
         if args.pcmd == "add":

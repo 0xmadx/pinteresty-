@@ -1,0 +1,8 @@
+{
+  "shop_sweep": {
+    "last_attempt": "2026-08-15T06:11:22.938822+00:00",
+    "last_status": "ok",
+    "last_success": "2026-08-15T06:11:22.938822+00:00",
+    "last_result": "{\"shops\": 2, \"detail\": [{\"shop\": \"shopflowerlane\", \"seen\": 39, \"recorded\": 39, \"review_counts_fetched\": 20, \"review_counts_refused\": 9, \"new_listings\": [], \"is_baseline\": false}, {\"shop\": \"ARTOFJOYStudio\", \"seen\": 37, \"recorded\": 37, \"review_counts_fetched\": 20, \"review_counts_refused\": 2, \"new_listings\": [], \"is_baseline\": false}]}"
+  }
+}
