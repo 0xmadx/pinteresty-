@@ -11,6 +11,40 @@ seller session must never be spent on it.
 DEFAULT_SAMPLE = 6
 
 
+def material_for_term(public_api, term, sample=DEFAULT_SAMPLE):
+    """Tags AND breadcrumbs in one SERP pass — both come off the same listing fetches.
+
+    Kept together because fetching the page twice to read two fields off it is the
+    obvious waste, and breadcrumbs were being discarded from calls already being made.
+    """
+    from etsy.analytics.taxonomy import category_consensus
+
+    serp = public_api.get_public_search(term)
+    if not serp or not serp.get("cards"):
+        return ({"consensus_tags": [], "basis": "serp_unavailable"}, None)
+
+    organic = [c for c in serp["cards"] if not c.get("is_ad")][:sample]
+    listings, breadcrumbs = [], []
+    for card in organic:
+        data = public_api.get_listing_data(card["listing_id"]) or {}
+        if data.get("breadcrumb"):
+            breadcrumbs.append(data["breadcrumb"])
+        if data.get("tags"):
+            listings.append({"tags": data["tags"],
+                             "review_count": card.get("review_count"),
+                             "shop_years": card.get("shop_years_on_etsy")})
+
+    from etsy.analytics.tag_mining import mine_consensus
+    if listings:
+        consensus = mine_consensus(listings, limit=MAX_MINED)
+        consensus["sampled_listings"] = len(listings)
+        consensus["basis"] = "measured"
+    else:
+        consensus = {"consensus_tags": [], "basis": "no_tags_parsed"}
+
+    return consensus, category_consensus(breadcrumbs)
+
+
 def consensus_for_term(public_api, term, sample=DEFAULT_SAMPLE):
     """Consensus tags from the organic page-one listings for `term`.
 

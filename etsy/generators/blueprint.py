@@ -195,8 +195,14 @@ CTR_CHECKLIST = [
 
 
 def build(term, data, consensus, verdict_for_price, product_type=None,
-          gap_phrases=(), long_tail=(), differentiator=None):
-    """Assemble the blueprint. Every field carries where it came from."""
+          gap_phrases=(), long_tail=(), differentiator=None, category=None):
+    """Assemble the blueprint. Every field carries where it came from.
+
+    `category` is `taxonomy.category_consensus(...)` — where page one files this
+    product. A blueprint that says what to write and what to charge but not where to
+    list it is missing the choice that decides which attribute filters exist and how
+    buyers browse to it.
+    """
     tags = build_tags(term, consensus.get("consensus_tags") if consensus else [],
                       gap_phrases, long_tail)
     title = build_title(term, tags["tags"], product_type, differentiator)
@@ -221,12 +227,18 @@ def build(term, data, consensus, verdict_for_price, product_type=None,
             "almost every tag is consensus — this lists you where incumbents are "
             "strongest with nothing they lack; add a differentiator")
 
+    if category and category.get("is_split"):
+        warnings.append(
+            "page one disagrees about the category — see POSITIONING; the choice "
+            "changes which attribute filters exist and how buyers browse to you")
+
     return {
         "term": term,
         "product_type": product_type,
         "title": title,
         "tags": tags,
         "price": price,
+        "category": category,
         "market": {"volume": data.get("volume"), "supply": data.get("supply"),
                    "cvr": data.get("cvr"), "wow_change": data.get("wow_change")},
         "ctr_checklist": CTR_CHECKLIST,
@@ -253,6 +265,14 @@ def render(bp):
     lines.append("PRICE")
     lines.append(f"  {'$' + str(price['price']) if price['price'] else 'NO PRICE CLEARS THE FLOOR'}")
     lines.append(f"  ↳ {price['reason']}")
+
+    category = bp.get("category")
+    if category and category.get("primary"):
+        from etsy.analytics.taxonomy import positioning_note
+        lines.append("")
+        lines.append("POSITIONING")
+        lines.append(f"  {' > '.join(category['full_path'])}")
+        lines.append(f"  ↳ {positioning_note(category)}")
 
     market = bp["market"]
     if market["volume"]:

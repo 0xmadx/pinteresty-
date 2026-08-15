@@ -18,7 +18,7 @@ margin against a 35% floor. Offense finds it; the gate stops it. No blueprint.
     .venv/Scripts/python.exe -m etsy.analytics.hunt --profile "Felt decor"
 """
 from etsy.analytics import discover, opportunity
-from etsy.analytics.blueprint_support import consensus_for_term
+from etsy.analytics.blueprint_support import material_for_term
 
 
 def hunt(api, public_api, settings, profile_name, limit=8, calendar_rows=None,
@@ -90,14 +90,18 @@ def _blueprint_for(term, data, public_api, settings, profile_name):
     from etsy.analytics import profit
     from etsy.generators import blueprint as bp
 
-    consensus = consensus_for_term(public_api, term)
+    # One SERP pass yields both: tags for the listing copy, breadcrumbs for where to
+    # file it. Fetching the same pages twice to read two fields would be the obvious
+    # waste, and breadcrumbs were previously discarded from calls already being made.
+    consensus, category = material_for_term(public_api, term)
     kwargs = settings.verdict_kwargs(profile_name)
 
     def verdict_for_price(price):
         return profit.verdict(price=price, demand_units_per_week=0, **kwargs)
 
     return bp.build(term, data, consensus, verdict_for_price,
-                    product_type=settings.profile(profile_name)["product_type"])
+                    product_type=settings.profile(profile_name)["product_type"],
+                    category=category)
 
 
 def render(results):
