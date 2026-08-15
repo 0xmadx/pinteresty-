@@ -46,9 +46,43 @@ def _slug(value):
 
 
 class PinterestTrendsAPI:
-    def __init__(self, cache=True, delay=0.6, store=True):
+    @staticmethod
+    def _session_cookies():
+        """Pinterest cookies from the vault, falling back to the legacy .env variable.
+
+        The vault is tried first because it is what the Chrome extension actually
+        fills now. The fallback is kept rather than deleted so this is not a breaking
+        change for a machine still running the old setup — but if both are empty the
+        original error is re-raised, since a Pinterest call with no session is a
+        refusal, not something to paper over.
+        """
+        try:
+            from core.cookie_vault import RedisCookieVault
+            from core.settings import ScraperConfig
+            account = RedisCookieVault(ScraperConfig()).get_valid_account("pinterest")
+            cookies = account.get("cookies_json")
+            if isinstance(cookies, dict) and cookies:
+                return cookies
+        except Exception:
+            # Vault unreachable or empty — fall through to the legacy path so the
+            # operator gets the original, actionable message rather than a Redis
+            # stack trace.
+            pass
+
         from pinterest.core.client import get_pinterest_cookies
-        self.cookies = get_pinterest_cookies()
+        return get_pinterest_cookies()
+
+    def __init__(self, cache=True, delay=0.6, store=True, cookies=None):
+        # D-28 moved sessions into the Redis vault, but only the Etsy tier was
+        # migrated: this class still called get_pinterest_cookies(), which reads
+        # PINTEREST_COOKIES from .env — a variable nothing writes any more. So the
+        # whole Pinterest tier raised on construction while the vault held working
+        # profiles the entire time.
+        #
+        # This composes the pieces that already exist (RedisCookieVault) rather than
+        # adding session mechanics; `pinterest/core/client.py` stays untouched and is
+        # still the fallback, so an operator with a populated .env is unaffected.
+        self.cookies = cookies or self._session_cookies()
         self.cache = cache
         self.delay = delay
         self._end_date = None
