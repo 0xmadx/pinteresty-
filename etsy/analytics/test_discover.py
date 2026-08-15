@@ -113,5 +113,52 @@ check("no moments at all does not crash the join",
       attach_moments([{"term": "x", "volume": 1, "categories": [], "basis": "etsy_curated"}],
                      [])[0]["timing"] == "evergreen")
 
+# --- winnability: market size is not opportunity -----------------------------------
+from etsy.analytics.discover import rank_by_opportunity, winnability  # noqa: E402
+
+# The exact numbers that exposed the flaw, measured live 2026-08-15.
+home = winnability({"volume": 310467, "supply": 2160627, "cvr": 0.00005})
+tag = winnability({"volume": 69874, "supply": 25031, "cvr": 0.00279})
+check("a 2.1M-listing term is a wall", home["verdict"] == "wall", home)
+check("and the reason quotes both numbers", "2,160,627 listings" in home["reason"], home)
+check("a term with more searches than listings is winnable",
+      tag["verdict"] == "winnable", tag)
+check("the ratio is exposed, not just a rank",
+      tag["demand_per_listing"] == 2.791, tag)
+# A composite score would rank the list just as well and tell the operator nothing —
+# "you cannot rank here" has to be checkable.
+
+check("the middle ground is named contested",
+      winnability({"volume": 1000, "supply": 2000, "cvr": 0.01})["verdict"] == "contested")
+
+u = winnability({"volume": None, "supply": 5000})
+check("an unsized term is unmeasured, not a wall", u["demand_per_listing"] is None, u)
+check("and does not claim a verdict", "verdict" not in u, u)
+# A 0 ratio would sort it beside terms measured to be hopeless (N-02).
+
+# --- ranking flips the list ---------------------------------------------------------
+data = {"home decor": {"volume": 310467, "supply": 2160627, "cvr": 0.00005},
+        "backpack name tag": {"volume": 69874, "supply": 25031, "cvr": 0.00279},
+        "unknown term": None}
+ranked = rank_by_opportunity(
+    [{"term": t, "volume": 0, "categories": [], "basis": "etsy_curated"} for t in data],
+    lambda t: data[t])
+check("the winnable term ranks first, despite 4x less volume",
+      ranked[0]["term"] == "backpack name tag", [r["term"] for r in ranked])
+check("the head term is demoted", ranked[1]["term"] == "home decor", ranked)
+check("an unsized term is kept, at the end",
+      ranked[-1]["term"] == "unknown term", ranked)
+check("and records why it could not be ranked",
+      ranked[-1]["winnability"]["basis"] == "fetch_failed", ranked[-1])
+# Dropping it would hide a term merely because Etsy declined to size it.
+
+# CVR breaks ties: of two equally crowded terms, the one whose searchers buy wins.
+tied = {"a": {"volume": 100, "supply": 100, "cvr": 0.001},
+        "b": {"volume": 100, "supply": 100, "cvr": 0.02}}
+ranked = rank_by_opportunity(
+    [{"term": t, "volume": 0, "categories": [], "basis": "etsy_curated"} for t in tied],
+    lambda t: tied[t])
+check("CVR breaks a tie on crowding", ranked[0]["term"] == "b", [r["term"] for r in ranked])
+
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)

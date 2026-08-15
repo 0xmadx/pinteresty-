@@ -35,8 +35,9 @@ A single operator running their **own Etsy shops**. Sells a mix:
 - **Personalized physical** — premium price, thin competition, **capped by their
   own hands**
 
-Not a SaaS today. Possibly a SaaS later — the architecture allows it, but every
-choice is made for one operator first.
+**Target: a SaaS-grade product** (decided 2026-08-15). Built for one operator first,
+but to a standard that could be sold — which is a quality bar, and, for the multi-tenant
+business, a blocker that no amount of code removes. Both are set out in §SaaS below.
 
 ---
 
@@ -96,12 +97,85 @@ engine that never learns.
 
 - **Not a general SEO tool.** It serves this operator's shops.
 - **Not real-time.** Weekly batches are correct; nothing needs streaming.
-- **Not multi-user today.** One operator. SaaS is a later evolution, not a
-  current requirement.
+- **Not multi-user today.** One operator, built to a sellable standard. See §SaaS
+  for what that means and what genuinely blocks the multi-tenant version.
 - **Not a scraper improvement project.** The data-access layer is treated as an
   input. This project is the analysis and decision system built on top.
 - **Not an AI product yet.** But data is captured today so a model is possible
   later (frozen feature vectors + real outcomes = a training set).
+
+---
+
+## SaaS — the quality bar, and the one real blocker
+
+*Added 2026-08-15, when the operator set a sellable product as the target.*
+
+### The bar (adopt now, it costs nothing extra)
+
+These are the differences between a personal script and something another person could
+pay for. Each is already partly true here:
+
+| | Bar | Where we stand |
+|---|---|---|
+| **Config, not code** | no shop name, fee or term hardcoded | ✅ `settings_store` |
+| **Refuses safely** | never runs on a missing session, never hangs | ✅ `preflight`, `VaultEmpty` |
+| **Self-diagnosing** | a stuck system says why, in one command | ✅ `vault_status`, `scheduler --list` |
+| **Provenance on every claim** | measured / derived / default, visible at the point of use | ✅ and `provisional` reaches the verdict |
+| **Onboarding under 10 minutes** | install → first real answer | ❌ needs the extension, a seller login, Docker |
+| **Multi-tenant data model** | rows keyed by account, not global | ❌ every table is single-operator |
+| **Someone else can run it** | no step that only the author knows | ⚠️ partly — the runbook is in docs, not in the product |
+
+### The blocker: the session model does not multiply
+
+The private tier authenticates **as the operator's own seller account** (D-29). That is
+not an implementation detail to be generalised later — it is the design:
+
+* every customer would need to install a Chrome extension and stay logged in
+* their seller session would sit in **your** Redis, and you would be scraping Etsy
+  **as them**
+* one banned account is a customer's business, not a re-login
+
+So **the analysis engine is sellable and the access layer is not.** Any real
+multi-tenant version replaces the private tier with Etsy's official API, or sells the
+judgement rather than the data: the operator brings their own numbers, the product
+supplies the profit gate, the calendar, the refusals.
+
+That is worth knowing **now**, because it changes what is worth building: keep the
+judgement layer clean, provider-agnostic and well-tested — that part travels. Do not
+invest in making the scraping layer prettier; it does not.
+
+### What that implies for the roadmap
+
+1. Nothing above the adapter may know where data came from (already constraint 5).
+2. The judgement layer stays pure and offline-testable — 674 assertions, no network.
+3. `settings_store` is the seam a second tenant would grow from; keep every operator
+   fact in it rather than in code.
+
+---
+
+## The fourth lens — winnable, not just true
+
+*Added 2026-08-15 after a concrete miss.*
+
+Three lenses were already here: **honest** (is the number true?), **profitable** (does
+it pay?), **timely** (when?). A fourth was missing and cost a real recommendation:
+
+> `discover` shipped ranking candidates by search volume. Every number was correct and
+> provenance-tagged. It still put `home decor` (310k volume, **2.16M listings**, CVR
+> 0.00005) first and `backpack name tag` (70k volume, **25k listings**, CVR 0.00279)
+> seventeenth — burying the only winnable term under three walls.
+
+**Market size is not opportunity.** A recommendation must survive *"could this shop
+actually rank here?"*, and the ratio that answers it — demand per listing — is already
+in every response we fetch.
+
+Enforced by the `etsy-seo-and-opportunity` skill. The short form:
+
+- rank by **winnability**, never volume; show the ratio, not a black-box score
+- name the **funnel stage** a metric belongs to — tags earn impressions, photos earn
+  clicks, and advising tags for a click problem is confident and useless
+- **long tail is the strategy**, not a consolation prize
+- market demand is never **this shop's** demand
 
 ---
 

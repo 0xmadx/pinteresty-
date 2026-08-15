@@ -272,6 +272,26 @@ that does not have one.
 source is needed, or moments must be derived from the terms' own series (a
 back-to-school curve is visible in the data even when nobody names the moment).
 
+### Phase 2b — winnability, and the SEO half of being right (D-31)
+
+Added 2026-08-15. The system was enforcing *is this number true* and not *is this the
+number to show first*. `discover` ranked by volume and put a 2.16M-listing term above
+the only winnable one on the screen.
+
+| # | Build | Status |
+|---|---|---|
+| — | **Winnability ranking** — demand/listing + CVR, ratio exposed not scored | ✅ done, 30 assertions |
+| — | `etsy-seo-and-opportunity` skill — the fourth review lens | ✅ done |
+| a | **Rank feasibility per listing** — can *this shop* reach page one, given its authority? | ⬜ |
+| b | **Funnel-stage labelling** — impressions vs clicks vs orders on every metric | ⬜ |
+| c | **CTR-side signals** — price position, photo count, review count. The biggest lever, and the one measured least | ⬜ |
+| d | **Long-tail expansion** — from a wall term to its winnable children | ⬜ |
+
+**Why (c) matters most of the remaining four:** tags earn an *impression*; the photo and
+the price earn the *click*. Everything this repo generates today (titles, 13 tags) acts
+at the impression stage, so a listing with a click problem gets confident, useless
+advice.
+
 ### Phase 3 — Pinterest's unused half
 
 | # | Build | Why |

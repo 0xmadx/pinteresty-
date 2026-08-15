@@ -418,6 +418,46 @@ layer down.
 
 ---
 
+## D-31 — Rank by winnability, not market size; and the target is SaaS-grade
+
+**Date:** 2026-08-15.
+**Context:** The operator asked whether this was being built with an SEO, analytics and
+marketing head, or only an engineering one. The honest answer was the latter, and it had
+a cost sitting in shipped code: `discover` ranked candidates by **search volume**. Every
+number was correct and provenance-tagged, and the list was still backwards.
+
+| Term | Volume | Supply | Demand/listing | CVR |
+|---|---|---|---|---|
+| `home decor` — ranked 1st | 310,467 | 2,160,627 | 0.14 | 0.00005 |
+| `backpack name tag` — ranked 17th | 69,874 | 25,031 | **2.79** | **0.00279** |
+
+19× the demand per listing, 56× the conversion rate, buried under three walls.
+
+**Chosen:**
+  * rank on **demand per listing** with CVR as the tiebreak, and **expose the ratio**
+    rather than a composite score — "you cannot rank here" must be checkable
+  * three named verdicts (`winnable` ≥1.0, `contested` ≥0.25, `wall` below), coarse and
+    stated rather than tuned, because they separate a wall from a chance and are not a
+    prediction
+  * an unsized term is `unmeasured` and keeps its place, never a 0 ratio (N-02)
+  * a fourth review lens — **winnable** alongside honest, profitable, timely — enforced
+    by the new `etsy-seo-and-opportunity` skill
+**Rejected:** a single opportunity score (ranks identically, explains nothing);
+dropping unsized terms; tuning the thresholds to the current sample.
+**Consequence:** `home decor` moved from 1st to 10th. Correctness and usefulness are
+separate tests, and this repo had only been enforcing the first.
+
+**Also decided: the target is a SaaS-grade product**, with one honest limit recorded in
+`GOAL.md`. The quality bar (config not code, safe refusals, self-diagnosis, provenance)
+is adopted now and costs nothing. But the private tier authenticates as the operator's
+**own seller account** (D-29), so multi-tenancy would mean holding customers' seller
+sessions and scraping Etsy as them — one ban is a customer's business, not a re-login.
+**The judgement layer is sellable; the access layer is not.** Investment therefore goes
+into keeping the judgement layer pure, provider-agnostic and offline-testable, and not
+into making scraping prettier.
+
+---
+
 ## Open decisions (not yet made)
 
 | # | Question | Blocked on |

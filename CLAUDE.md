@@ -112,7 +112,20 @@ time-varying value. The cache (`core/request_cache.py`) is the opposite — it e
 `chrome_extension/` — read them, document them, never extend them. **No Playwright or
 headless browsers, ever.** `requests` / `curl_cffi` are fine.
 
-### 7. Public unless seller access is mandatory (D-29)
+### 7. Rank by winnability, never by market size (D-31)
+
+`discover` shipped sorting by search volume — every number correct, and the
+recommendation still wrong:
+
+| Term | Volume | Supply | Demand/listing | CVR |
+|---|---|---|---|---|
+| `home decor` (was 1st) | 310,467 | 2,160,627 | 0.14 | 0.00005 |
+| `backpack name tag` (was 17th) | 69,874 | 25,031 | **2.79** | **0.00279** |
+
+A term with 2M listings is a wall, not an opportunity. Show the **ratio**, not a score —
+"you cannot rank here" has to be checkable. See the `etsy-seo-and-opportunity` skill.
+
+### 8. Public unless seller access is mandatory (D-29)
 
 `etsy_private` authenticates as **the operator's own seller account** — the one
 unreplaceable asset here. A burned buyer session costs a re-login; a burned seller
@@ -157,9 +170,15 @@ account costs the business.
 | `docs/GOAL.md` | the north star |
 | `BIASES_AND_BLIND_SPOTS.md` | ⚠️ self-declared **unverified**; 2 of its 10 claims were wrong. Prefer `bias_audit.md`. |
 
-Skills in `.claude/skills/`: **`etsy-pipeline-work`** (how to build here — read it before
-touching a pipeline), `system-architect`, `bias-aware-analysis`, `ui-builder`,
-`git-and-comments`. They are enforced, not advisory.
+Skills in `.claude/skills/`: **`etsy-pipeline-work`** (is the number *true* — read it
+before touching a pipeline), **`etsy-seo-and-opportunity`** (is it the *right number to
+show first* — read it before ranking or recommending anything), `system-architect`,
+`bias-aware-analysis`, `ui-builder`, `git-and-comments`. They are enforced, not
+advisory.
+
+Those first two are deliberately a pair. `etsy-pipeline-work` catches a wrong number;
+`etsy-seo-and-opportunity` catches a correct number shown in the wrong order. Both cost
+the operator a wasted launch, and only the first looks like a bug.
 
 ---
 

@@ -79,6 +79,71 @@ def trending_candidates(api, taxonomy_ids=None):
     return sorted(seen.values(), key=lambda c: c["volume"] or -1, reverse=True)
 
 
+def winnability(data):
+    """Can this shop plausibly rank here? Demand per listing, and the intent behind it.
+
+    **Market size is not opportunity.** Measured live 2026-08-15:
+
+        home decor          310,467 searches / 2,160,627 listings = 0.14   cvr 0.00005
+        backpack name tag    69,874 searches /    25,031 listings = 2.79   cvr 0.00279
+
+    `backpack name tag` has 19x the demand per listing and 56x the conversion rate.
+    Ranked by volume it sits seventeenth, under three terms this shop can never reach.
+
+    Returns the ratio itself rather than a score. A composite number would rank the
+    list just as well and tell the operator nothing about why — and "you cannot rank
+    here" is a conclusion they need to be able to check.
+    """
+    volume, supply, cvr = data.get("volume"), data.get("supply"), data.get("cvr")
+    if not volume or not supply:
+        # Absent is not zero: an unsized term is unknown, and a 0 ratio would sort it
+        # alongside terms measured to be hopeless (N-02).
+        return {"demand_per_listing": None, "basis": "unmeasured",
+                "detail": "volume or supply missing"}
+
+    ratio = volume / supply
+    # Thresholds are deliberately coarse and named, not tuned. They separate "a wall"
+    # from "a chance" for a shop with no ranking authority; they are not a prediction.
+    if ratio >= 1.0:
+        verdict, reason = "winnable", "more searches than listings — a new listing can surface"
+    elif ratio >= 0.25:
+        verdict, reason = "contested", "several listings per search — possible, not easy"
+    else:
+        verdict, reason = "wall", f"{supply:,} listings against {volume:,} searches"
+
+    return {
+        "demand_per_listing": round(ratio, 3),
+        "volume": volume,
+        "supply": supply,
+        "cvr": cvr,
+        "verdict": verdict,
+        "reason": reason,
+        "basis": "measured",
+    }
+
+
+def rank_by_opportunity(candidates, fetch):
+    """Re-rank candidates by winnability, not by market size.
+
+    `fetch` returns parsed results-data for a term. Terms that cannot be sized keep
+    their place at the end rather than being dropped — unmeasured is not hopeless.
+    """
+    out = []
+    for candidate in candidates:
+        data = fetch(candidate["term"])
+        out.append({**candidate,
+                    "winnability": winnability(data) if data else
+                    {"demand_per_listing": None, "basis": "fetch_failed"}})
+    # Sort on the ratio, then CVR as the tiebreak: of two equally crowded terms the
+    # one whose searchers actually buy is the better bet.
+    return sorted(
+        out,
+        key=lambda c: (c["winnability"]["demand_per_listing"] is not None,
+                       c["winnability"].get("demand_per_listing") or 0,
+                       c["winnability"].get("cvr") or 0),
+        reverse=True)
+
+
 def attach_moments(candidates, calendar_rows):
     """Tag each candidate with the seasonal moment it belongs to, if any.
 
@@ -112,16 +177,25 @@ def attach_moments(candidates, calendar_rows):
 
 
 def render(candidates, limit=20):
+    icon = {"winnable": "🟢", "contested": "🟡", "wall": "🔴"}
     lines = []
     for c in candidates[:limit]:
         volume = f"{c['volume']:>8,}" if c["volume"] is not None else "       ?"
         when = ""
-        if c["timing"] == "seasonal":
+        if c.get("timing") == "seasonal":
             when = f"  → {c['moment']} by {c['list_by']}"
             if c.get("is_late"):
                 when += " ⚠️LATE"
-        cats = ", ".join(dict.fromkeys(c["categories"]))[:34]
-        lines.append(f"{volume}  {c['term']:<30} {cats:<36}{when}")
+
+        win = c.get("winnability")
+        if win and win.get("demand_per_listing") is not None:
+            # The ratio is shown, not a score: "you cannot rank here" is a conclusion
+            # the operator has to be able to check.
+            head = (f"{icon[win['verdict']]} {win['demand_per_listing']:>6.2f}/listing "
+                    f"cvr {win.get('cvr') or 0:.5f}")
+        else:
+            head = f"⚪ {'unsized':>14}          "
+        lines.append(f"{head}  {volume}  {c['term']:<28}{when}")
     return "\n".join(lines)
 
 
@@ -134,13 +208,16 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog="discover")
     parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--seasonal-only", action="store_true")
+    parser.add_argument("--by-volume", action="store_true",
+                        help="rank by market size instead of winnability (rarely useful)")
     args = parser.parse_args(argv)
 
-    from etsy.api.private.api import EtsyPrivateAPI
+    from etsy.api.private.api import EtsyPrivateAPI, parse_results_data
     from etsy.analytics.calendar import build
     from pinterest.endpoints.api import PinterestTrendsAPI
 
-    candidates = trending_candidates(EtsyPrivateAPI())
+    api = EtsyPrivateAPI()
+    candidates = trending_candidates(api)
     with PinterestTrendsAPI() as pin:
         rows = build(pin.moments_calendar(country="US"))
 
@@ -148,8 +225,14 @@ def main(argv=None):
     if args.seasonal_only:
         tagged = [c for c in tagged if c["timing"] == "seasonal"]
 
-    print(f"{len(tagged)} candidates — Etsy's curated trending terms, not the top of "
-          f"the market by volume\n")
+    if not args.by_volume:
+        def fetch(term):
+            raw = api.get_results_data(term)
+            return parse_results_data(raw) if raw else None
+        tagged = rank_by_opportunity(tagged[:args.limit], fetch)
+
+    print(f"{len(tagged)} candidates — Etsy's curated picks, not the top of the market. "
+          f"Ranked by {'volume' if args.by_volume else 'winnability'}.\n")
     print(render(tagged, args.limit))
     return 0
 
