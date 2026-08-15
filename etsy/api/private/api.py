@@ -263,22 +263,35 @@ class EtsyPrivateAPI:
                 continue
                 
             data = resp.json()
-            
-            # If Etsy returned a backend cache, it might just be the exact same results. We'll still deduplicate them.
-            if data.get("cachedData"):
-                results = data["cachedData"].get("results", [])
-                for r in results:
-                    q = r.get("query")
+
+            # ⚠️ THE SNAKE_CASE BUG, ONE FUNCTION DEEPER. Verified on the wire
+            # 2026-08-15: the enqueue response is
+            #     {"run_id": "...", "thread_id": "...", "cached_data": null}
+            # and this code read runId / threadId / cachedData, so it printed
+            # "No runId/threadId returned" ten times and returned None — every time,
+            # since the endpoint was written. Recursive keyword expansion has therefore
+            # NEVER produced an edge, which is why `ssr_graph_pipeline` could not grow
+            # past its seed.
+            #
+            # The poll payload below already used snake_case, so the request side was
+            # right and only the response side was wrong — exactly the asymmetry that
+            # made the original D-24 bug survive three explanations.
+            cached = _pick(data, "cached_data", "cachedData")
+            if cached:
+                # A backend cache hit may repeat earlier results; dedupe regardless.
+                for r in cached.get("results", []) or []:
+                    q = edge_term(r)
                     if q and q not in seen_queries:
                         seen_queries.add(q)
                         all_results.append(r)
                 continue
-                
-            run_id = data.get("runId")
-            thread_id = data.get("threadId")
-            
+
+            run_id = _pick(data, "run_id", "runId")
+            thread_id = _pick(data, "thread_id", "threadId")
+
             if not run_id or not thread_id:
-                print("[-] No runId/threadId returned from enqueue.")
+                print(f"[-] enqueue returned neither run_id nor runId; keys were "
+                      f"{sorted(data)}")
                 continue
                 
             poll_url = f"https://www.etsy.com/api/v3/ajax/shop/{{shop_id}}/marketplace-insights/llm-exploratory-keywords/search/poll"
@@ -301,10 +314,13 @@ class EtsyPrivateAPI:
                     # result set.
                     with soft_parse("private.poll_response", keyword=keyword):
                         p_data = p_resp.json()
-                        if p_data and "results" in p_data:
-                            results = p_data["results"]
+                        # `edge_term` rather than r["query"]: the producer keys these on
+                        # `query` and older consumers read `searchTerm`, so going through
+                        # the helper is what keeps the two from drifting again.
+                        results = _pick(p_data or {}, "results", "search_terms")
+                        if results is not None:
                             for r in results:
-                                q = r.get("query")
+                                q = edge_term(r)
                                 if q and q not in seen_queries:
                                     seen_queries.add(q)
                                     all_results.append(r)

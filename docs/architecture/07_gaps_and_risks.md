@@ -879,4 +879,83 @@ session and the card fields all verified working in the same run.
 
 ---
 
+## Recursive keyword expansion — never worked, and why (2026-08-15)
+
+The operator asked whether recursive keyword discovery was implemented on both tiers.
+Checked rather than assumed:
+
+| Tier | Mechanism | State |
+|---|---|---|
+| **Pinterest** | `pin_graph_pipeline` — `related_terms` + `prefix_match`, BFS over a frontier | built; frontier now claim/complete so a failure cannot silently drop a term |
+| **Etsy private** | `ssr_graph_pipeline` → `get_similar_keywords` (LLM enqueue/poll) | **has never returned a single edge** |
+| **The new hunt** | `discover` → `hunt` | **no recursion at all** — one level, 28 curated terms |
+
+### RK-1 — the snake_case bug, one function deeper *(fixed)*
+
+`_fetch_similar_keywords` read the enqueue response as `runId` / `threadId` /
+`cachedData`. Verified on the wire:
+
+```json
+{"run_id": "01a00449-…", "thread_id": "1cfc77d2-…", "cached_data": null}
+```
+
+So it printed *"No runId/threadId returned"* ten times per call and returned `None` —
+every call, since the endpoint was written. **`ssr_graph_pipeline` could therefore never
+expand past its seed**, which is a second, independent reason the graph tables were
+empty.
+
+The tell was in the same function: the *poll payload* already used `run_id` /
+`thread_id`. The request side was right and only the response side was wrong — exactly
+the asymmetry that let the original D-24 bug survive three explanations. Fixed via
+`_pick`, accepting both spellings.
+
+### RK-2 — the poll endpoint rejects the run *(open)*
+
+With the ids now read correctly, `poll` returns **400 with a body of `null`**. The
+endpoint's own errors confirm the parameter names are right:
+
+| Payload | Response |
+|---|---|
+| `{run_id, thread_id}` | `400 Missing input parameter: [search_term]` |
+| `{runId, threadId, searchTerm}` | `400 Missing input parameter: [run_id]` |
+| `{run_id, thread_id, search_term}` | `400 null` ← all params present, still refused |
+| `GET ?run_id=…&thread_id=…` | `404 Resource not found` |
+
+So the keys are correct and something about the *run* is not retrievable — expired,
+never started, or needing a parameter the enqueue call does not currently send. Not
+guessed at; recorded.
+
+**Ruled out:** profile rotation across the stateful enqueue→poll pair. Both valid
+`etsy_private` profiles carry the same `shop_id` (56057851). ⚠️ It remains a latent
+hazard — `SessionManager` draws a *random* profile per request, so any future
+multi-seller vault would poll a run enqueued by a different shop.
+
+### RK-3 — recursion is not wired into the hunt *(open)*
+
+`discover` returns 28 curated terms and stops. Etsy's trending list is one level deep
+and, being curated, is the narrowest possible view of the market. The whole point of
+recursion is reaching the long tail that is *not* on Etsy's promoted list — which is
+also where `etsy-seo-and-opportunity` says the winnable terms live.
+
+---
+
+## Breadcrumbs — parsed, and used by almost nothing (2026-08-15)
+
+`get_listing_data` returns `{"breadcrumb": [...], "tags": [...]}`. The blueprint work
+consumed `tags` and ignored `breadcrumb` entirely; only `listing_generator` counts them.
+
+A breadcrumb is the listing's **taxonomy path**, and three things want it:
+
+1. **The real taxonomy tree.** `trending-search-terms-v2` is keyed by `taxonomy_id`, and
+   a blind probe found only 7 of 15 guessed ids populated. Breadcrumbs from listings
+   already fetched name the categories that actually exist, instead of guessing ids.
+2. **Category-correct filters.** Which attribute filters are even askable depends on the
+   category — the filter registry (Phase 2, #11) needs this to gate the *request*.
+3. **Competitor positioning.** Which category a rival files a listing under is a
+   deliberate choice and part of how it ranks.
+
+Cheap, already fetched, currently discarded.
+
+---
+
 *Back to [01_system_overview.md](01_system_overview.md) for the one-page summary.*
