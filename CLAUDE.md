@@ -162,6 +162,7 @@ account costs the business.
 | File | Answers |
 |---|---|
 | `docs/architecture/09_build_plan.md` | **what we are building and in what order** — start here |
+| `docs/HOW_WE_WORK.md` | **the operating model** — the three seats, the loop, which lens fires when. Read first. |
 | `docs/market_map/` | **the shared knowledge base** — `reference/` (params, payloads, verified per platform) + `analysis/` (what each is worth, and the combinations). Read before planning data work. |
 | `docs/architecture/11_endpoint_reference.md` | one-page endpoint summary; `docs/market_map/` is the full version |
 | `docs/architecture/10_session_layer.md` | how sessions really work now (Redis vault), the defect list, and why nothing can run today |
@@ -188,6 +189,11 @@ before planning a data-gathering feature or judging a new endpoint's value. It c
 the value chain (discover cheap → qualify public → measure private-last), what to store
 for compounding value, and the roles (operator confirms direction, engineer builds and
 never fabricates a number).
+
+**`web-surface-mapping`** is the fourth: map a tool through the operator's *logged-in
+browser* — click every filter, watch every request, capture exact wire formats, and
+record what each control is worth. Probing the API alone has repeatedly missed things a
+single screenshot would have caught.
 
 ---
 

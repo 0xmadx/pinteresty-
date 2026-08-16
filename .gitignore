@@ -43,3 +43,6 @@ data/vault_backup_*.json
 
 # conversation transcript dumps, not source
 look her/
+
+# redis dump artifact
+dump.rdb
