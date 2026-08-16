@@ -201,6 +201,29 @@ class Settings:
     def profiles(self):
         return dict(self.data["product_profiles"])
 
+    def profile_for_type(self, product_type):
+        """The operator's profile matching a detected product type, or None.
+
+        This is how a hunt costs each candidate correctly: a term detected as digital is
+        judged with a digital profile, not one blanket profile applied to everything
+        (which made the first hunt reject a digital niche at -142% margin — an artefact
+        of the profile, not the niche).
+
+        Returns the single profile of that type when there is exactly one. With several,
+        returns None and the caller must choose — guessing which of two physical
+        profiles to apply would be a silent decision about cost, which drives the
+        verdict.
+        """
+        matches = [name for name, p in self.data["product_profiles"].items()
+                   if p.get("product_type") == product_type]
+        if len(matches) == 1:
+            return matches[0]
+        return None  # zero → none defined for this type; many → caller must pick
+
+    def profiles_of_type(self, product_type):
+        return [name for name, p in self.data["product_profiles"].items()
+                if p.get("product_type") == product_type]
+
     # -- what the scheduler sweeps ----------------------------------------------------
     def add_shop(self, name, tier=None, notes=None):
         """Track a competitor shop. `tier` is a free-text note, e.g. 'star', 'mid'."""

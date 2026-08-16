@@ -21,13 +21,22 @@ from etsy.analytics import discover, opportunity
 from etsy.analytics.blueprint_support import material_for_term
 
 
-def hunt(api, public_api, settings, profile_name, limit=8, calendar_rows=None,
-         min_ratio=0.25):
-    """Candidates → verdicts → blueprints for the ones worth building.
+def hunt(api, public_api, settings, limit=8, calendar_rows=None, min_ratio=0.25,
+         llm=None):
+    """Candidates → typed → verdicts → blueprints for the ones worth building.
+
+    Each candidate is now costed with a profile matching its DETECTED product type
+    (D-22), not one blanket profile. That closes the gap the first hunt exposed: a
+    digital term judged with a physical profile came back at -142% margin, which was an
+    artefact of the profile, not the niche.
 
     `min_ratio` drops walls before any private-tier call is spent on them: a term with
     two million listings does not become winnable because the margin is good.
+
+    `llm` (optional) is the D-27 fallback — used only to classify a term whose page-one
+    sample is too split or thin for deterministic detection, never to invent a number.
     """
+    from etsy.analytics.blueprint_support import resolve_product_type
     from etsy.api.private.api import parse_results_data
 
     def fetch(term):
@@ -55,45 +64,55 @@ def hunt(api, public_api, settings, profile_name, limit=8, calendar_rows=None,
             results.append({**candidate, "stage": "fetch_failed"})
             continue
 
+        # Type the candidate, then cost it with a profile that actually describes it.
+        typed = resolve_product_type(public_api, candidate["term"], llm=llm)
+        product_type = typed["product_type"]
+        profile_name = settings.profile_for_type(product_type) if product_type else None
+        if not profile_name:
+            results.append({**candidate, "stage": "unjudged", "product_type": typed,
+                            "reason": _no_profile_reason(settings, product_type, typed)})
+            continue
+
         verdict = opportunity.evaluate(candidate["term"], data, settings, profile_name)
         if not verdict.get("verdict"):
-            results.append({**candidate, "stage": "unjudged",
+            results.append({**candidate, "stage": "unjudged", "product_type": typed,
                             "reason": verdict.get("reason"), "market": verdict["market"]})
             continue
         if not verdict["verdict"]["go"]:
-            # A rejection is only meaningful if the candidate was costed as the kind of
-            # thing it actually is. One profile is applied to every candidate here, so
-            # a digital term judged with a physical profile ("digital products" came
-            # back at -142% margin with $4 COGS and 12 minutes of labour attached) is
-            # not rejected — it is UNJUDGED, and saying otherwise would retire a real
-            # opportunity for a reason that is an artefact of our own settings.
-            impossible = verdict["verdict"]["profit_per_unit"] <= 0
-            results.append({**candidate,
-                            "stage": "unjudged" if impossible else "rejected_by_gate",
+            results.append({**candidate, "stage": "rejected_by_gate",
+                            "product_type": typed, "profile": profile_name,
                             "verdict": verdict["verdict"],
-                            "reason": ("; ".join(verdict["verdict"]["reasons"][:2])
-                                       + (f" — but costed as '{profile_name}'; if this "
-                                          f"is not that kind of product the verdict is "
-                                          f"about the profile, not the niche"
-                                          if impossible else ""))})
+                            "reason": "; ".join(verdict["verdict"]["reasons"][:2])})
             continue
 
         # Survivor: worth the extra public calls a blueprint costs.
-        results.append({**candidate, "stage": "blueprint",
-                        "verdict": verdict["verdict"],
+        results.append({**candidate, "stage": "blueprint", "product_type": typed,
+                        "profile": profile_name, "verdict": verdict["verdict"],
                         "blueprint": _blueprint_for(candidate["term"], data, public_api,
                                                     settings, profile_name)})
     return results
+
+
+def _no_profile_reason(settings, product_type, typed):
+    """Why a candidate could not be costed — a missing-input problem, not a rejection."""
+    if not product_type:
+        return (f"product type undetermined ({typed['basis']}); cannot pick a profile "
+                f"or a margin floor without it")
+    others = settings.profiles_of_type(product_type)
+    if not others:
+        return (f"detected {product_type} ({typed['basis']}), but no {product_type} "
+                f"profile exists — add one with settings_store")
+    return (f"detected {product_type}, but {len(others)} {product_type} profiles exist "
+            f"({', '.join(others)}); which one is a cost decision only you can make")
 
 
 def _blueprint_for(term, data, public_api, settings, profile_name):
     from etsy.analytics import profit
     from etsy.generators import blueprint as bp
 
-    # One SERP pass yields both: tags for the listing copy, breadcrumbs for where to
-    # file it. Fetching the same pages twice to read two fields would be the obvious
-    # waste, and breadcrumbs were previously discarded from calls already being made.
-    consensus, category = material_for_term(public_api, term)
+    # One SERP pass yields tags for the copy, breadcrumbs for where to file it, and the
+    # product type (the third value, already consumed upstream to pick the profile).
+    consensus, category, _ = material_for_term(public_api, term)
     kwargs = settings.verdict_kwargs(profile_name)
 
     def verdict_for_price(price):
@@ -114,7 +133,14 @@ def render(results):
     for r in results:
         ratio = (r.get("winnability") or {}).get("demand_per_listing")
         ratio_text = f"{ratio:>6.2f}/listing" if ratio is not None else "     unsized"
-        lines.append(f"{icon[r['stage']]} {ratio_text}  {r['term']:<28} {r['stage']}")
+        pt = (r.get("product_type") or {}).get("product_type")
+        basis = (r.get("product_type") or {}).get("basis")
+        # A type read from listings is trusted; one guessed by the LLM is flagged with
+        # '?', so a verdict resting on a guess is never mistaken for one resting on
+        # measurement.
+        type_text = f" [{pt}{'?' if basis == 'llm_fallback' else ''}]" if pt else ""
+        lines.append(f"{icon[r['stage']]} {ratio_text}  {r['term']:<26}{type_text:<15} "
+                     f"{r['stage']}")
         if r.get("reason"):
             lines.append(f"{'':<16}   ↳ {r['reason']}")
         if r["stage"] == "blueprint":
@@ -125,12 +151,20 @@ def render(results):
             lines.append("")
             lines.append(bp.render(r["blueprint"]))
 
+    # Show the detected type next to each judged candidate, so a rejection is legibly
+    # about the niche costed as the right kind of thing, not an artefact of one profile.
+    for r in results:
+        pt = (r.get("product_type") or {}).get("product_type")
+        if pt and r.get("profile"):
+            basis = r["product_type"]["basis"]
+            flag = " (llm-guessed)" if basis == "llm_fallback" else ""
+            # annotate the already-printed line implicitly via the reason field instead
     lines.append("")
     lines.append(f"── {survivors} of {len(results)} candidates survived to a blueprint ──")
     unjudged = sum(1 for r in results if r["stage"] == "unjudged")
     if unjudged:
-        lines.append(f"   {unjudged} could not be judged — costed with a profile that "
-                     f"may not describe them (see D-22: type must be DETECTED).")
+        lines.append(f"   {unjudged} could not be judged — type undetermined or no "
+                     f"matching profile (see D-22: type must be DETECTED).")
     if not survivors:
         # Not a failure. A week where nothing clears the gate is information, and
         # manufacturing a recommendation to fill the screen is the one thing this
@@ -147,9 +181,11 @@ def main(argv=None):
 
     load_dotenv(override=True)
     parser = argparse.ArgumentParser(prog="hunt")
-    parser.add_argument("--profile", required=True, help="product profile from settings")
     parser.add_argument("--limit", type=int, default=8)
     parser.add_argument("--no-calendar", action="store_true")
+    parser.add_argument("--llm", action="store_true",
+                        help="use DeepSeek to classify terms whose page-one type is "
+                             "ambiguous (D-27 fallback; flagged in output)")
     args = parser.parse_args(argv)
 
     from core.preflight import PreflightFailed, require
@@ -164,10 +200,17 @@ def main(argv=None):
         return 1
 
     settings = load()
-    if args.profile not in settings.profiles():
-        print(f"No product profile {args.profile!r}. Known: "
-              f"{', '.join(settings.profiles()) or '(none)'}")
+    if not settings.profiles():
+        print("No product profiles defined. The hunt costs each candidate with a "
+              "profile matching its detected type — add at least one:")
+        print("  python -m core.settings_store profile add \"Digital printable\" "
+              "--type digital")
         return 1
+
+    llm = None
+    if args.llm:
+        from core.llm_client import LLMClient
+        llm = LLMClient()
 
     rows = None
     if not args.no_calendar:
@@ -176,8 +219,8 @@ def main(argv=None):
         with PinterestTrendsAPI() as pin:
             rows = build_calendar(pin.moments_calendar(country="US"))
 
-    results = hunt(EtsyPrivateAPI(), EtsyPublicAPI(), settings, args.profile,
-                   limit=args.limit, calendar_rows=rows)
+    results = hunt(EtsyPrivateAPI(), EtsyPublicAPI(), settings,
+                   limit=args.limit, calendar_rows=rows, llm=llm)
     print(render(results))
 
     basis = settings.basis()

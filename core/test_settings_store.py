@@ -147,5 +147,22 @@ check("and gain missing fields from defaults",
 check("newly-added fields are NOT silently marked confirmed",
       not old.is_confirmed("fees.transaction_rate"))
 
+# --- profile_for_type: the hunt picks a profile by detected type -------------------
+s = fresh()
+s.add_profile("Printable", "digital", cogs=0)
+s.add_profile("Felt sign", "physical", cogs=4, labor_minutes=12)
+check("a single profile of a type is selected", s.profile_for_type("digital") == "Printable")
+check("the physical profile is selected", s.profile_for_type("physical") == "Felt sign")
+check("a type with no profile returns None", s.profile_for_type("personalized") is None)
+
+s.add_profile("Mug", "physical", cogs=8, labor_minutes=3)
+check("two profiles of one type refuse an automatic pick",
+      s.profile_for_type("physical") is None, s.profile_for_type("physical"))
+check("but both are listed for the caller to choose",
+      set(s.profiles_of_type("physical")) == {"Felt sign", "Mug"},
+      s.profiles_of_type("physical"))
+# Guessing which of two physical profiles to apply would be a silent decision about
+# cost, and cost drives the verdict.
+
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)

@@ -12,23 +12,29 @@ DEFAULT_SAMPLE = 6
 
 
 def material_for_term(public_api, term, sample=DEFAULT_SAMPLE):
-    """Tags AND breadcrumbs in one SERP pass — both come off the same listing fetches.
+    """Tags, breadcrumbs AND product type in one SERP pass.
 
-    Kept together because fetching the page twice to read two fields off it is the
-    obvious waste, and breadcrumbs were being discarded from calls already being made.
+    All three come off the same listing fetches — the pages are fetched once and every
+    field that can be read from them is. Fetching the same pages again for each field
+    would be the obvious waste, and all three were previously discarded from calls
+    already being made.
     """
+    from etsy.analytics.product_type import majority_type
     from etsy.analytics.taxonomy import category_consensus
 
     serp = public_api.get_public_search(term)
     if not serp or not serp.get("cards"):
-        return ({"consensus_tags": [], "basis": "serp_unavailable"}, None)
+        return ({"consensus_tags": [], "basis": "serp_unavailable"}, None,
+                {"product_type": None, "basis": "serp_unavailable"})
 
     organic = [c for c in serp["cards"] if not c.get("is_ad")][:sample]
-    listings, breadcrumbs = [], []
+    listings, breadcrumbs, types = [], [], []
     for card in organic:
         data = public_api.get_listing_data(card["listing_id"]) or {}
         if data.get("breadcrumb"):
             breadcrumbs.append(data["breadcrumb"])
+        if data.get("product_type"):
+            types.append({"product_type": data["product_type"]})
         if data.get("tags"):
             listings.append({"tags": data["tags"],
                              "review_count": card.get("review_count"),
@@ -42,7 +48,31 @@ def material_for_term(public_api, term, sample=DEFAULT_SAMPLE):
     else:
         consensus = {"consensus_tags": [], "basis": "no_tags_parsed"}
 
-    return consensus, category_consensus(breadcrumbs)
+    return consensus, category_consensus(breadcrumbs), majority_type(types)
+
+
+def resolve_product_type(public_api, term, llm=None):
+    """The term's product type — deterministic first (D-22), LLM only as fallback (D-27).
+
+    Order matters and is the whole point:
+      1. `majority_type` over page-one listings — measured, checkable, trusted
+      2. only if that is split or thin, an LLM classification of the term string
+      3. if neither is confident, None — the caller must not judge, because a wrong
+         type applies the wrong margin floor
+
+    Returns {product_type, basis} so a downstream verdict can show whether the type was
+    measured or guessed.
+    """
+    _, _, detected = material_for_term(public_api, term)
+    if detected.get("product_type"):
+        return {"product_type": detected["product_type"], "basis": detected["basis"]}
+
+    if llm is not None:
+        guess = llm.classify_product_type(term)
+        if guess:
+            return {"product_type": guess, "basis": "llm_fallback"}
+
+    return {"product_type": None, "basis": detected.get("basis", "undetermined")}
 
 
 def consensus_for_term(public_api, term, sample=DEFAULT_SAMPLE):

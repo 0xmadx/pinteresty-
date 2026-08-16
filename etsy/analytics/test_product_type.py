@@ -102,5 +102,59 @@ check("but still returns the type", res["product_type"] == DIGITAL, res)
 # 40% of that niche has a different cost structure and a different margin floor, so
 # the verdict is right for most of the niche rather than for the niche.
 
+# --- resolve_product_type: deterministic first, LLM only as fallback (D-27) --------
+from etsy.analytics.blueprint_support import resolve_product_type  # noqa: E402
+
+
+class FakePublic:
+    """Serves a fixed SERP + per-listing product types."""
+
+    def __init__(self, types):
+        self._types = types  # list of product_type strings
+
+    def get_public_search(self, term):
+        return {"cards": [{"listing_id": str(i), "is_ad": False}
+                          for i in range(len(self._types))]}
+
+    def get_listing_data(self, listing_id):
+        return {"tags": ["t"], "breadcrumb": ["C"],
+                "product_type": self._types[int(listing_id)]}
+
+
+class FakeLLM:
+    def __init__(self, answer):
+        self.answer = answer
+        self.called = False
+
+    def classify_product_type(self, term):
+        self.called = True
+        return self.answer
+
+
+# A clear page-one majority is trusted and the LLM is never consulted.
+llm = FakeLLM("physical")
+r = resolve_product_type(FakePublic([DIGITAL, DIGITAL, DIGITAL, PHYSICAL]), "x", llm=llm)
+check("a measured majority wins", r["product_type"] == DIGITAL, r)
+check("and the LLM is NOT called when detection is confident", llm.called is False, llm.called)
+
+# A split page-one falls back to the LLM — and the basis says so.
+llm = FakeLLM("personalized")
+r = resolve_product_type(FakePublic([DIGITAL, PHYSICAL, PERSONALIZED]), "x", llm=llm)
+check("a split sample falls back to the LLM", r["product_type"] == PERSONALIZED, r)
+check("the LLM was consulted", llm.called is True)
+check("and the basis flags it as a guess", r["basis"] == "llm_fallback", r)
+# A verdict resting on an LLM guess must be distinguishable from one resting on
+# measurement — the '?' in the hunt output comes from this basis.
+
+# No LLM and a split sample → no type, and therefore no verdict.
+r = resolve_product_type(FakePublic([DIGITAL, PHYSICAL, PERSONALIZED]), "x", llm=None)
+check("without an LLM a split sample stays undetermined", r["product_type"] is None, r)
+
+# The LLM refusing ('unknown' → None) does not become a defaulted type.
+llm = FakeLLM(None)
+r = resolve_product_type(FakePublic([DIGITAL, PHYSICAL, PERSONALIZED]), "x", llm=llm)
+check("an unsure LLM leaves the type None, never defaulted", r["product_type"] is None, r)
+# "I am not sure" must never silently become "physical" and apply the 0.35 floor.
+
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)

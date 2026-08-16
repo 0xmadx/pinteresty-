@@ -7,6 +7,7 @@ from core.guards import soft_parse
 from core.request_cache import RequestCache, TTL_LISTING_TAGS, TTL_SERP
 from core.session_manager import SessionManager
 from core.settings import ScraperConfig
+from etsy.analytics import product_type
 
 class EtsyPublicAPI:
     def __init__(self, cache=None):
@@ -165,7 +166,12 @@ class EtsyPublicAPI:
 
             result = {
                 "breadcrumb": [],
-                "tags": []
+                "tags": [],
+                # Product type from the SAME html already fetched for tags — zero extra
+                # calls. The markers (a personalization form field, "Digital download")
+                # were being discarded with the rest of the page. D-22 makes this
+                # mandatory: type decides the margin floor a candidate is judged against.
+                "product_type": product_type.detect_from_html(html).get("product_type"),
             }
 
             # 1. Extract Breadcrumb from LD+JSON
