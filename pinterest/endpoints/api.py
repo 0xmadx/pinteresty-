@@ -230,10 +230,20 @@ class PinterestTrendsAPI:
             params["numTermsToReturn"] = limit
         if interests:
             params["l1interests"] = ",".join(interests)
-        if age:
-            params["ageBuckets"] = age
-        if gender:
-            params["gender"] = gender
+        if age is not None:
+            # The endpoint takes NUMERIC bucket indices, not the label. Passing the
+            # string "25-34" returns 500 (verified 2026-08-16) — which made the age/
+            # gender filters look broken when they are not. Accept the friendly label
+            # and translate; a raw int/list passes through for callers that already
+            # have it. AGE maps a band to its index list (18-24 spans two buckets).
+            from .constants import AGE
+            if isinstance(age, str):
+                age = AGE.get(age, age)
+            params["ageBuckets"] = ",".join(str(a) for a in age) if isinstance(age, (list, tuple)) else age
+        if gender is not None:
+            # Same trap: the endpoint wants 0/1/2, not "female". "female" -> 500.
+            from .constants import GENDER
+            params["gender"] = GENDER.get(gender, gender) if isinstance(gender, str) else gender
         if moments:
             params["moments"] = ",".join(moments) if isinstance(moments, list) else moments
         if keywords:

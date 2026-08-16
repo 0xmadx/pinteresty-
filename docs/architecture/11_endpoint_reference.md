@@ -161,12 +161,18 @@ three timescales, each `{index, value}`), `seasonality_score` (0–1), `searchCo
 | `trendsPreset` | the ranking logic (above) | ✅ the one that matters |
 | `numTermsToReturn` | 1–100. UI sends 50; **100 works and the first 50 are identical** — free 2× breadth for one call. 101 → 400. | ✅ |
 | `lookbackWindow` | **cosmetic** — 1/2/3/5 return byte-identical rows. Do not bother tuning. | ✅ code-verified |
-| `l1interests` | filter to one interest category (Beauty → nail/hair trends) | ✅ |
-| `gender` / `ageBuckets` | **500 on this endpoint** — demographic filtering does NOT work here | ✅ verified 500 |
-| `moments`, `keywordsToInclude` | additional filters | ❓ not probed |
+| `l1interests` | **Interest** filter — one category (Beauty → nail/hair trends) | ✅ |
+| `gender` | **Gender** filter — works, but wants NUMERIC (0/1/2), NOT "female". Our code now maps the label. `female → nails/hairstyles`, `male → wallpaper/spiderman/anime` — dramatically different. | ✅ |
+| `ageBuckets` | **Age** filter — NUMERIC bucket index (18-24 = [2,3]). Label now mapped. | ✅ |
+| `moments` | **Moments** filter — tie a term set to a seasonal moment | ❓ not probed |
+| `keywordsToInclude` | **Include keyword** filter | ❓ not probed |
 
-⚠️ For demographics use the separate `demographics()` (3.5) or the `/ads/` shopping
-endpoints — the flat search-trends endpoint 500s on age/gender.
+The UI's five filters — Interest, Moments, Age, Gender, Include keyword — are ALL real.
+⚠️ **The trap:** gender/age want numeric indices; the string "female" returns 500. That
+500 briefly looked like "the filter doesn't work" — it does, our code was sending the
+wrong format (fixed 2026-08-16, `top_trends` now maps labels via `GENDER`/`AGE`).
+The demographic split IS available right here — you do NOT need the separate
+`demographics()` endpoint for search trends.
 
 Powers `scrape_search.py` and `pin_graph_pipeline` seeding.
 
