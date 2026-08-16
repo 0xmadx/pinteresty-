@@ -31,6 +31,17 @@ USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36")
 
 
+def _moment_slug(value):
+    """A moments-filter value in the wire format captured from the UI 2026-08-16.
+
+    Lowercase, apostrophes removed, spaces preserved, no hyphens:
+    "Mother's Day" -> "mothers day", "New Year's Eve" -> "new years eve". Idempotent, so
+    a value already in slug form (as the moments_calendar endpoint returns it) passes
+    through unchanged.
+    """
+    return re.sub(r"[^a-z0-9 ]+", "", str(value).lower()).strip()
+
+
 def _slug(value):
     """Filename-safe slug.
 
@@ -245,9 +256,19 @@ class PinterestTrendsAPI:
             from .constants import GENDER
             params["gender"] = GENDER.get(gender, gender) if isinstance(gender, str) else gender
         if moments:
-            params["moments"] = ",".join(moments) if isinstance(moments, list) else moments
+            # Wire format captured from the UI network log 2026-08-16: lowercase,
+            # apostrophes STRIPPED, spaces kept, no hyphens ("Mother's Day" ->
+            # "mothers day"), comma-joined for several. This is the SAME vocabulary the
+            # moments_calendar endpoint returns as its `moment` field, so a filter and a
+            # calendar deadline can be cross-referenced by the same slug.
+            if isinstance(moments, str):
+                moments = [moments]
+            params["moments"] = ",".join(_moment_slug(m) for m in moments)
         if keywords:
-            params["keywordsToInclude"] = keywords
+            # Free-text, comma-joined for several (keywordsToInclude=costume).
+            if isinstance(keywords, str):
+                keywords = [keywords]
+            params["keywordsToInclude"] = ",".join(keywords)
 
         key = "trends_" + _slug("_".join(str(v) for v in params.values()))
         hit = self._cached(key)

@@ -164,10 +164,12 @@ three timescales, each `{index, value}`), `seasonality_score` (0–1), `searchCo
 | `l1interests` | **Interest** filter — one category (Beauty → nail/hair trends) | ✅ |
 | `gender` | **Gender** filter — works, but wants NUMERIC (0/1/2), NOT "female". Our code now maps the label. `female → nails/hairstyles`, `male → wallpaper/spiderman/anime` — dramatically different. | ✅ |
 | `ageBuckets` | **Age** filter — NUMERIC bucket index (18-24 = [2,3]). Label now mapped. | ✅ |
-| `moments` | **Moments** filter — tie a term set to a seasonal moment | ❓ not probed |
-| `keywordsToInclude` | **Include keyword** filter | ❓ not probed |
+| `moments` | **Moments** filter — narrows to a seasonal moment's terms (Halloween → costume terms). Wire slug: lowercase, apostrophes stripped, spaces kept ("Mother's Day" → `mothers day`), comma-joined. **Same vocabulary as `moments_calendar`'s `moment` field** — a filter and a calendar deadline join on the same slug. | ✅ operator-captured + verified |
+| `keywordsToInclude` | **Include keyword** filter — free text, comma-joined (`keywordsToInclude=costume`) | ✅ operator-captured + verified |
 
-The UI's five filters — Interest, Moments, Age, Gender, Include keyword — are ALL real.
+**All five UI filters are now real and verified — Interest, Moments, Age, Gender,
+Include keyword.** Moments + Include-keyword formats were captured by the operator from
+the live UI network log and confirmed on the wire.
 ⚠️ **The trap:** gender/age want numeric indices; the string "female" returns 500. That
 500 briefly looked like "the filter doesn't work" — it does, our code was sending the
 wrong format (fixed 2026-08-16, `top_trends` now maps labels via `GENDER`/`AGE`).
