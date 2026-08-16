@@ -219,8 +219,16 @@ def main(argv=None):
         with PinterestTrendsAPI() as pin:
             rows = build_calendar(pin.moments_calendar(country="US"))
 
-    results = hunt(EtsyPrivateAPI(), EtsyPublicAPI(), settings,
-                   limit=args.limit, calendar_rows=rows, llm=llm)
+    from etsy.api.private.api import SessionDown
+    try:
+        results = hunt(EtsyPrivateAPI(), EtsyPublicAPI(), settings,
+                       limit=args.limit, calendar_rows=rows, llm=llm)
+    except SessionDown as exc:
+        # The session died mid-run (e.g. the browser was closed after preflight
+        # passed). Report the real cause, not a half-finished hunt that looks like
+        # "nothing is winnable".
+        print(f"\n⛔ {exc}")
+        return 1
     print(render(results))
 
     basis = settings.basis()

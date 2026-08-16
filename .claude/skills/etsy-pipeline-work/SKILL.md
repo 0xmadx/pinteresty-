@@ -46,8 +46,21 @@ Redis now (D-28), and an empty pool makes the call **hang forever**, not fail:
 .venv/Scripts/python.exe -m core.vault_status     # one second; run it before any long job
 ```
 
-A `401` means the profile is not authenticated as a seller — auth, *not* a rate limit.
-See `docs/architecture/10_session_layer.md`.
+A `401`/`403` means the profile is not authenticated as a seller — auth, *not* a rate
+limit. See `docs/architecture/10_session_layer.md`.
+
+**When a private endpoint returns nothing, check the session BEFORE the code.** A dead
+seller session (browser/extension off) and a broken endpoint look identical from the
+consumer's side — an empty result. This exact ambiguity once made a *working* endpoint
+look like a bug: the operator's browser was off, the session was stale, and the empty
+response was diagnosed as a code fault. The order of suspicion is fixed:
+
+1. `python -m core.vault_status` — is there a live `etsy_private` profile?
+2. only then diff the response keys against the code
+
+The private clients now raise **`SessionDown`** on a 401/403 rather than returning
+`None`, so this can't be silently mistaken again. If you add a private endpoint, raise
+it too.
 
 ---
 

@@ -84,5 +84,56 @@ check("shop_name read from snake_case", card["shop_name"] == "X")
 check("an unreadable review count is None, not 0",
       normalise_listing_card({"number_of_reviews": "n/a"})["review_count"] is None)
 
+# --- a dead seller session is legible, not a silent None ---------------------------
+# The failure this pins: browser/extension off -> stale session -> 401 -> the old code
+# returned None, which read like a broken endpoint. It was mis-diagnosed as one once.
+from core.request_cache import RequestCache  # noqa: E402
+from etsy.api.private.api import EtsyPrivateAPI, SessionDown  # noqa: E402
+
+
+class _Resp:
+    def __init__(self, code):
+        self.status_code = code
+        self.text = "null"
+
+    def json(self):
+        return None
+
+
+class _FakeSession:
+    def __init__(self, code):
+        self.code = code
+
+    def request(self, *a, **k):
+        return _Resp(self.code)
+
+
+def _api(code):
+    api = EtsyPrivateAPI.__new__(EtsyPrivateAPI)
+    api.session = _FakeSession(code)
+    api.headers = {}
+    api.manager = None
+    api.cache = RequestCache()
+    return api
+
+
+for code in (401, 403):
+    try:
+        _api(code).get_results_data(f"probe {code}")
+        check(f"a {code} raises rather than returning None", False, "returned")
+    except SessionDown as exc:
+        check(f"a {code} raises SessionDown", True)
+        check(f"{code} names the cause", "session" in str(exc).lower())
+        check(f"{code} points at the check", "vault_status" in str(exc))
+
+check("SessionDown is distinct from a generic error",
+      issubclass(SessionDown, RuntimeError) and SessionDown is not RuntimeError)
+# So a caller can catch "your browser is off" separately from "Etsy said no" (429) and
+# "the code broke" — three different fixes.
+
+# A 500 is NOT a session problem and must not masquerade as one.
+check("a 500 returns None, not SessionDown",
+      _api(500).get_results_data("probe 500") is None)
+
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)

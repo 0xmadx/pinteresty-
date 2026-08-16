@@ -9,6 +9,17 @@ from core.session_manager import SessionManager
 from core.endpoints_manager import EndpointManager
 from core.settings import ScraperConfig
 
+class SessionDown(RuntimeError):
+    """A private (seller) endpoint returned 401/403 — the session is stale or absent.
+
+    A distinct type so callers and the operator can tell "your browser is off" apart
+    from "the endpoint is broken" or "Etsy said no". This is exactly the confusion that
+    once made a working endpoint look like a bug: the browser was off, the private
+    session was dead, and the empty result read like a code failure. 401 = stale
+    session, never a rate limit (that is 429). See CLAUDE.md and docs 10_session_layer.
+    """
+
+
 def _money(value):
     """"$17.10" -> 17.10. None when there is no number to read.
 
@@ -216,6 +227,15 @@ class EtsyPrivateAPI:
             resp = self.session.request("GET", url, headers=self.headers, platform="etsy_private")
             if resp.status_code == 200:
                 return resp.json()
+            # A stale seller session (browser/extension off) surfaces here as 401/403.
+            # Raising rather than returning None stops an entire hunt from silently
+            # producing "nothing winnable" when the real cause is a dead session —
+            # the mis-diagnosis this guard exists to prevent.
+            if resp.status_code in (401, 403):
+                raise SessionDown(
+                    f"results-data returned {resp.status_code} — seller session stale or "
+                    f"absent. Is the browser + extension running? Check: "
+                    f"python -m core.vault_status")
             print(f"[-] results-data failed: {resp.status_code}")
             return None
 
@@ -260,8 +280,20 @@ class EtsyPrivateAPI:
 
         for i in range(iterations):
             print(f"  [~] Suggestion LLM Iteration {i+1}/{iterations}...")
-            
+
             resp = self.session.request("POST", enqueue_url, headers=self.headers, platform="etsy_private", data=json.dumps(payload))
+            # 401/403 on a private call is a stale or absent SELLER session, not a
+            # broken endpoint — almost always the browser/extension is not running so
+            # the vault holds no live etsy_private cookies. Say that plainly and stop,
+            # rather than looping ten times and returning None as if the code were
+            # wrong. This is the failure that got mis-diagnosed as an endpoint bug once
+            # already; the message now points at the real cause and the check that
+            # confirms it. (CLAUDE.md: 401 = stale session, not 429.)
+            if resp.status_code in (401, 403):
+                raise SessionDown(
+                    f"etsy_private returned {resp.status_code} — the seller session is "
+                    f"stale or absent. Is the browser + extension running on a Shop "
+                    f"Manager tab? Confirm with: python -m core.vault_status")
             if resp.status_code not in [200, 202]:
                 print(f"[-] enqueue failed: {resp.status_code}")
                 continue
