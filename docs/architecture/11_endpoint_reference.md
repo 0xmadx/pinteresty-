@@ -131,9 +131,44 @@ charm necklace, cross necklace. Powers `pin_graph_pipeline`.
 ~10 prefix completions. Verified: "mom neck" → neck tattoo, mom outfits (prefix, so
 noisy — string match, not semantic).
 
-### 3.4 `top_trends(preset, country)` — "Search trends" tab ❓
-`growing` / `seasonal` presets. Powers `scrape_search.py` and `pin_graph_pipeline`
-seeding. Not re-probed this pass.
+### 3.4 `top_trends(preset, ...)` — "Search trends" / trending keywords ✅ 2026-08-16
+`/top_trends_filtered/`. The wide discovery net — up to 100 rising keywords per call.
+**Fully analysed on the wire 2026-08-16.**
+
+**THE PRESET IS THE MASTER SWITCH.** `trendsPreset` (1–4) changes the ranking logic
+entirely — same page, four different answers:
+
+| preset | trendsPreset | ranks by | live top rows | use for |
+|---|---|---|---|---|
+| `top_monthly` | 1 | volume this month | nails, nail ideas, hairstyles | the biggest terms right now |
+| `top_yearly` | 2 | volume this year | nails, hairstyles, wallpaper | evergreen giants |
+| `growing` | 3 | velocity (rising) | isopod wants, sterling point tv show | breakout/novelty (often niche/noise) |
+| **`seasonal`** | 4 | seasonal spike NOW | **first day of school prayer, august pedicure colors, senior sunrise captions** | **timing — what is spiking this week** |
+
+`seasonal` is the timing goldmine: it surfaces terms peaking *right now*. `growing`
+catches breakouts but is noisy (fandom/meme terms). `top_monthly` is the reliable
+big-volume list.
+
+**Row structure (9 fields):** `term`, `mom_change`/`yoy_change`/`wow_change` (momentum at
+three timescales, each `{index, value}`), `seasonality_score` (0–1), `searchCount` +
+`normalizedCount` (volume), `affinity` (interest affinity, null unless filtered),
+`reverseRank`.
+
+**Parameters — what works and what doesn't (verified):**
+
+| param | effect | verified |
+|---|---|---|
+| `trendsPreset` | the ranking logic (above) | ✅ the one that matters |
+| `numTermsToReturn` | 1–100. UI sends 50; **100 works and the first 50 are identical** — free 2× breadth for one call. 101 → 400. | ✅ |
+| `lookbackWindow` | **cosmetic** — 1/2/3/5 return byte-identical rows. Do not bother tuning. | ✅ code-verified |
+| `l1interests` | filter to one interest category (Beauty → nail/hair trends) | ✅ |
+| `gender` / `ageBuckets` | **500 on this endpoint** — demographic filtering does NOT work here | ✅ verified 500 |
+| `moments`, `keywordsToInclude` | additional filters | ❓ not probed |
+
+⚠️ For demographics use the separate `demographics()` (3.5) or the `/ads/` shopping
+endpoints — the flat search-trends endpoint 500s on age/gender.
+
+Powers `scrape_search.py` and `pin_graph_pipeline` seeding.
 
 ### The three Pinterest Trends TABS (the operator's "search trends / shopping / spotlight")
 These are Pinterest's own product surfaces, each with a pipeline already:
