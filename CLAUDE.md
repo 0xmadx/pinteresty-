@@ -162,6 +162,7 @@ account costs the business.
 | File | Answers |
 |---|---|
 | `docs/architecture/09_build_plan.md` | **what we are building and in what order** — start here |
+| `docs/architecture/11_endpoint_reference.md` | **the ground truth: every endpoint by platform, params, returns, verified-or-assumed.** Read before touching any endpoint. |
 | `docs/architecture/10_session_layer.md` | how sessions really work now (Redis vault), the defect list, and why nothing can run today |
 | `docs/architecture/08_capability_map.md` | every endpoint + parameter, used vs never called |
 | `docs/architecture/07_gaps_and_risks.md` | the defect list; §ROOT CAUSE explains the empty tables |
