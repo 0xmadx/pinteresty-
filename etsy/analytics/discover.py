@@ -144,6 +144,64 @@ def rank_by_opportunity(candidates, fetch):
         reverse=True)
 
 
+def expand_seed(api, seed):
+    """One seed keyword → its long-tail neighbourhood, each sized for winnability.
+
+    Wraps `get_similar_keywords` (the LLM keyword endpoint, ~118 edges per seed) into
+    the candidate shape the rest of DISCOVER uses. Each edge already carries its own
+    search_volume and avg_total_listings, so winnability is computable without a second
+    call per term — which is what makes recursion affordable.
+
+    This is the answer to the narrowness of the curated front door. `trending_candidates`
+    returns 28 head terms Etsy chose to promote; a single seed here returns a hundred
+    long-tail terms Etsy did NOT promote, which is exactly where the winnable ground
+    lives (see the etsy-seo-and-opportunity skill).
+
+    The endpoint caches server-side: the first call for a seed computes the run, later
+    calls return it in `cached_data` instantly. Combined with the local RequestCache,
+    the second hunt over a seed is effectively free — the self-learning flywheel, but
+    the cache is Etsy's and ours rather than something we had to build.
+    """
+    from etsy.api.private.api import edge_term
+
+    edges = api.get_similar_keywords(seed)
+    if not edges:
+        return []
+    out = []
+    for edge in edges:
+        term = edge_term(edge)
+        if not term or term == seed:
+            continue
+        out.append({
+            "term": term,
+            "volume": edge.get("search_volume"),
+            "supply": edge.get("avg_total_listings"),
+            "categories": [f"expanded from '{seed}'"],
+            # NOT etsy_curated: these are the algorithm's neighbours of a seed WE chose,
+            # so the curation bias is ours and known, not Etsy's promotional agenda.
+            "basis": "seed_expansion",
+            "seed": seed,
+        })
+    return out
+
+
+def rank_expanded(candidates):
+    """Rank already-sized candidates by winnability, with no extra fetch.
+
+    `expand_seed` edges carry their own volume and supply, so their winnability is
+    computable directly — the whole point of the LLM endpoint returning metrics inline.
+    A separate `fetch`-based path (`rank_by_opportunity`) exists for candidates that
+    arrive unsized, like the trending front door.
+    """
+    out = [{**c, "winnability": winnability(c)} for c in candidates]
+    return sorted(
+        out,
+        key=lambda c: (c["winnability"]["demand_per_listing"] is not None,
+                       c["winnability"].get("demand_per_listing") or 0,
+                       c["winnability"].get("cvr") or 0),
+        reverse=True)
+
+
 def attach_moments(candidates, calendar_rows):
     """Tag each candidate with the seasonal moment it belongs to, if any.
 

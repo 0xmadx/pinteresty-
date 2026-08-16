@@ -160,5 +160,46 @@ ranked = rank_by_opportunity(
     lambda t: tied[t])
 check("CVR breaks a tie on crowding", ranked[0]["term"] == "b", [r["term"] for r in ranked])
 
+# --- seed expansion: the long tail, sized inline -----------------------------------
+from etsy.analytics.discover import expand_seed, rank_expanded  # noqa: E402
+
+
+class FakeSeedAPI:
+    def __init__(self, edges):
+        self.edges = edges
+
+    def get_similar_keywords(self, seed):
+        return self.edges
+
+
+# The real edge shape: search_term (snake), plus volume and supply inline.
+edges = [
+    {"search_term": "felt ball garland", "search_volume": 693, "avg_total_listings": 11100},
+    {"search_term": "felt banner", "search_volume": 2179, "avg_total_listings": 29606},
+    {"search_term": "felt garland", "search_volume": 300, "avg_total_listings": 5000},  # the seed itself
+    {"search_term": "", "search_volume": 5, "avg_total_listings": 10},                  # junk
+]
+cands = expand_seed(FakeSeedAPI(edges), "felt garland")
+check("expansion drops the seed and the blank", len(cands) == 2, [c["term"] for c in cands])
+check("each edge keeps its inline volume",
+      next(c for c in cands if c["term"] == "felt banner")["volume"] == 2179, cands)
+check("and its inline supply",
+      next(c for c in cands if c["term"] == "felt banner")["supply"] == 29606, cands)
+check("basis is seed_expansion, not etsy_curated",
+      all(c["basis"] == "seed_expansion" for c in cands), cands)
+# The curation here is ours (we chose the seed), not Etsy's promotional agenda.
+
+ranked = rank_expanded(cands)
+# felt banner 2179/29606 = 0.074 beats felt ball garland 693/11100 = 0.062.
+check("ranked without any extra fetch (inline metrics)",
+      ranked[0]["term"] == "felt banner", [r["term"] for r in ranked])
+check("higher demand-per-listing ranks first",
+      ranked[0]["winnability"]["demand_per_listing"]
+      >= ranked[1]["winnability"]["demand_per_listing"], ranked)
+
+check("an empty expansion is not fatal", expand_seed(FakeSeedAPI(None), "x") == [])
+check("a seed that returns nothing yields nothing",
+      expand_seed(FakeSeedAPI([]), "x") == [])
+
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)

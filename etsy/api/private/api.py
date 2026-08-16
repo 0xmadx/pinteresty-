@@ -177,7 +177,11 @@ def edge_term(edge):
     """
     if not isinstance(edge, dict):
         return None
-    for key in ("searchTerm", "query", "term", "keyword"):
+    # `search_term` is the spelling the LLM keyword endpoint actually uses, in both the
+    # enqueue's `cached_data.results` and the poll body. It was missing here, so even
+    # after the enqueue/poll reads were fixed every edge still resolved to None and the
+    # recursion produced nothing — the snake_case bug at a third layer.
+    for key in ("search_term", "searchTerm", "query", "term", "keyword"):
         value = edge.get(key)
         if value:
             return value
@@ -301,36 +305,52 @@ class EtsyPrivateAPI:
                 "search_term": keyword
             }
             
-            # Polling Loop
+            # Polling Loop.
+            #
+            # Probed live 2026-08-15: the LLM run is genuinely asynchronous and takes a
+            # few seconds to produce anything. Two behaviours the old loop got wrong:
+            #   * a poll that arrives before the run is ready returns 400 with a `null`
+            #     body — NOT 202 — and the old loop treated any non-200/202 as fatal
+            #     and broke on the first one, so it never reached the ready state
+            #   * a flat 1.5s backoff polled 400 ten times and gave up; an escalating
+            #     wait reached the 200 in two or three tries
+            # So 400/202/null are all "still cooking, keep waiting", and only a 200 with
+            # a parseable result list ends the loop. A 401/403/429 is a real session or
+            # throttle failure and still stops.
+            backoff = 2.0
+            got_data = False
             for attempt in range(max_retries):
-                time.sleep(1.5) # Polite backoff
-                p_resp = self.session.request("POST", poll_url, headers=self.headers, platform="etsy_private", data=json.dumps(poll_payload))
-                
-                if p_resp.status_code == 200:
-                    # A 200 whose body will not parse is not the same as "still working" —
-                    # it used to fall through to the next attempt and, once retries ran
-                    # out, return silently with fewer keywords than the crawl asked for.
-                    # Recorded now, so a shape change surfaces instead of shrinking the
-                    # result set.
+                time.sleep(backoff)
+                backoff = min(backoff * 1.4, 8.0)   # 2, 2.8, 3.9, 5.5, 7.7, 8, ...
+                p_resp = self.session.request("POST", poll_url, headers=self.headers,
+                                              platform="etsy_private",
+                                              data=json.dumps(poll_payload))
+
+                if p_resp.status_code in (401, 403, 429):
+                    print(f"[-] poll auth/throttle failure: {p_resp.status_code}")
+                    break
+
+                if p_resp.status_code == 200 and p_resp.text.strip() not in ("", "null"):
+                    # A 200 whose body will not parse is not the same as "still working".
+                    # Recorded so a shape change surfaces instead of shrinking the set.
                     with soft_parse("private.poll_response", keyword=keyword):
                         p_data = p_resp.json()
-                        # `edge_term` rather than r["query"]: the producer keys these on
-                        # `query` and older consumers read `searchTerm`, so going through
-                        # the helper is what keeps the two from drifting again.
+                        # `edge_term`, not r["query"]: the producer keys these on `query`
+                        # and older consumers read `searchTerm` — the helper stops them
+                        # drifting apart again.
                         results = _pick(p_data or {}, "results", "search_terms")
-                        if results is not None:
+                        if results:
                             for r in results:
                                 q = edge_term(r)
                                 if q and q not in seen_queries:
                                     seen_queries.add(q)
                                     all_results.append(r)
-                            break # Break the poll loop on success
-                elif p_resp.status_code == 202:
-                    # 202 Accepted means still processing
-                    continue
-                else:
-                    print(f"[-] poll failed: {p_resp.status_code}")
-                    break
+                            got_data = True
+                            break
+                # 400 / 202 / 200-null: the run is not ready yet. Keep polling.
+
+            if not got_data:
+                print(f"  [~] run for '{keyword}' did not yield within {max_retries} polls")
         
         if all_results:
             print(f"  [+] Extracted a total of {len(all_results)} deduplicated edges!")
