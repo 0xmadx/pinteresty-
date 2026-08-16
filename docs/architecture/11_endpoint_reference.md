@@ -164,11 +164,31 @@ This is Pinterest's strongest unique claim and it holds up. Worth building on.
 Returned `None` for "mom necklace" this probe. Wired, inconsistent — needs a term in
 Pinterest's index. Do not assume it populates.
 
-### 3.8 Rich, UNPROBED Pinterest surface ❓
+### 3.8 `featured_topics(interests, country)` — "Trends in the Spotlight" ✅ 2026-08-16
+The Spotlight tab. **Verified exact match** to the operator's UM screen: 5 curated topics
+(`SPOTLIGHT_TOPIC_COUNT = 5`), ranked on Pin **SAVE** (`SPOTLIGHT_EVENT = "SAVE"`).
+Reproduced Back to School Nail Designs, Senior Spirit Jeans, Starbucks Drink Orders,
+Senior Picture Ideas, Pottery Painting Ideas — same order.
+
+Richer than the screen shows — each topic carries:
+- `name` + `description` (editorial blurb)
+- `pct_growth_mom` — ⚠️ the UI multiplies this by 100: raw `3` shows as "300% MoM".
+  Report the raw value ×100 or it reads 100× too small.
+- `related_search_trends` — **4+ keyword seeds per topic** (`teen nails`, `first day of
+  school nails`) — feed straight into the seed crawl (1.3)
+- `interests` — the "Popular in Beauty and Event Planning" tags
+- `time_series` — the momentum curve
+- `pins` — the actual pins
+
+Powers `scrape_spotlight.py` (sweeps all 15 interest dropdowns). A real discovery source:
+5 topics × their keyword seeds × momentum, and it is SAVE-ranked (aspiration, not
+purchase intent — pair with 3.6's OUTBOUND_CLICK to tell dreaming from buying).
+
+### 3.9 Still UNPROBED Pinterest surface ❓
 `category_metrics`, `category_demographics`, `top_products`, `etsy_competitors`
-(Pinterest's view of Etsy competitors per category), `featured_topics`,
-`editorial_content`, `product_categories`, `split_forecast`, `predicted_days`. All
-wired, none re-probed this session. **Assume nothing until probed.**
+(Pinterest's view of Etsy competitors per category), `editorial_content`,
+`product_categories`, `split_forecast`, `predicted_days`. Wired, not re-probed this
+session. **Assume nothing until probed.**
 
 ---
 
