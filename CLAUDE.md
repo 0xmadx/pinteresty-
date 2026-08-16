@@ -181,6 +181,13 @@ Those first two are deliberately a pair. `etsy-pipeline-work` catches a wrong nu
 `etsy-seo-and-opportunity` catches a correct number shown in the wrong order. Both cost
 the operator a wasted launch, and only the first looks like a bug.
 
+The third, **`etsy-market-intelligence`**, is the analyst/marketer lens: *is this signal
+worth gathering at all, from which platform, and what does a seller do with it.* Read it
+before planning a data-gathering feature or judging a new endpoint's value. It carries
+the value chain (discover cheap → qualify public → measure private-last), what to store
+for compounding value, and the roles (operator confirms direction, engineer builds and
+never fabricates a number).
+
 ---
 
 ## Current state

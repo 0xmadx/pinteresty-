@@ -131,8 +131,18 @@ charm necklace, cross necklace. Powers `pin_graph_pipeline`.
 ~10 prefix completions. Verified: "mom neck" → neck tattoo, mom outfits (prefix, so
 noisy — string match, not semantic).
 
-### 3.4 `top_trends(preset, country)` — trending seeds ❓
-`growing` / `seasonal` presets. Used by `pin_graph_pipeline` seeding. Not re-probed.
+### 3.4 `top_trends(preset, country)` — "Search trends" tab ❓
+`growing` / `seasonal` presets. Powers `scrape_search.py` and `pin_graph_pipeline`
+seeding. Not re-probed this pass.
+
+### The three Pinterest Trends TABS (the operator's "search trends / shopping / spotlight")
+These are Pinterest's own product surfaces, each with a pipeline already:
+
+| Operator's name | Pipeline | Endpoint |
+|---|---|---|
+| **Search trends** | `scrape_search.py` | `top_trends(preset)` (3.4) |
+| **Shopping trending** | `scrape_shopping.py` | `top_categories` (3.6) + `etsy_competitors` + `top_products` |
+| **Trends in the spotlight** | `scrape_spotlight.py` | `top_trends` over `SPOTLIGHT_INTERESTS` |
 
 ### 3.5 `demographics(terms)` — age/gender ⚠️ 2026-08-16
 Returns `{term_distributions: {}}` — **empty for "mom necklace"**. Wired, but needs a
@@ -143,9 +153,12 @@ term Pinterest actually has demographic data for. **The unique signal Etsy has n
 **Verified real and it separates.** `OUTBOUND_CLICK` (people who clicked THROUGH to buy)
 returned **37 categories**; `SAVE` (people who just bookmarked) returned **20** — different
 sets, different sizes. That gap IS the buy-signal-vs-daydream distinction, and Etsy has
-no equivalent at any price. Each entry carries `parent_product_categories`,
-`related_search_trends`, `summary`. This is Pinterest's strongest unique claim and it
-holds up. Worth building on.
+no equivalent at any price. Verified structure per category:
+- `summary` = `saves` / `engagement` / `outbound` each with `percent_growth` (momentum!)
+- `related_search_trends` = **25 related terms per category** (a discovery source)
+- `product_category`, `parent_product_categories`
+
+This is Pinterest's strongest unique claim and it holds up. Worth building on.
 
 ### 3.7 `metrics(terms, days)` — momentum series ⚠️ 2026-08-16
 Returned `None` for "mom necklace" this probe. Wired, inconsistent — needs a term in
