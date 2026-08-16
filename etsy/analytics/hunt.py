@@ -22,19 +22,19 @@ from etsy.analytics.blueprint_support import material_for_term
 
 
 def hunt(api, public_api, settings, limit=8, calendar_rows=None, min_ratio=0.25,
-         llm=None):
+         llm=None, seed=None):
     """Candidates → typed → verdicts → blueprints for the ones worth building.
 
-    Each candidate is now costed with a profile matching its DETECTED product type
-    (D-22), not one blanket profile. That closes the gap the first hunt exposed: a
-    digital term judged with a physical profile came back at -142% margin, which was an
-    artefact of the profile, not the niche.
+    Two front doors:
+      * default — Etsy's 28 curated trending terms (head terms, one level deep)
+      * `seed` — a recursive crawl from one keyword, which surfaces the winnable
+        long-tail POCKETS the curated list never shows. This is the mixed engine: the
+        crawl (hunter + data scientist) finds the pockets, and each then runs the full
+        judgement pipeline — product type, profit gate, blueprint (analyst + SEO).
 
-    `min_ratio` drops walls before any private-tier call is spent on them: a term with
-    two million listings does not become winnable because the margin is good.
-
-    `llm` (optional) is the D-27 fallback — used only to classify a term whose page-one
-    sample is too split or thin for deterministic detection, never to invent a number.
+    Each candidate is costed with a profile matching its DETECTED product type (D-22),
+    not one blanket profile. `min_ratio` drops walls before a private-tier call is spent
+    on them. `llm` is the D-27 fallback for an ambiguous product type only.
     """
     from etsy.analytics.blueprint_support import resolve_product_type
     from etsy.api.private.api import parse_results_data
@@ -43,10 +43,24 @@ def hunt(api, public_api, settings, limit=8, calendar_rows=None, min_ratio=0.25,
         raw = api.get_results_data(term)
         return parse_results_data(raw) if raw else None
 
-    candidates = discover.trending_candidates(api)
-    if calendar_rows:
-        candidates = discover.attach_moments(candidates, calendar_rows)
-    ranked = discover.rank_by_opportunity(candidates[:limit * 2], fetch)
+    if seed:
+        # The crawl already sized every node (volume/supply inline), so pockets arrive
+        # pre-ranked by winnability with no extra fetch. Only the winnable-enough ones
+        # are worth the private results-data call each candidate below costs.
+        from etsy.analytics import keyword_crawl
+        nodes = keyword_crawl.crawl(api, seed, max_nodes=limit * 12, max_depth=3)
+        pocket = keyword_crawl.pockets(nodes, min_ratio=min_ratio)
+        candidates = [{"term": n["term"], "volume": n["volume"], "supply": n["supply"],
+                       "categories": [f"from seed '{seed}'"], "basis": "seed_crawl"}
+                      for n in pocket]
+        if calendar_rows:
+            candidates = discover.attach_moments(candidates, calendar_rows)
+        ranked = discover.rank_expanded(candidates)
+    else:
+        candidates = discover.trending_candidates(api)
+        if calendar_rows:
+            candidates = discover.attach_moments(candidates, calendar_rows)
+        ranked = discover.rank_by_opportunity(candidates[:limit * 2], fetch)
 
     results = []
     for candidate in ranked:
@@ -182,6 +196,8 @@ def main(argv=None):
     load_dotenv(override=True)
     parser = argparse.ArgumentParser(prog="hunt")
     parser.add_argument("--limit", type=int, default=8)
+    parser.add_argument("--seed", help="hunt the long-tail POCKETS around one keyword, "
+                        "instead of Etsy's 28 curated trending terms")
     parser.add_argument("--no-calendar", action="store_true")
     parser.add_argument("--llm", action="store_true",
                         help="use DeepSeek to classify terms whose page-one type is "
@@ -222,7 +238,7 @@ def main(argv=None):
     from etsy.api.private.api import SessionDown
     try:
         results = hunt(EtsyPrivateAPI(), EtsyPublicAPI(), settings,
-                       limit=args.limit, calendar_rows=rows, llm=llm)
+                       limit=args.limit, calendar_rows=rows, llm=llm, seed=args.seed)
     except SessionDown as exc:
         # The session died mid-run (e.g. the browser was closed after preflight
         # passed). Report the real cause, not a half-finished hunt that looks like
