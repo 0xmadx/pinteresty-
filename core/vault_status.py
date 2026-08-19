@@ -72,9 +72,19 @@ def _profile_report(client, platform, profile_id, in_valid_set):
         except (ValueError, TypeError):
             warnings.append("last_updated unreadable")
     else:
-        # cookie_vault only purges when last_updated is present, so no heartbeat means
-        # this profile is never aged out. Old, but usable.
-        warnings.append("no heartbeat — written by an older server; never auto-purged")
+        # WARNING, not blocking — and that distinction was tested before it was
+        # reasoned about here. An earlier version made this blocking and reported a
+        # vault of 20 working profiles as "0 usable"; test_vault_status pins the
+        # correction. A missing heartbeat is not evidence of staleness, it is
+        # evidence that freshness is UNKNOWN, and refusing on unknown is how a
+        # diagnostic starts crying wolf.
+        #
+        # What is worth saying, and was not said before: cookie_vault checks age
+        # only `if last_updated:`, so a profile without one is never aged out. It is
+        # not that it is stale — it is that if it ever GOES stale, nothing will
+        # notice. That is a real exposure and belongs in the warning text.
+        warnings.append("no heartbeat — cookie_vault only ages out profiles that "
+                        "have one, so if this session dies nothing will purge it")
 
     if platform == "etsy_private":
         missing = [f for f in PRIVATE_REQUIRED if not data.get(f)]

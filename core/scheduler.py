@@ -210,7 +210,24 @@ def job_keyword_sweep():
         return {"skipped": "no watched terms — add with: settings_store term add TERM"}
 
     db, api = MarketDatabase(), EtsyPrivateAPI()
-    recorded, failed = [], []
+    recorded, failed, retried = [], [], []
+
+    # SessionManager draws a RANDOM profile per request, so a pool holding one
+    # healthy and one dead profile fails roughly half the time — per term, not per
+    # run. One retry re-draws and usually lands on a different profile.
+    #
+    # This is a symptom fix and is labelled as one: the cause is that
+    # cookie_vault.get_valid_account only checks freshness `if last_updated:`, so a
+    # profile with no heartbeat is never aged out. Retrying around it keeps the
+    # day's reading; it does not make the pool healthy. Never retry more than once
+    # — a genuinely dead pool should fail fast and loudly, not spin.
+    def fetch(term):
+        try:
+            return parse_results_data(api.get_results_data(term)) or {}
+        except Exception:
+            retried.append(term)
+            return parse_results_data(api.get_results_data(term)) or {}
+
     for term in terms:
         try:
             # parse_results_data returns a FLAT dict — volume/supply/cvr/price_low —
@@ -218,7 +235,7 @@ def job_keyword_sweep():
             # None for every field and writes a row of NULLs that reads as "we looked
             # and the market is unmeasured". That is the camelCase bug (D-24) in a new
             # costume, and it was committed here before this comment existed.
-            data = parse_results_data(api.get_results_data(term)) or {}
+            data = fetch(term)
             volume = data.get("volume")
             if volume is None:
                 # No volume means the call did not really succeed. Recording a row
@@ -236,7 +253,10 @@ def job_keyword_sweep():
             recorded.append(term)
         except Exception as e:
             failed.append({"term": term, "why": f"{type(e).__name__}: {e}"})
-    return {"recorded": len(recorded), "terms": recorded, "failed": failed}
+    return {"recorded": len(recorded), "terms": recorded, "failed": failed,
+            "retried": retried,
+            "note": ("a retry means the vault served a dead profile; run "
+                     "`python -m core.vault_status`") if retried else None}
 
 
 def job_rank_check():
