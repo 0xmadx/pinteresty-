@@ -237,6 +237,20 @@ class MarketDatabase:
             # shop page, so "listed 3 weeks ago" is only true of listings we watched
             # appear. Calling it `listed_at` would invent a fact, and a wrong age makes
             # every velocity built on it wrong.
+            shop_cols = {row[1] for row in
+                         cursor.execute("PRAGMA table_info(shop_observations)")}
+            for column, decl in [
+                # Etsy's lifetime sales counter is QUANTISED at scale — a shop showing
+                # "25,100" moves in steps of 100, so a zero delta means "moved less
+                # than the counter can display", not "sold nothing". The rate is
+                # refused in that case and this bound carries what IS known.
+                ("sales_per_day_upper", "REAL"),
+                ("counter_resolution", "INTEGER"),
+            ]:
+                if column not in shop_cols:
+                    cursor.execute(
+                        f"ALTER TABLE shop_observations ADD COLUMN {column} {decl}")
+
             observed = {row[1] for row in
                         cursor.execute("PRAGMA table_info(listing_observations)")}
             for column, decl in [
@@ -498,6 +512,41 @@ class MarketDatabase:
                 'ORDER BY collected_at ASC', (trend_name, country))]
 
     # --- SHOP OBSERVATIONS API (the daily delta) ---
+    # A bound computed over a very short window is arithmetically correct and
+    # practically empty: 99 unseen sales across 9 minutes bounds the rate at
+    # 16,000/day, which excludes nothing. Below this window a below_resolution
+    # reading is recorded but its bound is marked uninformative rather than being
+    # presented as a constraint — the same treatment survivor_bound gives a 100%
+    # share.
+    MIN_INFORMATIVE_WINDOW_DAYS = 1.0
+
+    @staticmethod
+    def bound_is_informative(window_days):
+        """Does this window make the upper bound worth reporting?"""
+        return bool(window_days and window_days >= MarketDatabase.MIN_INFORMATIVE_WINDOW_DAYS)
+
+    @staticmethod
+    def counter_resolution(total_sales):
+        """The smallest change Etsy's shop counter can actually display.
+
+        Etsy shows an exact number for a small shop and rounds at scale, so "25,100"
+        is not 25,100 — it is somewhere in [25,100, 25,200). Inferred from the value
+        itself rather than from a magnitude threshold: a shop reporting 8,143 is
+        clearly unrounded whatever its size, and one reporting 25,100 clearly is not.
+        Returns 1 when the number carries full precision.
+
+        This matters because the resolution is the ERROR BAR on every delta. Two
+        readings 4.7 days apart on a counter that steps by 100 cannot distinguish
+        "sold nothing" from "sold 99", and those are opposite conclusions about a
+        competitor.
+        """
+        if total_sales is None or total_sales < 1000:
+            return 1
+        for step in (1000, 100, 10):
+            if total_sales % step == 0:
+                return step
+        return 1
+
     def record_shop_observation(self, shop_name, total_sales, total_reviews=None,
                                 collected_at=None):
         """Append one shop reading and derive the delta against the previous one.
@@ -517,12 +566,22 @@ class MarketDatabase:
                             drag every downstream rate below zero, so the delta is
                             refused while the observation is still kept, making the
                             anomaly visible instead of invisible.
+          below_resolution  the counter did not move, but it is QUANTISED — a shop
+                            displaying "25,100" steps in hundreds, so a zero delta
+                            means the true change lay somewhere in [0, 100), not that
+                            the shop sold nothing. Measured live: shopflowerlane held
+                            25,100 across 4.7 days, which this method used to record
+                            as sales_per_day 0.0 with basis `measured_delta` — a
+                            confident claim that a 25,000-sale shop had stopped
+                            selling. The rate is refused here and an upper BOUND is
+                            stored instead, never a rate.
         """
         now = collected_at or datetime.now(timezone.utc).isoformat()
         previous = self.latest_shop_observation(shop_name)
 
-        delta = window_days = per_day = None
+        delta = window_days = per_day = per_day_upper = None
         basis = "baseline"
+        resolution = self.counter_resolution(total_sales)
         if previous and previous.get("total_sales") is not None:
             raw = total_sales - previous["total_sales"]
             if raw < 0:
@@ -537,21 +596,33 @@ class MarketDatabase:
                 # division by zero dressed up as an infinite sales rate.
                 per_day = round(raw / window_days, 6) if window_days > 0 else None
 
+                if raw == 0 and resolution > 1:
+                    # The counter cannot resolve this window. 0.0/day would be a
+                    # confident claim that the shop sold nothing; what is actually
+                    # known is only that it sold FEWER than one counter step.
+                    basis = "below_resolution"
+                    per_day_upper = (round((resolution - 1) / window_days, 6)
+                                     if window_days > 0 else None)
+                    per_day = None
+
         row = {
             "shop_name": shop_name, "collected_at": now,
             "total_sales": total_sales, "total_reviews": total_reviews,
             "sales_delta": delta, "window_days": window_days,
             "sales_per_day": per_day, "basis": basis,
+            "sales_per_day_upper": per_day_upper,
+            "counter_resolution": resolution,
         }
         with self.get_connection() as conn:
             # Same instant twice is the same observation, not two.
             conn.execute('''
                 INSERT OR REPLACE INTO shop_observations (
                     shop_name, collected_at, total_sales, total_reviews,
-                    sales_delta, window_days, sales_per_day, basis
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    sales_delta, window_days, sales_per_day, basis,
+                    sales_per_day_upper, counter_resolution
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (shop_name, now, total_sales, total_reviews, delta, window_days,
-                  per_day, basis))
+                  per_day, basis, per_day_upper, resolution))
             conn.commit()
         return row
 
@@ -655,3 +726,73 @@ class MarketDatabase:
         with self.get_connection() as conn:
             conn.row_factory = sqlite3.Row
             return [dict(r) for r in conn.execute(sql, args).fetchall()]
+
+
+def recompute_shop_rates(db_path=None, apply=False):
+    """Recompute the DERIVED columns on shop_observations from the raw readings.
+
+    Time is append-only here, so this deliberately does not touch an observation:
+    `total_sales`, `total_reviews` and `collected_at` are what was seen and are left
+    exactly as they were. `sales_delta`, `sales_per_day`, `basis`,
+    `sales_per_day_upper` and `counter_resolution` are DERIVATIONS from those
+    readings, and a derivation computed by a rule now known to be wrong should be
+    recomputed, not preserved.
+
+    The rule that changed: a quantised counter that did not move used to yield
+    `sales_per_day = 0.0, basis = measured_delta`. It now yields a refusal plus an
+    upper bound. Rows written before that are claims the system would no longer make.
+
+    Dry run by default — call with apply=True to write.
+    """
+    db = MarketDatabase(db_path) if db_path else MarketDatabase()
+    changes = []
+    with db.get_connection() as conn:
+        conn.row_factory = sqlite3.Row
+        rows = [dict(r) for r in conn.execute(
+            "SELECT * FROM shop_observations ORDER BY shop_name, collected_at")]
+
+        previous = {}
+        for row in rows:
+            shop, total = row["shop_name"], row["total_sales"]
+            resolution = MarketDatabase.counter_resolution(total)
+            prev = previous.get(shop)
+            delta = window = per_day = upper = None
+            basis = "baseline"
+
+            if prev and prev["total_sales"] is not None and total is not None:
+                raw = total - prev["total_sales"]
+                if raw < 0:
+                    basis = "counter_decreased"
+                else:
+                    gap = (datetime.fromisoformat(row["collected_at"])
+                           - datetime.fromisoformat(prev["collected_at"]))
+                    window = round(gap.total_seconds() / 86400.0, 6)
+                    delta, basis = raw, "measured_delta"
+                    per_day = round(raw / window, 6) if window > 0 else None
+                    if raw == 0 and resolution > 1:
+                        basis = "below_resolution"
+                        upper = (round((resolution - 1) / window, 6)
+                                 if window > 0 else None)
+                        per_day = None
+
+            if (row["basis"] != basis or row["sales_per_day"] != per_day
+                    or row.get("counter_resolution") != resolution):
+                changes.append({"shop": shop, "collected_at": row["collected_at"],
+                                "was": {"basis": row["basis"],
+                                        "sales_per_day": row["sales_per_day"]},
+                                "now": {"basis": basis, "sales_per_day": per_day,
+                                        "sales_per_day_upper": upper,
+                                        "counter_resolution": resolution}})
+            if apply:
+                conn.execute("""
+                    UPDATE shop_observations
+                       SET sales_delta = ?, window_days = ?, sales_per_day = ?,
+                           basis = ?, sales_per_day_upper = ?, counter_resolution = ?
+                     WHERE shop_name = ? AND collected_at = ?
+                """, (delta, window, per_day, basis, upper, resolution,
+                      shop, row["collected_at"]))
+            previous[shop] = row
+        if apply:
+            conn.commit()
+    return {"rows": len(rows), "changed": len(changes), "applied": apply,
+            "changes": changes}

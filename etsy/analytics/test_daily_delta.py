@@ -161,6 +161,58 @@ def main():
     finally:
         daily_tracker.SHOPS_FILE = saved
 
+    # --- the counter's own resolution is the error bar on every delta ------------------
+    # Measured live: shopflowerlane displayed 25,100 sales on 15 Aug and 25,100 on
+    # 19 Aug. The old code recorded that as sales_per_day 0.0, basis measured_delta —
+    # a confident claim that a 25,000-sale shop had stopped selling for five days.
+    print()
+    dbq = MarketDatabase(db_path=os.path.join(tmp, "quantised.db"))
+    dbq.record_shop_observation("big", 25100, collected_at="2026-08-15T00:00:00+00:00")
+    q = dbq.record_shop_observation("big", 25100, collected_at="2026-08-19T16:00:00+00:00")
+    check("a quantised counter that did not move is NOT a measured rate",
+          q["basis"] == "below_resolution", q["basis"])
+    check("no rate is stored at all — 0.0/day would claim the shop sold nothing",
+          q["sales_per_day"] is None, q["sales_per_day"])
+    check("an upper BOUND is stored instead, never a rate",
+          q["sales_per_day_upper"] is not None and q["sales_per_day_upper"] > 0,
+          q["sales_per_day_upper"])
+    check("the bound is (resolution - 1) / window, i.e. what is genuinely known",
+          abs(q["sales_per_day_upper"] - 99 / q["window_days"]) < 0.01,
+          q["sales_per_day_upper"])
+    check("the resolution that produced the bound is recorded with it",
+          q["counter_resolution"] == 100, q["counter_resolution"])
+    check("and latest_shop_rate refuses rather than returning the bound as a rate",
+          dbq.latest_shop_rate("big") is None)
+
+    # A small shop's counter is exact, so zero really is zero.
+    dbq.record_shop_observation("small", 843, collected_at="2026-08-15T00:00:00+00:00")
+    e = dbq.record_shop_observation("small", 843, collected_at="2026-08-19T16:00:00+00:00")
+    check("an UNROUNDED counter that did not move is a real measured zero",
+          e["basis"] == "measured_delta" and e["sales_per_day"] == 0.0, e)
+    check("and carries no bound, because none is needed",
+          e["sales_per_day_upper"] is None)
+
+    # A real movement is unaffected by any of this.
+    dbq.record_shop_observation("mover", 25100, collected_at="2026-08-15T00:00:00+00:00")
+    m = dbq.record_shop_observation("mover", 25400, collected_at="2026-08-16T00:00:00+00:00")
+    check("a counter that DID move still reports a measured rate",
+          m["basis"] == "measured_delta" and m["sales_per_day"] == 300.0, m)
+
+    # A bound over a 9-minute window is arithmetically true and excludes nothing.
+    short = dbq.record_shop_observation("big", 25100,
+                                        collected_at="2026-08-19T16:09:00+00:00")
+    check("a bound over a sub-day window is marked uninformative, not reported as a limit",
+          not MarketDatabase.bound_is_informative(short["window_days"]),
+          short["window_days"])
+    check("a bound over several days IS informative",
+          MarketDatabase.bound_is_informative(q["window_days"]), q["window_days"])
+    check("informativeness needs a real window, and None is not one",
+          not MarketDatabase.bound_is_informative(None))
+
+    check("resolution is inferred from the number, not from its magnitude",
+          [MarketDatabase.counter_resolution(n) for n in (843, 8143, 8100, 25000)]
+          == [1, 1, 100, 1000])
+
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
 
