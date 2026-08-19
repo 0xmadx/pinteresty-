@@ -154,6 +154,11 @@ account costs the business.
 | **Unused, verified to exist** | `predicted_days` (Pinterest 91-day forecast), `page` (pagination), `include_trendline`. See `08_capability_map.md`. |
 | **`similar_search_terms` and `market_gap_recommendations` are EMPTY** | Recorded earlier as free unread signals. Probed 2026-08-15 on `felt garland`, `mom necklace`, `christmas ornament`: all returned `total_results_count: 0` and a null gap block. The keys are in the schema; Etsy returns nothing in them. **Do not build on them.** |
 | **`locationQuery` is not a filter** | It returns a *broader* result set than the search it filters. On `monogrammed waffle weave towel` (10,011 unfiltered) Germany returned 28,271 and seven countries summed to **1116%** of the market they claim to partition. Origin share is **not obtainable from the SERP** — use `sourcing.sample_origins()`, which reads each listing's declared origin and can see countries Etsy's list omits (it found a Turkish seller). `delivery_days` was checked the same way and **is** sound: monotonic, cumulative, never above total. |
+| **9 of 12 SERP filters cannot be believed** | Audited 2026-08-19, recorded in `config/filter_trust.json`, enforced by `find_gaps`. Trusted: `delivery_days`, `gift_wrap`, `is_personalizable`. Ignored: `min_rating` (returns 4.8-rated listings), `best_by_etsy`, `holiday`. Not a subset: `attr_1` (colours sum to 562%), `is_digital`. Unstable: `is_star_seller`, `is_discounted`, `free_shipping`, `locationQuery`. Re-audit: `python -m etsy.analytics.filter_trust`. |
+| **`total_results` is an ESTIMATE** | Identical unfiltered searches returned 217,196 / 217,196 / 217,395. Never test it with exact equality — see `filter_trust.COUNT_JITTER` (2%). |
+| **Etsy's shop counter is QUANTISED** | A shop displaying "25,100" steps by 100, so a zero delta means "moved less than the counter can show", not "sold nothing". `record_shop_observation` returns `below_resolution` + an upper bound rather than a 0.0 rate. |
+| **Printify has no production cost** | The catalog exposes shipping and handling time; there is NO price on a catalog variant, and the Premium discount cannot be read. `cost` exists only on a product object. COGS is operator-confirmed or it does not exist. |
+| **Printify handling is 10 days** | On every towel provider. Lead time 12-16 days, so Etsy's 7-day delivery bracket is structurally closed to POD. |
 | **The DISCOVER front door works** | `trending-search-terms-v2` returns rising terms with real volumes and no quota cost. Only **7** taxonomy ids are populated (1, 66, 199, 323, 891, 1429, 1633) — several plausible ones (Jewelry, Clothing, Craft Supplies) return nothing. 28 candidates total. |
 
 ---
@@ -162,7 +167,9 @@ account costs the business.
 
 | File | Answers |
 |---|---|
-| `docs/architecture/09_build_plan.md` | **what we are building and in what order** — start here |
+| `docs/ONBOARDING.md` | **start here for a fresh session** — what is true, what is a trap |
+| `docs/MCP.md` | the MCP surface, and where DeepSeek is allowed to touch the system |
+| `docs/architecture/09_build_plan.md` | **what we are building and in what order** |
 | `docs/HOW_WE_WORK.md` | **the operating model** — the three seats, the loop, which lens fires when. Read first. |
 | `docs/market_map/` | **the shared knowledge base** — `reference/` (params, payloads, verified per platform) + `analysis/` (what each is worth, and the combinations). Read before planning data work. |
 | `docs/architecture/11_endpoint_reference.md` | one-page endpoint summary; `docs/market_map/` is the full version |
@@ -204,12 +211,26 @@ single screenshot would have caught.
 scoring with discrimination check · freshness floor · tag mining · term join ·
 request cache · run log · guards. 20 test suites, ~441 assertions, all offline.
 
-**Empty:** every observation table except a first `keyword_observations` row. The
-machine is built and has barely been switched on. **Value compounds only with time** —
-the daily delta needs two readings a day apart, LEARN needs 10 launches.
+**Added 2026-08-19:** filter-trust registry (`etsy/analytics/filter_trust.py`) with
+`find_gaps` enforcement · sourcing + lead time + origin sampling
+(`etsy/analytics/sourcing.py`) · POD costing and the profit gate's two inverses
+(`etsy/analytics/pod_costing.py`) · Printify client (`etsy/api/printify/`) ·
+LEARN outcome capture (`etsy/analytics/learn.py`) · 12 MCP tools (`mcp_server/`).
+~593 assertions across ~35 offline suites.
 
-**Next:** see `09_build_plan.md`. Phase 0 is Settings (real fee/cost numbers) and the
-scheduler, because nothing downstream is trustworthy or accumulating without them.
+**The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
+`EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend
+observations into a table that had held zero.
+
+**Still thin:** 84 trend · 304 listing · 6 shop · 1 keyword observations, and
+**0 launches**, so LEARN cannot start. **Value compounds only with time** — a daily
+delta needs two readings a day apart and cannot be backfilled.
+
+**Still provisional:** `config/settings.json` has `"confirmed": []`, so every profit
+verdict rests on default fees and costs. `settings_store set <path> <value>` marks a
+value confirmed.
+
+**Next:** see `09_build_plan.md`.
 
 ---
 
