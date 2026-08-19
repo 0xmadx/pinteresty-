@@ -135,5 +135,29 @@ check("SessionDown is distinct from a generic error",
 check("a 500 returns None, not SessionDown",
       _api(500).get_results_data("probe 500") is None)
 
+
+# --- THE PARSER'S SHAPE IS A CONTRACT, and consumers keep getting it wrong ----------
+#
+# parse_results_data returns a FLAT dict. Twice now code has been written against an
+# imagined nested `stats` block with camelCase keys — once across seven modules for
+# the life of the project (D-24), and once again on 2026-08-19 in the MCP tool and
+# the keyword sweep job, both written the same afternoon the rule was restated.
+#
+# Indexing a shape the parser does not return does not raise. It yields None for
+# every field, and a pipeline then writes a row of NULLs that reads as "we looked and
+# the market is unmeasured". These assertions exist so that mistake fails loudly in
+# the suite instead of silently in the database.
+FLAT_KEYS = ("keyword", "volume", "supply", "cvr", "cvr_bucket", "price_low",
+             "price_high", "wow_change", "wow_direction", "listings")
+live_shape = parse_results_data(payload)
+for key in FLAT_KEYS:
+    check(f"parse_results_data exposes '{key}' at the TOP level",
+          key in live_shape, sorted(live_shape))
+check("there is NO nested 'stats' block — indexing one silently yields None",
+      "stats" not in live_shape, sorted(live_shape))
+check("and no camelCase survives the parser",
+      not [k for k in live_shape if any(c.isupper() for c in k)],
+      [k for k in live_shape if any(c.isupper() for c in k)])
+
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)

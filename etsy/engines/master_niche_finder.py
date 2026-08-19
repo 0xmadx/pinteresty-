@@ -5,6 +5,7 @@ from collections import deque
 from etsy.api.private.api import (EtsyPrivateAPI, edge_term, parse_results_data,
                                   parse_term_summaries)
 from etsy.analytics.derivations import parse_price
+from etsy.analytics import verdict_log
 from etsy.analytics.profit import DIGITAL, verdict
 from etsy.analytics.scoring import (PoolTooSmall, can_discriminate, score_pool,
                                     shortlist)
@@ -324,12 +325,51 @@ class MasterNicheFinder:
                 niche["profit_verdict"] = None
                 niche["profit_basis"] = "unjudged: no median price in the API response"
                 unjudged.append(niche)
+                # Logged as `unjudged`, not skipped. A keyword that silently vanishes
+                # from the log looks identical to one that was never analysed, and the
+                # gap between "we could not judge this" and "we never looked" is
+                # exactly what the change log exists to preserve.
+                try:
+                    verdict_log.record(
+                        subject=niche["keyword"], verdict="unjudged",
+                        inputs={"median_price_low": None,
+                                "volume": niche.get("volume"),
+                                "supply": niche.get("competition")},
+                        basis=niche["profit_basis"],
+                        note="no median price in the API response")
+                except Exception:
+                    pass
                 print(f"      ❔ '{niche['keyword']}': no price returned — cannot judge, not rejected")
                 continue
 
             v = verdict(price=price, **self.profile)
             niche["profit_verdict"] = v
             niche["profit_basis"] = "derived_from_measured_price_and_operator_profile"
+
+            # Record the verdict WITH the inputs that produced it, so a later flip
+            # can be explained rather than merely noticed. This has to happen at the
+            # moment of judgement: reconstructing these inputs afterwards means
+            # re-querying a market that has since moved, which is different data.
+            # A logging failure must never sink a run that otherwise succeeded.
+            try:
+                verdict_log.record(
+                    subject=niche["keyword"],
+                    verdict="go" if v["go"] else "no_go",
+                    inputs={
+                        "median_price_low": price,
+                        "volume": niche.get("volume"),
+                        "supply": niche.get("competition"),
+                        "cvr": niche.get("cvr"),
+                        "margin": v["margin"],
+                        "margin_floor": v["margin_floor"],
+                        "profit_per_unit": v["profit_per_unit"],
+                        "product_type": self.profile.get("product_type"),
+                        "capacity_bound": v.get("capacity_bound"),
+                    },
+                    basis=niche["profit_basis"],
+                    note="; ".join(v["reasons"]) or None)
+            except Exception as e:
+                print(f"      [!] verdict not logged for '{niche['keyword']}': {e}")
 
             if v["go"]:
                 passed.append(niche)

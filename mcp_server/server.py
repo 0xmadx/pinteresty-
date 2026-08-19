@@ -192,9 +192,11 @@ def analyze_keyword(keyword: str) -> dict:
         return _fail("the private API returned nothing for this keyword",
                      fix="Check the etsy_private session: python -m core.vault_status")
 
-    stats = data.get("stats") or {}
-    volume = stats.get("searchVolume")
-    supply = stats.get("avgTotalListings")
+    # FLAT keys. parse_results_data owns the wire shape precisely so callers do
+    # not index raw API keys; indexing a stats block it never returns is the same
+    # mistake one layer up.
+    volume = data.get("volume")
+    supply = data.get("supply")
     public = EtsyPublicAPI().get_public_search(keyword) or {}
     public_supply = public.get("total_results")
 
@@ -210,12 +212,15 @@ def analyze_keyword(keyword: str) -> dict:
                                "basis": "derived" if ratio else "unmeasured",
                                "note": "THE headline number. Above ~1.0 is worth a "
                                        "look; below ~0.2 you cannot rank."},
-        "query_cvr": {"value": stats.get("queryCvr"), "basis": "measured"},
-        "median_price": {"low": stats.get("medianPriceLow"),
-                         "high": stats.get("medianPriceHigh"), "basis": "measured"},
-        "wow_change": {"value": (data.get("wow_data") or {}).get("value"),
+        "query_cvr": {"value": data.get("cvr"),
+                      "basis": "measured" if data.get("cvr") is not None else "unmeasured",
+                      "bucket": data.get("cvr_bucket")},
+        "median_price": {"low": data.get("price_low"), "high": data.get("price_high"),
+                         "basis": "measured"},
+        "wow_change": {"value": data.get("wow_change"),
+                       "direction": data.get("wow_direction"),
                        "basis": "measured", "note": "Etsy's own week-over-week %"},
-        "competitors_returned": len(data.get("listing_cards") or []),
+        "competitors_returned": len(data.get("listings") or []),
     })
 
 

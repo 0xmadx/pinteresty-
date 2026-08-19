@@ -186,6 +186,59 @@ def job_shop_sweep():
     return {"shops": len(out), "detail": out}
 
 
+def job_keyword_sweep():
+    """Daily: volume, supply, CVR and price band for every watched term.
+
+    Daily because these are the inputs every verdict rests on, and a verdict that
+    flips is only explainable if the inputs were being recorded on both sides of
+    the flip. `keyword_observations` held ONE row before this job existed, which
+    meant no term in the system had a history at all.
+
+    Costs one private-API call per term. There is no quota on this endpoint
+    (D-14: three consecutive distinct calls left remaining_quota at 15/15), so the
+    cost is time, not allowance.
+
+    A term that fails is recorded as a failure and the sweep continues — losing
+    one term is no reason to lose the day's reading for the other five.
+    """
+    from core.database import MarketDatabase
+    from core.settings_store import load
+    from etsy.api.private.api import EtsyPrivateAPI, parse_results_data
+
+    terms = load().terms()
+    if not terms:
+        return {"skipped": "no watched terms — add with: settings_store term add TERM"}
+
+    db, api = MarketDatabase(), EtsyPrivateAPI()
+    recorded, failed = [], []
+    for term in terms:
+        try:
+            # parse_results_data returns a FLAT dict — volume/supply/cvr/price_low —
+            # not a nested stats block. Indexing a shape that does not exist yields
+            # None for every field and writes a row of NULLs that reads as "we looked
+            # and the market is unmeasured". That is the camelCase bug (D-24) in a new
+            # costume, and it was committed here before this comment existed.
+            data = parse_results_data(api.get_results_data(term)) or {}
+            volume = data.get("volume")
+            if volume is None:
+                # No volume means the call did not really succeed. Recording a row
+                # of NULLs would put a reading in the history that says "we looked
+                # and the market is unmeasured", which is not what happened.
+                failed.append({"term": term, "why": "no searchVolume in response"})
+                continue
+            cvr = data.get("cvr")
+            db.record_keyword(
+                term, source="etsy_private", volume=volume,
+                competition=data.get("supply"), cvr=cvr,
+                cvr_source="measured" if cvr is not None else "default",
+                price_low=data.get("price_low"),
+                price_high=data.get("price_high"))
+            recorded.append(term)
+        except Exception as e:
+            failed.append({"term": term, "why": f"{type(e).__name__}: {e}"})
+    return {"recorded": len(recorded), "terms": recorded, "failed": failed}
+
+
 def job_rank_check():
     """3x/week: where our launched listings actually rank.
 
@@ -210,6 +263,8 @@ def default_jobs():
     return [
         Job("shop_sweep", 24, job_shop_sweep, platforms=("etsy",),
             description="competitor shop totals, inventory and review counts"),
+        Job("keyword_sweep", 24, job_keyword_sweep, platforms=("etsy_private",),
+            description="volume, supply, CVR and price band for every watched term"),
         Job("rank_check", 56, job_rank_check, platforms=("etsy",),
             description="rank of our launched listings (~3x/week)"),
         Job("pinterest_bridge", 168, job_pinterest_bridge, platforms=("pinterest",),
