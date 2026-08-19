@@ -6,7 +6,7 @@ import time
 from etsy.engines.master_niche_finder import MasterNicheFinder
 from etsy.api.public.api import EtsyPublicAPI
 from etsy.analytics.gaps import PHYSICAL, find_gaps, summarise
-from etsy.analytics import sourcing
+from etsy.analytics import filter_trust, sourcing
 from core.database import MarketDatabase
 from core.guards import report_failures, reset_failures
 from core.runlog import stage
@@ -84,6 +84,26 @@ class HybridArbitrageEngine:
         # can see countries Etsy's filter list omits entirely, Turkey among them.
         origin_sample_size = 20
         
+        # Which dimensions can produce a verdict at all. Measuring a bracket whose
+        # filter failed the audit costs a request and yields a number find_gaps will
+        # refuse, so the sections below skip it and say why. This is not an
+        # optimisation: it is the difference between "we did not look" and "we
+        # looked and found nothing", which are opposite conclusions.
+        trust_registry = filter_trust.load()
+
+        def usable(dimension, value=None):
+            return filter_trust.bracket_is_trusted(dimension, value,
+                                                   registry=trust_registry)
+
+        skipped = sorted({d for d in ("format", "geographic", "quality", "occasion",
+                                      "personalizable", "discount", "free_shipping",
+                                      "gift_wrap", "shipping_speed", "color")
+                          if not usable(d, "star_seller" if d == "quality" else None)})
+        if skipped:
+            print(f"[!] Skipping {len(skipped)} dimension(s) whose SERP filter failed "
+                  f"the trust audit: {', '.join(skipped)}")
+            print(f"    Re-audit with: python -m etsy.analytics.filter_trust")
+
         arbitrage_results = []
         # ~24 public requests per niche. Recorded so question 4 — "what did the budget
         # cost?" — has a real number rather than an estimate.
@@ -276,6 +296,10 @@ class HybridArbitrageEngine:
             }
             
             niche_report["color_arbitrage"] = {}
+            if not usable("color"):
+                print(f"         [skipped] attr_1 failed the trust audit — 7 requests "
+                      f"not spent on counts that cannot be read as shares")
+                color_map = {}
             for color_name, color_id in color_map.items():
                 time.sleep(1)
                 color_data = self.public_api.get_public_search(keyword, filters={"attr_1": color_id})
@@ -319,7 +343,8 @@ class HybridArbitrageEngine:
                 ],
             }
             for b in classified:
-                if b.status in ("gap", "thin_but_unproven", "not_applicable"):
+                if b.status in ("gap", "thin_but_unproven", "not_applicable",
+                                "untrusted_source"):
                     print(f"         [{b.status}] {b.dimension}={b.value} "
                           f"({b.share:.1%}){' - ' + b.note if b.note else ''}")
 

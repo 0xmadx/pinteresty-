@@ -69,15 +69,23 @@ class SourcingProfile:
         return next((s for s in self.delivery if s.label == "7"), None)
 
 
+# Etsy's `organic_listings_count` is an ESTIMATE and drifts between identical
+# calls (~0.1% observed, see filter_trust.COUNT_JITTER). An exact-equality test
+# for "ignored" therefore misses a filter that WAS ignored but was sampled a
+# moment later — which is how `holiday` first read as a broken filter rather than
+# an ignored one.
+COUNT_JITTER = 0.02
+
+
 def to_share(label, listings, total):
     """One bracket count -> a Share, detecting the ignored-filter case."""
     if listings is None:
         return Share(label, 0, 0.0, "unmeasured")
-    if total and listings == total:
+    if total and abs(listings - total) <= total * COUNT_JITTER:
         # Identical to unfiltered: Etsy ignored the parameter. Reporting 100%
         # here would claim every listing matches, which is the opposite of true.
         return Share(label, listings, 1.0, IGNORED)
-    if total and listings > total:
+    if total and listings > total * (1 + COUNT_JITTER):
         # A filtered search cannot legitimately return more than the unfiltered
         # one. locationQuery does exactly this (see LOCATION_QUERY_IS_NOT_A_FILTER).
         return Share(label, listings, listings / total, NOT_A_SUBSET)

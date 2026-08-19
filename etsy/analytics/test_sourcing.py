@@ -152,6 +152,16 @@ def main():
           all(s.status == "measured" for s in ok.origins)
           and abs(ok.unmeasured_share - 0.30) < 0.001, ok.unmeasured_share)
 
+    # --- count jitter (measured: identical searches differ by ~0.1%) --------------------
+    print()
+    jitter = to_share("halloween", 217395, 217213)
+    check("a count a hair ABOVE total reads as ignored, not as a broken filter",
+          jitter.status == IGNORED, jitter.status)
+    check("a count a hair BELOW total also reads as ignored",
+          to_share("x", 217000, 217213).status == IGNORED)
+    check("a genuinely smaller count is still a real share",
+          to_share("x", 2151, 10011).status == "measured")
+
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
 

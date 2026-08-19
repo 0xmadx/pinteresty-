@@ -1,0 +1,449 @@
+{
+  "updated_at": 1787177822.0850422,
+  "filters": {
+    "attr_1": {
+      "name": "attr_1",
+      "status": "not_a_subset",
+      "checked_at": 1787177709.9906645,
+      "queries": [
+        "personalized towel",
+        "monogrammed waffle weave towel",
+        "printable wall art"
+      ],
+      "evidence": [
+        [
+          "personalized towel",
+          217213,
+          {
+            "1": 51832,
+            "2": 77064,
+            "3": 61805,
+            "4": 63821,
+            "5": 39014,
+            "6": 29411,
+            "7": 53879
+          }
+        ],
+        [
+          "monogrammed waffle weave towel",
+          10011,
+          {
+            "1": 8129,
+            "2": 8412,
+            "3": 8434,
+            "4": 8328,
+            "5": 8114,
+            "6": 7334,
+            "7": 7508
+          }
+        ],
+        [
+          "printable wall art",
+          1689789,
+          {
+            "1": 1535389,
+            "2": 1639953,
+            "3": 1858398,
+            "4": 1289267,
+            "5": 425626,
+            "6": 679078,
+            "7": 1196783
+          }
+        ]
+      ],
+      "note": "values sum to 376826 (173%) of 217213; values sum to 56259 (562%) of 10011"
+    },
+    "best_by_etsy": {
+      "name": "best_by_etsy",
+      "status": "ignored",
+      "checked_at": 1787177628.6283956,
+      "queries": [
+        "personalized towel",
+        "monogrammed waffle weave towel",
+        "printable wall art"
+      ],
+      "evidence": [
+        [
+          "personalized towel",
+          217213,
+          {
+            "1": 217196
+          }
+        ],
+        [
+          "monogrammed waffle weave towel",
+          10011,
+          {
+            "1": 10011
+          }
+        ],
+        [
+          "printable wall art",
+          1689789,
+          {
+            "1": 1689789
+          }
+        ]
+      ],
+      "note": "every value returned the unfiltered total (~217213); every value returned the unfiltered total (~10011)"
+    },
+    "delivery_days": {
+      "name": "delivery_days",
+      "status": "trusted",
+      "checked_at": 1787177670.917695,
+      "queries": [
+        "personalized towel",
+        "monogrammed waffle weave towel",
+        "printable wall art"
+      ],
+      "evidence": [
+        [
+          "personalized towel",
+          217213,
+          {
+            "7": 17640,
+            "14": 79312,
+            "21": 138482,
+            "30": 192308
+          }
+        ],
+        [
+          "monogrammed waffle weave towel",
+          10011,
+          {
+            "7": 1574,
+            "14": 5109,
+            "21": 7161,
+            "30": 8766
+          }
+        ],
+        [
+          "printable wall art",
+          1689789,
+          {
+            "7": 18301,
+            "14": 239748,
+            "21": 515685,
+            "30": 682751
+          }
+        ]
+      ],
+      "note": "subset on every probe"
+    },
+    "free_shipping": {
+      "name": "free_shipping",
+      "status": "unstable",
+      "checked_at": 1787177646.983243,
+      "queries": [
+        "personalized towel",
+        "monogrammed waffle weave towel",
+        "printable wall art"
+      ],
+      "evidence": [
+        [
+          "personalized towel",
+          217213,
+          {
+            "true": 55696
+          }
+        ],
+        [
+          "monogrammed waffle weave towel",
+          10011,
+          {
+            "true": 2151
+          }
+        ],
+        [
+          "printable wall art",
+          1689789,
+          {
+            "true": 1743394
+          }
+        ]
+      ],
+      "note": "passed some probes, not_a_subset on others: true=1743394 exceeds unfiltered 1689789 by 3%"
+    },
+    "gift_wrap": {
+      "name": "gift_wrap",
+      "status": "trusted",
+      "checked_at": 1787177652.987903,
+      "queries": [
+        "personalized towel",
+        "monogrammed waffle weave towel",
+        "printable wall art"
+      ],
+      "evidence": [
+        [
+          "personalized towel",
+          217213,
+          {
+            "true": 42594
+          }
+        ],
+        [
+          "monogrammed waffle weave towel",
+          10011,
+          {
+            "true": 8217
+          }
+        ],
+        [
+          "printable wall art",
+          1689789,
+          {
+            "true": 49725
+          }
+        ]
+      ],
+      "note": "subset on every probe"
+    },
+    "holiday": {
+      "name": "holiday",
+      "status": "ignored",
+      "checked_at": 1787177662.1741962,
+      "queries": [
+        "personalized towel",
+        "monogrammed waffle weave towel",
+        "printable wall art"
+      ],
+      "evidence": [
+        [
+          "personalized towel",
+          217213,
+          {
+            "halloween": 217395,
+            "christmas": 217395
+          }
+        ],
+        [
+          "monogrammed waffle weave towel",
+          10011,
+          {
+            "halloween": 10011,
+            "christmas": 10011
+          }
+        ],
+        [
+          "printable wall art",
+          1689789,
+          {
+            "halloween": 1689789,
+            "christmas": 1689789
+          }
+        ]
+      ],
+      "note": "every value returned the unfiltered total (~217213); every value returned the unfiltered total (~10011)"
+    },
+    "is_digital": {
+      "name": "is_digital",
+      "status": "not_a_subset",
+      "checked_at": 1787177617.5642948,
+      "queries": [
+        "personalized towel",
+        "monogrammed waffle weave towel",
+        "printable wall art"
+      ],
+      "evidence": [
+        [
+          "personalized towel",
+          217213,
+          {
+            "1": 231084
+          }
+        ],
+        [
+          "monogrammed waffle weave towel",
+          10011,
+          {
+            "1": 10076
+          }
+        ],
+        [
+          "printable wall art",
+          1689789,
+          {
+            "1": 1689790
+          }
+        ]
+      ],
+      "note": "1=231084 exceeds unfiltered 217213 by 6%; every value returned the unfiltered total (~10011)"
+    },
+    "is_discounted": {
+      "name": "is_discounted",
+      "status": "unstable",
+      "checked_at": 1787177643.3790827,
+      "queries": [
+        "personalized towel",
+        "monogrammed waffle weave towel",
+        "printable wall art"
+      ],
+      "evidence": [
+        [
+          "personalized towel",
+          217213,
+          {
+            "true": 128664
+          }
+        ],
+        [
+          "monogrammed waffle weave towel",
+          10011,
+          {
+            "true": 4895
+          }
+        ],
+        [
+          "printable wall art",
+          1689789,
+          {
+            "true": 3132132
+          }
+        ]
+      ],
+      "note": "passed some probes, not_a_subset on others: true=3132132 exceeds unfiltered 1689789 by 85%"
+    },
+    "is_personalizable": {
+      "name": "is_personalizable",
+      "status": "trusted",
+      "checked_at": 1787177637.450372,
+      "queries": [
+        "personalized towel",
+        "monogrammed waffle weave towel",
+        "printable wall art"
+      ],
+      "evidence": [
+        [
+          "personalized towel",
+          217213,
+          {
+            "true": 134639
+          }
+        ],
+        [
+          "monogrammed waffle weave towel",
+          10011,
+          {
+            "true": 8036
+          }
+        ],
+        [
+          "printable wall art",
+          1689789,
+          {
+            "true": 388075
+          }
+        ]
+      ],
+      "note": "subset on every probe"
+    },
+    "is_star_seller": {
+      "name": "is_star_seller",
+      "status": "unstable",
+      "checked_at": 1787177623.5366235,
+      "queries": [
+        "personalized towel",
+        "monogrammed waffle weave towel",
+        "printable wall art"
+      ],
+      "evidence": [
+        [
+          "personalized towel",
+          217213,
+          {
+            "1": 100877
+          }
+        ],
+        [
+          "monogrammed waffle weave towel",
+          10011,
+          {
+            "1": 9285
+          }
+        ],
+        [
+          "printable wall art",
+          1689789,
+          {
+            "1": 1717366
+          }
+        ]
+      ],
+      "note": "passed some probes, ignored on others: every value returned the unfiltered total (~1689789)"
+    },
+    "locationQuery": {
+      "name": "locationQuery",
+      "status": "unstable",
+      "checked_at": 1787177716.526286,
+      "queries": [
+        "personalized towel",
+        "monogrammed waffle weave towel",
+        "printable wall art"
+      ],
+      "evidence": [
+        [
+          "personalized towel",
+          217213,
+          {
+            "6252001": 180214,
+            "2635167": 14620,
+            "2921044": 18455
+          }
+        ],
+        [
+          "monogrammed waffle weave towel",
+          10011,
+          {
+            "6252001": 10918,
+            "2635167": 6412,
+            "2921044": 28271
+          }
+        ],
+        [
+          "printable wall art",
+          1689789,
+          {
+            "6252001": 1772041,
+            "2635167": 159854,
+            "2921044": 56200
+          }
+        ]
+      ],
+      "note": "passed some probes, not_a_subset on others: 2921044=28271 exceeds unfiltered 10011 by 182%; 6252001=1772041 exceeds unfiltered 1689789 by 5%"
+    },
+    "min_rating": {
+      "name": "min_rating",
+      "status": "ignored",
+      "checked_at": 1787177633.600069,
+      "queries": [
+        "personalized towel",
+        "monogrammed waffle weave towel",
+        "printable wall art"
+      ],
+      "evidence": [
+        [
+          "personalized towel",
+          217213,
+          {
+            "5": 217196
+          }
+        ],
+        [
+          "monogrammed waffle weave towel",
+          10011,
+          {
+            "5": 10011
+          }
+        ],
+        [
+          "printable wall art",
+          1689789,
+          {
+            "5": 1689790
+          }
+        ]
+      ],
+      "note": "every value returned the unfiltered total (~217213); every value returned the unfiltered total (~10011)"
+    }
+  }
+}

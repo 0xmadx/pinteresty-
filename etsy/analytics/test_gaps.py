@@ -8,7 +8,9 @@ Run:  python -m etsy.analytics.test_gaps
 """
 import sys
 
-from etsy.analytics.gaps import (DIGITAL, PERSONALIZED, PHYSICAL, analyse_bracket,
+from etsy.analytics import filter_trust
+from etsy.analytics.gaps import (ALL_DIMENSIONS, DIGITAL, PERSONALIZED, PHYSICAL,
+                                 analyse_bracket,
                                  find_gaps, summarise)
 
 PASS = FAIL = 0
@@ -106,7 +108,8 @@ def main():
         ("format", "digital"): 30000,         # crowded
     }
     demand = {("occasion", "halloween"): 60}
-    results = find_gaps(brackets, DIGITAL, total_listings=50000, demand_by_bracket=demand)
+    results = find_gaps(brackets, DIGITAL, total_listings=50000, demand_by_bracket=demand,
+                      trust=True)
 
     check("sweep: every bracket is classified, none silently dropped",
           len(results) == len(brackets), f"got {len(results)}")
@@ -127,11 +130,58 @@ def main():
           sum(1 for r in results if r.listings == 0 and r.is_gap) == 0)
 
     # Same sweep, physical: the shipping/gift/free dimensions now genuinely apply.
-    phys = find_gaps(brackets, PHYSICAL, total_listings=50000, demand_by_bracket=demand)
+    phys = find_gaps(brackets, PHYSICAL, total_listings=50000, demand_by_bracket=demand,
+                      trust=True)
     check("sweep: for a physical product those dimensions become answerable",
           summarise(phys).get("not_applicable") is None, f"got {summarise(phys)}")
     check("sweep: but they are still 'empty', not gaps, without demand",
           all(not r.is_gap for r in phys if r.listings == 0))
+
+    # --- the trust gate: an untrusted filter may not produce a verdict ------------------
+    print()
+    b = analyse_bracket("geographic", "Germany", listings=2000, total_listings=50000,
+                        product_type=PHYSICAL, trusted=False)
+    check("an untrusted filter's bracket is refused, not classified",
+          b.status == "untrusted_source", b.status)
+    check("and it is explicitly NOT a gap", not b.is_gap)
+    check("the note says how to fix it", "filter_trust" in b.note, b.note)
+    b = analyse_bracket("geographic", "Germany", listings=2000, total_listings=50000,
+                        product_type=PHYSICAL, trusted=True)
+    check("the same bracket classifies normally when the filter is trusted",
+          b.status != "untrusted_source", b.status)
+
+    # A thin bracket WITH demand would be the strongest possible "gap" verdict.
+    # It must still lose to an untrusted source: a launch recommendation built on
+    # a count that is not a share is the worst outcome this system can produce.
+    b = analyse_bracket("geographic", "Germany", listings=100, total_listings=50000,
+                        product_type=PHYSICAL, trusted=False, demand_in_bracket=900)
+    check("untrust beats even a thin bracket with proven demand",
+          b.status == "untrusted_source", b.status)
+
+    # --- find_gaps consults the registry, and can be injected for tests -----------------
+    print()
+    brackets = {("geographic", "Germany"): 100, ("shipping_speed", "7_days"): 100}
+    none_trusted = find_gaps(brackets, PHYSICAL, 50000, trust=lambda d, v: False)
+    check("find_gaps(trust=callable) refuses every bracket",
+          all(b.status == "untrusted_source" for b in none_trusted))
+    all_trusted = find_gaps(brackets, PHYSICAL, 50000, trust=True)
+    check("find_gaps(trust=True) classifies normally for offline rule tests",
+          not any(b.status == "untrusted_source" for b in all_trusted))
+    check("untrusted brackets sort LAST, below even not_applicable",
+          find_gaps({("geographic", "DE"): 100, ("gift_wrap", "true"): 100}, PHYSICAL,
+                    50000, trust=lambda d, v: d != "geographic")[-1].dimension
+          == "geographic")
+
+    # --- the dimension -> filter map must cover what master_arbitrage sends -------------
+    print()
+    unmapped = [d for d in ALL_DIMENSIONS
+                if d != "quality" and filter_trust.filter_for(d) is None]
+    check("every gap dimension maps to a real SERP filter", not unmapped, unmapped)
+    check("quality maps per value, since it asks three different filters",
+          filter_trust.filter_for("quality", "star_seller") == "is_star_seller"
+          and filter_trust.filter_for("quality", "5_star") == "min_rating")
+    check("a dimension with no filter behind it is trusted by default",
+          filter_trust.bracket_is_trusted("something_measured_elsewhere", registry={}))
 
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0

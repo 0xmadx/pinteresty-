@@ -64,7 +64,8 @@ class Bracket:
     listings: int
     total_listings: int
     share: float
-    status: str          # gap | thin_but_unproven | crowded | empty | not_applicable
+    status: str          # gap | thin_but_unproven | crowded | empty |
+                         # not_applicable | untrusted_source
     demand_evidence: str
     note: str = ""
 
@@ -74,6 +75,7 @@ class Bracket:
 
 
 def analyse_bracket(dimension, value, listings, total_listings, product_type,
+                    trusted=True,
                     demand_in_bracket=None):
     """Classify one bracket. Returns a `Bracket`, never a bare number.
 
@@ -87,7 +89,20 @@ def analyse_bracket(dimension, value, listings, total_listings, product_type,
     if dimension not in ALL_DIMENSIONS:
         raise ValueError(f"unknown dimension {dimension!r}")
 
+
     share = (listings / total_listings) if total_listings else 0.0
+
+    # Before any classification: is the number even a share of this market? A
+    # filter that returns a superset, or that Etsy silently ignores, produces a
+    # count that is real, well-formed, and meaningless here. Classifying it turns
+    # a measurement error into a launch recommendation, so this outranks every
+    # other rule below — including a thin bracket with proven demand.
+    if trusted is False:
+        return Bracket(dimension, value, listings, total_listings, share,
+                       "untrusted_source", "none",
+                       f"the SERP filter behind '{dimension}' did not pass the "
+                       f"trust audit — its count is not a share of this market. "
+                       f"Re-run: python -m etsy.analytics.filter_trust")
 
     if dimension not in APPLICABLE[product_type]:
         return Bracket(dimension, value, listings, total_listings, share, "not_applicable",
@@ -118,23 +133,45 @@ def analyse_bracket(dimension, value, listings, total_listings, product_type,
                    "measured" if demand_in_bracket else "none")
 
 
-def find_gaps(brackets, product_type, total_listings, demand_by_bracket=None):
+def find_gaps(brackets, product_type, total_listings, demand_by_bracket=None,
+              trust=None):
     """Classify many brackets at once.
 
     `brackets` maps (dimension, value) -> listing count.
     `demand_by_bracket` maps the same keys -> demand observed inside that bracket.
+    `trust` decides whether a bracket's underlying SERP filter may be believed:
+
+        None       consult the filter-trust registry on disk (the default, and
+                   what any real run should do)
+        True       trust everything — for offline tests of the classification
+                   rules themselves, never for a live run
+        callable   trust(dimension, value) -> bool, for injecting a fixture
 
     Returns every bracket classified, so a caller can see what was ruled out and why —
     silently dropping the non-applicable ones is how the trap gets rebuilt.
     """
     demand_by_bracket = demand_by_bracket or {}
+
+    if trust is None:
+        # Imported here, not at module scope: gaps.py is pure classification logic
+        # and must stay importable without a registry file present.
+        from etsy.analytics import filter_trust
+        registry = filter_trust.load()
+        def trust(dimension, value):
+            return filter_trust.bracket_is_trusted(dimension, value, registry=registry)
+    elif trust is True:
+        def trust(dimension, value):
+            return True
+
     out = []
     for (dimension, value), listings in brackets.items():
         out.append(analyse_bracket(
             dimension, value, listings, total_listings, product_type,
-            demand_by_bracket.get((dimension, value))))
+            trusted=trust(dimension, value),
+            demand_in_bracket=demand_by_bracket.get((dimension, value))))
     # Real gaps first, then the thin-but-unproven ones worth measuring next.
-    order = {"gap": 0, "thin_but_unproven": 1, "crowded": 2, "empty": 3, "not_applicable": 4}
+    order = {"gap": 0, "thin_but_unproven": 1, "crowded": 2, "empty": 3,
+             "not_applicable": 4, "untrusted_source": 5}
     return sorted(out, key=lambda b: (order[b.status], b.share))
 
 
