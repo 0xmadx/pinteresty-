@@ -145,7 +145,8 @@ account costs the business.
 |---|---|
 | **The vault is the session** | Redis, filled by the Go server from the extension. `SessionManager` rotates profiles per request, so two calls in one run may use two identities. |
 | **Extension role defaults to `"auto"`** | …which matches **no** branch, so cookies land in `etsy` while `shop_id`/csrf land in `etsy_private`. The private profile therefore has **no cookies** and cannot authenticate. Current blocker (S-1). |
-| **An empty vault hangs** | `get_valid_account` loops `sleep(5)` forever. Never assume a failed run will return (S-2). |
+| **The vault is hardened (2026-08-19)** | `get_valid_account` prefers a fresh heartbeat, evicts signed-out jars (no `session-key-www` / `_auth`), claims a `SET NX` lease, and waits a **bounded** 120s. A heartbeat-less profile is deprioritised, never evicted — `private_seller_1` is the seller session and nothing beams it back. See `docs/SESSION_LAYER_FIX.md`. |
+| **429 no longer burns a session** | `session_manager.classify()` separates `rate_limited` / `malformed` / `auth_expired` / `blocked`. Only the last two evict, so neither Etsy throttling nor a bug in our own request can retire the seller account. |
 | **No quota** | `results-data` reports `quota_data {total:15, remaining:15}` but three consecutive distinct calls left it at 15/15 — this endpoint does not consume it (D-14). `deep_dive_limit` defaults to unlimited. |
 | **401 ≠ 429** | 401 = stale session (restart cookie server). 429 = real throttle; `SessionManager.rate_limited` counts them. Nothing has ever recorded a 429. |
 | **`.env` is untracked** | `git rm --cached` was applied. `registry.json` was also untracked — it held 32 live session cookies. |

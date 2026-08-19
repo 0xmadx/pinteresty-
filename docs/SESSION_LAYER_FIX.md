@@ -1,8 +1,13 @@
-# The heartbeat gap — diagnosis, and a patch awaiting approval
+# Session layer: the four gaps, and how they were closed
 
-**Status: NOT APPLIED.** The change below is inside the access layer
-(`core/cookie_vault.py`), which this project's rules forbid me from editing.
-It is written out so the operator can apply it, or decide not to.
+**Status: APPLIED 2026-08-19**, with the operator's explicit permission
+("fix everything by yourself, you have permission"). All four gaps are closed.
+Verified live afterwards: 6/6 watched terms recorded, every pool intact, no
+stranded leases.
+
+One deliberate departure from the reference implementation is documented under
+"The patch" below — the heartbeat-less profile is **deprioritised, not evicted**,
+because here it is the operator's irreplaceable seller session.
 
 Reference implementation: `Desktop\pinterest-apify\src\vault.py`, which is the
 same vault code carried over and hardened.
@@ -62,9 +67,32 @@ outage. Reverted; the warning text now carries the real exposure instead
 
 ---
 
-## The patch
+## The patch — as applied
 
-One line of behaviour, in `get_valid_account`:
+`get_valid_account` was rewritten from recursive to iterative and now:
+
+1. **prefers profiles with a fresh heartbeat**, falling back to a heartbeat-less
+   one only when nothing better exists, and saying so loudly;
+2. **evicts a signed-out jar** — one that lacks `session-key-www` (Etsy) or
+   `_auth`/`_pinterest_sess` (Pinterest);
+3. **claims a lease** (`SET NX` + TTL) so two runs cannot share one session;
+4. **counts its wait** rather than reading the clock, so the bound advances with
+   the sleeps (a wall-clock version turned the suite's patched `sleep` into a
+   120-second busy loop).
+
+### Why deprioritise instead of evict
+
+pinterest-apify evicts a heartbeat-less profile outright, and can afford to: its
+extension actively beams the one account it needs. Here `private_seller_1` has no
+heartbeat and **is** the seller session — `plan_prune` preserves it on purpose as
+"the one verified-working seller profile [which] predates the heartbeat field".
+Nothing beams it back, so evicting it would be unrecoverable.
+
+Unknown freshness is not freshness, but it is also not proof of death, and
+destroying the irreplaceable on a suspicion is the expensive direction of this
+error (D-29).
+
+### The original one-line sketch, for reference
 
 ```python
         # Check heartbeat timestamp
@@ -118,11 +146,9 @@ correct, but should be a decision rather than a surprise.
 
 ---
 
-## Three more things pinterest-apify has that this repo does not
+## The other three — also applied
 
-Worth considering separately; none is required to close the gap above.
-
-### 1. `classify()` — what kind of "no" is this?
+### 1. `classify()` — applied
 
 ```python
       ok            usable response
@@ -132,25 +158,27 @@ Worth considering separately; none is required to close the gap above.
       blocked       bot detection fired on this identity
 ```
 
-This repo collapses 401 and 403 into `SessionDown`. The consequence is in
-pinterest-apify's own comment: *"a code bug can never evict a healthy session"* —
-a malformed request that returns 403 currently looks identical to a dead cookie,
-so a header bug can retire a perfectly good profile and send the operator to
-re-login for nothing.
+This repo used to collapse everything into one question — "is there DataDome text,
+or is it a 429?" — and evict whenever the answer was yes. That was wrong twice
+over: a 429 means the session is HEALTHY and we asked too fast, and a 401/403 from
+our own malformed request means the CODE is wrong, not the login.
 
-`etsy_private` is the operator's own seller account. Evicting it over a code bug
-is the expensive direction of that error.
+`etsy_private` is the operator's own seller account (D-29), so the expensive
+direction of this error is destroying a working one. `EVICTABLE` is now exactly
+`(auth_expired, blocked)`; a rate limit backs off on the same identity instead.
 
-### 2. A lease (`SET NX` with TTL)
+### 2. The lease — applied
 
-Prevents two concurrent runs driving one session from two places at once. This
-repo has no mutual exclusion; the scheduler is currently serial, so nothing is
-broken today, but a second run started by hand while the scheduler is working
-would share a profile.
+`SET NX` with a 90s TTL, claimed in `get_valid_account` and released in a
+`finally` in `SessionManager._execute_with_retry`, so every exit path — including
+an exception — hands the profile back exactly once. A retry loop releases the
+previous attempt's lease before claiming another, or it would hold every profile
+it had tried.
 
-The lease is self-healing: a crashed run releases it when the TTL expires.
+Self-healing: a crashed run releases it when the TTL expires. Verified after a
+live run — zero stranded leases.
 
-### 3. A signed-out check
+### 3. The signed-out check — applied
 
 pinterest-apify verifies that specific auth cookies are present, not merely that
 *some* cookies are:
@@ -160,20 +188,32 @@ pinterest-apify verifies that specific auth cookies are present, not merely that
 > and Pinterest answers those with plausible *public* data, so the run "succeeds"
 > while collecting the wrong thing.
 
-That last sentence is this project's failure mode stated exactly. This repo
-checks `cookies_json` is non-empty and, for `etsy_private`, that `csrf_token`
-and `shop_id` exist — but not that the session cookies that actually carry the
-login are present.
+That last sentence is this project's failure mode stated exactly.
+
+Which cookie carries the login was measured, not assumed: every profile in a valid
+pool carries `session-key-www`, and the one profile missing it was exactly the
+stale, already out-of-pool one. Etsy requires only that single cookie —
+deliberately the MINIMUM reliable signal, because this check EVICTS and one cookie
+that is unambiguously present when logged in beats two that must both survive
+whatever Etsy changes next.
 
 ---
 
-## What was done instead, outside the access layer
+## Also kept, from before the access layer was opened
 
-**Caller-side retry** in `core/scheduler.py::job_keyword_sweep`. A random draw
-that lands on a bad profile no longer costs the day's reading for that term; the
-job re-draws once and reports `retried` so the symptom stays visible. Labelled in
-the code as a symptom fix, with one retry only — a genuinely dead pool should
-fail fast and loudly rather than spin.
+**Caller-side retry** in `core/scheduler.py::job_keyword_sweep` — one retry, so a
+draw onto a bad profile costs a re-draw rather than the day's reading. Still
+worth having: it covers failures the vault cannot see.
 
 **Sharper warning** in `core/vault_status.py`, carrying the real exposure rather
 than "old, but usable".
+
+## Verification
+
+    27 assertions   core.test_cookie_vault      (heartbeat preference, signed-out,
+                                                 lease, double-encoded jar)
+    18 assertions   core.test_session_classify  (which verdicts may evict)
+  1030 assertions   whole suite, 0 failures
+
+Live afterwards: public SERP request served, 6/6 watched terms recorded through
+the private tier, all three pools unchanged, no stranded leases.

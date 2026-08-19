@@ -1,7 +1,52 @@
 import os
+import time
+
 from curl_cffi import requests
 from core.settings import ScraperConfig
 from core.cookie_vault import RedisCookieVault
+
+
+# What kind of "no" is this? Conflating these is how a dead cookie gets reported as
+# a rate limit, or — far worse here — how a bug in our own request retires the
+# operator's seller session.
+OK = "ok"
+MALFORMED = "malformed"          # our request was wrong; the session is fine
+AUTH_EXPIRED = "auth_expired"    # the session is dead; the fix is in Chrome
+RATE_LIMITED = "rate_limited"    # the session is fine; we asked too fast
+BLOCKED = "blocked"              # bot detection fired on this identity
+
+# Only these justify taking a profile out of rotation. A 429 is deliberately NOT
+# here: the old code evicted on it, which destroyed a healthy session over a timing
+# problem — and with one seller profile in the pool, that is the whole private tier
+# gone until Chrome re-beams.
+EVICTABLE = (AUTH_EXPIRED, BLOCKED)
+
+
+def classify(response):
+    """Read a failure precisely enough to know whether the SESSION is at fault.
+
+    The distinction that matters most here is `malformed` vs `auth_expired`. Etsy
+    answers a badly-formed authenticated request with 401/403 just as it answers a
+    dead cookie, so without this a missing header in our own code looks exactly like
+    a logged-out browser: the operator is sent to re-login for nothing, and the
+    profile is evicted on the way. `etsy_private` is the operator's own seller
+    account (D-29) — the expensive direction of this error is destroying a good one.
+    """
+    code = response.status_code
+    if code == 429:
+        return RATE_LIMITED
+    if code in (401, 403):
+        body = (getattr(response, "text", "") or "")[:2000].lower()
+        if "datadome" in body or "geo.captcha-delivery.com" in body or "captcha" in body:
+            return BLOCKED
+        # Etsy's own phrasing for a request it could not parse. Never evict on this.
+        if "invalid resource request" in body or "invalid request" in body:
+            return MALFORMED
+        return AUTH_EXPIRED
+    if code >= 500:
+        # Server-side. Retrying the SAME identity is correct; the session is fine.
+        return OK
+    return OK
 
 class SessionManager:
     """
@@ -13,6 +58,9 @@ class SessionManager:
         self.config = config
         self.vault = RedisCookieVault(config)
         self.rate_limited = 0
+        # The profile currently leased by this manager, so every exit path can hand
+        # it back exactly once.
+        self._leased = None
 
     def _build_session(self, user_agent=None) -> requests.Session:
         # Impersonate Chrome 124 to pass TLS fingerprinting checks (Akamai/DataDome)
@@ -41,14 +89,35 @@ class SessionManager:
         return session
 
     def _execute_with_retry(self, method, url, cookies=None, platform="etsy", **kwargs):
+        """Execute a request against a LEASED session, classifying any failure.
+
+        The try/finally exists because of the lease: get_valid_account now CLAIMS a
+        profile, so two runs cannot drive one Etsy session from two places at once —
+        the pattern a fingerprinter looks for. A claim that is never released
+        strands the operator's only seller profile until the TTL expires, so every
+        exit path, including an exception, must hand it back.
+
+        Failover is no longer "any 401/403/429 burns the profile" — see classify().
+        Only auth_expired and blocked evict.
         """
-        Executes a request. If a 403 or DataDome block occurs, it invalidates the current 
-        profile in Redis and grabs a new one to retry automatically (failover).
-        """
+        try:
+            return self._attempt_loop(method, url, cookies, platform, **kwargs)
+        finally:
+            if self._leased:
+                self.vault.release(platform, self._leased)
+                self._leased = None
+
+    def _attempt_loop(self, method, url, cookies=None, platform="etsy", **kwargs):
+        response = None
         for attempt in range(self.config.MAX_RETRIES):
             # 1. Grab a valid account from Redis
             # This will raise ValueError if no valid accounts are found for the platform
+            # Release the previous attempt's lease before claiming another, or a
+            # retry loop holds every profile it has tried.
+            if self._leased:
+                self.vault.release(platform, self._leased)
             account = self.vault.get_valid_account(platform)
+            self._leased = account["profile_id"]
                 
             # 2. Build a fresh session with the profile's specific User-Agent to match
             # the browser where the cookies were actually generated.
