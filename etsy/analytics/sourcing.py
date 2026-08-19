@@ -140,7 +140,9 @@ def read(profile):
 GEONAME_RE = r'"displayName":"([^"]+)","geoname":"(\d+)"'
 
 DEFAULT_COUNTRIES = ("United States", "United Kingdom", "Canada", "China", "India")
-DELIVERY_BRACKETS = ("7", "14")
+# Verified live 2026-08-15: Etsy accepts ONLY these. delivery_days=1 and =3 return
+# the unfiltered total, i.e. they are silently ignored — caught by to_share().
+DELIVERY_BRACKETS = ("7", "14", "21", "30")
 
 
 def discover_geonames(public_api, query):
@@ -201,3 +203,178 @@ def fetch_profile(public_api, query, countries=DEFAULT_COUNTRIES,
                      "fall into the unattributed remainder")
 
     return build_profile(query, total, origin_counts, delivery_counts, notes)
+
+
+# --- lead time (délai) -----------------------------------------------------------------
+
+def delivery_distribution(profile):
+    """Turn the CUMULATIVE delivery brackets into a per-band distribution.
+
+    `delivery_days=14` means "arrives within 14 days", so it *includes* the 7-day
+    listings. Reading the raw brackets as bands would double-count the fast ones and
+    understate how slow the tail really is.
+
+    Returns [(band_label, share)] plus an explicit "over 30 days" remainder, which is
+    the band that matters most for a gift with a deadline and the one no bracket
+    reports directly.
+    """
+    got = {s.label: s for s in profile.delivery if s.status == "measured"}
+    order = [b for b in ("7", "14", "21", "30") if b in got]
+    if not order:
+        return []
+
+    out, previous = [], 0.0
+    labels = {"7": "0-7 days", "14": "8-14 days", "21": "15-21 days", "30": "22-30 days"}
+    for b in order:
+        share = got[b].share
+        out.append((labels[b], round(max(0.0, share - previous), 4)))
+        previous = share
+    out.append(("over 30 days", round(max(0.0, 1.0 - previous), 4)))
+    return out
+
+
+def median_band(profile):
+    """The band the 50th-percentile listing falls in — the honest 'how long, typically'."""
+    cumulative = 0.0
+    for label, share in delivery_distribution(profile):
+        cumulative += share
+        if cumulative >= 0.50:
+            return label
+    return None
+
+
+# --- per-listing origin ------------------------------------------------------------------
+
+# Etsy ships the origin in the listing page's LD+JSON as
+# shippingDetails.shippingOrigin{addressCountry, addressRegion}. There is NO per-listing
+# lead time in the static HTML — "arrives by" is computed client-side against the
+# buyer's address — so délai stays an aggregate measure via DELIVERY_BRACKETS.
+ORIGIN_RE = (r'"shippingOrigin":\{[^}]*?"addressCountry":"([A-Z]{2})"'
+             r'(?:[^}]*?"addressRegion":"([^"]*)")?')
+SHIPS_FROM_RE = r"Ships from ([^.\"<]{3,60})"
+
+
+def listing_origin(public_api, listing_id):
+    """Where ONE listing actually ships from: {country, region, text} or None.
+
+    Worth the request because a shop's NAME is not its origin. `TurkishTowelWeaving`
+    sells "Turkish" towels and ships from East Hanover, NJ — inferring origin from
+    branding would have been wrong, and confidently so.
+    """
+    import re as _re
+    url = f"https://www.etsy.com/listing/{listing_id}"
+    try:
+        html = public_api.session.request(
+            "GET", url, headers=getattr(public_api, "headers", {}),
+            platform="etsy").text
+    except Exception:
+        return None
+
+    m = _re.search(ORIGIN_RE, html)
+    text = _re.search(SHIPS_FROM_RE, html)
+    if not m and not text:
+        return None
+    return {
+        "listing_id": str(listing_id),
+        "country": m.group(1) if m else None,
+        "region": (m.group(2) or None) if m else None,
+        "text": text.group(1).strip() if text else None,
+    }
+
+
+# --- per-listing delivery estimate (the délai) --------------------------------------------
+
+# Etsy renders it as:  Order today to get by <strong>Aug 24-28</strong>
+# Two shapes: same-month "Aug 24-28" and cross-month "Aug 27-Sep 4". The second is the
+# one a naive parser gets wrong, and it is also the one that matters — a range crossing
+# a month boundary is the slow tail.
+GET_BY_RE = r"Order today to get by\s*(?:<[^>]+>)*\s*([A-Z][a-z]{2}\s+\d{1,2}\s*[-–]\s*(?:[A-Z][a-z]{2}\s+)?\d{1,2})"
+_MONTHS = {m: i for i, m in enumerate(
+    ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], start=1)}
+
+
+def parse_get_by(text, today=None):
+    """'Aug 24-28' or 'Aug 27-Sep 4' -> {earliest, latest, days_min, days_max}.
+
+    Returns None when it cannot parse. Never guesses a date: a wrong lead time would
+    make a slow seller look fast, which is precisely the competitive read this is for.
+
+    Etsy omits the year, so a range ending in a month EARLIER than it starts has rolled
+    over into next year (Dec 28-Jan 5). Without that, the December case yields a
+    negative lead time.
+    """
+    import re as _re
+    from datetime import date, datetime
+    if not text:
+        return None
+    m = _re.search(r"([A-Z][a-z]{2})\s+(\d{1,2})\s*[-–]\s*(?:([A-Z][a-z]{2})\s+)?(\d{1,2})",
+                   text)
+    if not m:
+        return None
+    start_mon, start_day, end_mon, end_day = m.groups()
+    if start_mon not in _MONTHS or (end_mon and end_mon not in _MONTHS):
+        return None
+
+    today = today or date.today()
+    if isinstance(today, datetime):
+        today = today.date()
+    year = today.year
+    try:
+        earliest = date(year, _MONTHS[start_mon], int(start_day))
+        end_month = _MONTHS[end_mon] if end_mon else _MONTHS[start_mon]
+        end_year = year + 1 if end_month < _MONTHS[start_mon] else year
+        latest = date(end_year, end_month, int(end_day))
+    except ValueError:
+        return None
+
+    # The estimate is always forward-looking; a start already behind us means the page
+    # was rendered near a year boundary.
+    if (earliest - today).days < -30:
+        try:
+            earliest = earliest.replace(year=year + 1)
+            latest = latest.replace(year=latest.year + 1)
+        except ValueError:
+            return None
+
+    return {
+        "earliest": earliest.isoformat(),
+        "latest": latest.isoformat(),
+        "days_min": (earliest - today).days,
+        "days_max": (latest - today).days,
+        "text": m.group(0),
+    }
+
+
+def listing_shipping(public_api, listing_id, today=None):
+    """Everything one listing says about shipping: origin, délai, returns, free shipping.
+
+    This is the per-listing view the aggregate delivery_days brackets cannot give —
+    those say what SHARE of a niche is fast, this says whether THIS competitor is.
+    """
+    import re as _re
+    url = f"https://www.etsy.com/listing/{listing_id}"
+    try:
+        html = public_api.session.request(
+            "GET", url, headers=getattr(public_api, "headers", {}),
+            platform="etsy").text
+    except Exception:
+        return None
+
+    origin = _re.search(ORIGIN_RE, html)
+    ships_from = _re.search(r"Ships from:?\s*(?:<[^>]+>)*\s*([A-Za-z .'-]+,\s*[A-Z]{2})", html)
+    get_by = _re.search(GET_BY_RE, html)
+
+    return {
+        "listing_id": str(listing_id),
+        "country": origin.group(1) if origin else None,
+        "region": (origin.group(2) or None) if origin else None,
+        "ships_from": ships_from.group(1).strip() if ships_from else None,
+        "delivery": parse_get_by(get_by.group(1), today) if get_by else None,
+        # "accepted" / "not accepted" — a returns policy is a quality signal and a
+        # cost the profit model does not yet carry.
+        "returns_accepted": (True if _re.search(r"Returns &(?:amp;)? exchanges accepted", html)
+                             else False if _re.search(r"Returns &(?:amp;)? exchanges not accepted", html)
+                             else None),
+        "free_shipping": bool(_re.search(r"\bFREE shipping\b", html, _re.I)) or None,
+    }

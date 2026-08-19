@@ -7,7 +7,9 @@ truth, and invisible. That is how a wrong parameter name poisons an analysis.
 Run:  python -m etsy.analytics.test_sourcing
 """
 import sys
-from etsy.analytics.sourcing import IGNORED, build_profile, read, to_share
+from datetime import date
+from etsy.analytics.sourcing import (IGNORED, build_profile, delivery_distribution,
+                                     median_band, parse_get_by, read, to_share)
 
 PASS = FAIL = 0
 
@@ -75,6 +77,40 @@ def main():
     bad = build_profile("x", 1000, {"Nowhere": 1000}, {"7": 50})
     check("an ignored filter is reported to the reader",
           any("ignored" in l.lower() for l in read(bad)), read(bad))
+
+    # --- lead time: cumulative brackets must become bands ----------------------------
+    print()
+    lead = build_profile("personalized towel", 217213, {"United States": 180214},
+                         {"7": 17640, "14": 79312, "21": 138482, "30": 192308})
+    dist = dict(delivery_distribution(lead))
+    check("0-7 band matches the raw bracket", abs(dist["0-7 days"] - 0.081) < 0.005,
+          f"got {dist['0-7 days']}")
+    check("8-14 SUBTRACTS the faster listings (brackets are cumulative)",
+          abs(dist["8-14 days"] - 0.284) < 0.005, f"got {dist['8-14 days']}")
+    check("the over-30 tail is surfaced - no bracket reports it directly",
+          abs(dist["over 30 days"] - 0.115) < 0.005, f"got {dist['over 30 days']}")
+    check("bands sum to 1", abs(sum(dist.values()) - 1.0) < 0.001, sum(dist.values()))
+    check("median band is the honest 'how long, typically'",
+          median_band(lead) == "15-21 days", median_band(lead))
+    ign = build_profile("x", 1000, {}, {"7": 1000, "14": 300})
+    check("an ignored bracket never becomes a band",
+          "0-7 days" not in dict(delivery_distribution(ign)))
+
+    # --- per-listing delivery estimate (the delai) -------------------------------------
+    print()
+    t = date(2026, 8, 15)
+    r = parse_get_by("Aug 24-28", today=t)
+    check("same-month range parses", r["days_min"] == 9 and r["days_max"] == 13, r)
+    r = parse_get_by("Aug 27-Sep 4", today=t)
+    check("CROSS-MONTH range parses - the slow tail a naive parser breaks on",
+          r["earliest"] == "2026-08-27" and r["latest"] == "2026-09-04", r)
+    r = parse_get_by("Dec 28-Jan 5", today=t)
+    check("a range rolling into next year does not go negative",
+          r["latest"].startswith("2027") and r["days_max"] > r["days_min"], r)
+    check("unparseable text yields None, never a guessed date",
+          parse_get_by("garbage") is None and parse_get_by(None) is None)
+    check("an impossible date is refused, not clamped",
+          parse_get_by("Feb 30-31", today=t) is None)
 
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
