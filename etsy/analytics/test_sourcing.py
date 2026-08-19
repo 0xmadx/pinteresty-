@@ -8,7 +8,7 @@ Run:  python -m etsy.analytics.test_sourcing
 """
 import sys
 from datetime import date
-from etsy.analytics.sourcing import (IGNORED, build_profile, delivery_distribution,
+from etsy.analytics.sourcing import (IGNORED, NOT_A_SUBSET, build_profile, delivery_distribution, gap_brackets,
                                      median_band, parse_get_by, read, to_share)
 
 PASS = FAIL = 0
@@ -111,6 +111,46 @@ def main():
           parse_get_by("garbage") is None and parse_get_by(None) is None)
     check("an impossible date is refused, not clamped",
           parse_get_by("Feb 30-31", today=t) is None)
+
+    # --- what may be handed to find_gaps ----------------------------------------------
+    print()
+    mixed = build_profile("x", 1000, {"United States": 400, "China": 1000, "India": None},
+                          {"7": 90, "14": None})
+    br = gap_brackets(mixed)
+    check("a measured origin becomes a bracket", br[("geographic", "United States")] == 400)
+    check("an IGNORED origin is DROPPED, not passed as a saturated bracket",
+          ("geographic", "China") not in br)
+    check("an unmeasured origin is DROPPED, not passed as an empty one",
+          ("geographic", "India") not in br)
+    check("a measured delivery bracket is keyed by days",
+          br[("shipping_speed", "7_days")] == 90)
+    check("an unmeasured delivery bracket is dropped",
+          ("shipping_speed", "14_days") not in br)
+
+    # --- locationQuery returns a superset, not a subset --------------------------------
+    print()
+    over = to_share("Germany", 28271, 10011)
+    check("a filter returning MORE than unfiltered is not a share",
+          over.status == NOT_A_SUBSET, over.status)
+    # Each country below the total, but together impossible: this is the case that
+    # passes every per-call check and is still wrong.
+    sneaky = build_profile("towel", 1000, {"United States": 830, "Germany": 85,
+                                           "Australia": 83, "Canada": 39}, {})
+    check("origins summing above total demote ALL of them, not just the big one",
+          all(s.status == NOT_A_SUBSET for s in sneaky.origins),
+          [s.status for s in sneaky.origins])
+    check("no origin survives to become a gap bracket",
+          not any(k[0] == "geographic" for k in gap_brackets(sneaky)))
+    check("the remainder is None, never a 0% that reads as fully accounted for",
+          sneaky.unmeasured_share is None, sneaky.unmeasured_share)
+    check("read() refuses to state an origin picture it cannot support",
+          any("NOT reported" in line for line in read(sneaky)))
+    check("read() never calls it a domestic niche off unusable counts",
+          not any("Domestic niche" in line for line in read(sneaky)))
+    ok = build_profile("towel", 1000, {"United States": 600, "China": 100}, {})
+    check("origins that DO sum below total still measure normally",
+          all(s.status == "measured" for s in ok.origins)
+          and abs(ok.unmeasured_share - 0.30) < 0.001, ok.unmeasured_share)
 
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0

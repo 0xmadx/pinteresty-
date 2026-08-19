@@ -30,6 +30,10 @@ from dataclasses import dataclass, field
 # A bracket whose count equals the unfiltered total means Etsy did not apply the
 # filter — a wrong or unsupported parameter. Never read as "everything matches".
 IGNORED = "filter_ignored"
+# The filter returned MORE listings than the unfiltered search, or the brackets
+# together exceed total supply. Either way the result set is not a subset of the
+# market, so its count cannot be read as a share of it.
+NOT_A_SUBSET = "not_a_subset"
 
 # Below this share of listings delivering fast, speed is worth investigating as a
 # gap. Not a verdict on its own — D-10 still requires demand inside the bracket.
@@ -73,6 +77,10 @@ def to_share(label, listings, total):
         # Identical to unfiltered: Etsy ignored the parameter. Reporting 100%
         # here would claim every listing matches, which is the opposite of true.
         return Share(label, listings, 1.0, IGNORED)
+    if total and listings > total:
+        # A filtered search cannot legitimately return more than the unfiltered
+        # one. locationQuery does exactly this (see LOCATION_QUERY_IS_NOT_A_FILTER).
+        return Share(label, listings, listings / total, NOT_A_SUBSET)
     return Share(label, listings, (listings / total) if total else 0.0)
 
 
@@ -81,10 +89,30 @@ def build_profile(query, total_supply, origin_counts, delivery_counts, notes=())
     origins = tuple(to_share(k, v, total_supply) for k, v in origin_counts.items())
     delivery = tuple(to_share(k, v, total_supply) for k, v in delivery_counts.items())
 
+    notes = list(notes)
+
+    # A listing ships from exactly one country, so the measured origins must sum to
+    # AT MOST total supply. When they exceed it the counts are not partitioning the
+    # market and no share derived from them means anything — including the ones that
+    # individually look reasonable. Verified on the wire 2026-08-19: seven countries
+    # summed to 115% of supply on "personalized towel" and to 1116% on
+    # "monogrammed waffle weave towel". Demote all of them rather than reporting the
+    # subset that happens to look plausible.
     measured = sum(s.listings for s in origins if s.status == "measured")
+    if total_supply and measured > total_supply:
+        origins = tuple(Share(s.label, s.listings, s.share, NOT_A_SUBSET)
+                        if s.status == "measured" else s for s in origins)
+        notes.append(f"origin counts sum to {measured / total_supply:.0%} of supply — "
+                     f"locationQuery does not return a subset of the market, so no "
+                     f"origin share here is a share. Use listing_shipping() per "
+                     f"listing instead.")
+        measured = 0
+
     unmeasured = None
-    if total_supply:
-        # What no listed country accounts for. Turkey lives in here.
+    if total_supply and any(s.status == "measured" for s in origins):
+        # What no listed country accounts for. Turkey lives in here. Left at None
+        # when nothing was validly measured — a 0% remainder would read as "every
+        # listing is accounted for", which is the opposite of the truth.
         unmeasured = round(max(0.0, (total_supply - measured) / total_supply), 4)
 
     return SourcingProfile(query=query, total_supply=total_supply, origins=origins,
@@ -129,10 +157,41 @@ def read(profile):
         if s.status == IGNORED:
             out.append(f"⚠️ '{s.label}' returned the unfiltered total — Etsy ignored "
                        f"that filter. Treat it as unmeasured, not as a match.")
+    if any(s.status == NOT_A_SUBSET for s in profile.origins):
+        out.append("⚠️ Origin shares are NOT reported: Etsy's ships-from filter "
+                   "returns a broader result set than the search it filters, so its "
+                   "counts cannot be read as shares of this market. The only "
+                   "trustworthy origin is per-listing (listing_shipping).")
+    for n in profile.notes:
+        out.append(f"note: {n}")
     return out
 
 
 # --- fetching -------------------------------------------------------------------------
+
+# LOCATION_QUERY_IS_NOT_A_FILTER — measured on the wire 2026-08-19.
+#
+# `locationQuery` does not narrow the result set; it returns a DIFFERENT, usually
+# larger one. On "monogrammed waffle weave towel" (10,011 unfiltered):
+#
+#     United States  10,918   109%      Germany   28,271   282%
+#     United Kingdom  6,412    64%      France    26,809   268%
+#     Canada          5,530    55%      Australia 26,589   266%
+#     China           3,045    30%      India      4,124    41%
+#     ------------------------------------------------------------
+#     sum            111,698  1116% of the market it claims to partition
+#
+# Every one of those numbers is real, well-formed, and meaningless as a share.
+# Four of the eight are individually below the unfiltered total and would pass any
+# per-call sanity check — which is why the guard is at the PROFILE level, on the
+# sum. This is the house failure mode exactly: a plausible wrong number.
+#
+# Consequence: origin share is not obtainable from the SERP. `listing_shipping()`
+# reads the true origin from a listing's LD+JSON and is the only trustworthy path;
+# sampling N listings gives a real distribution at N requests.
+#
+# `delivery_days` was checked the same way and is sound — monotonic, cumulative,
+# never above total. The lead-time analysis stands.
 
 # Etsy's ships-from filter takes GeoNames ids, not country codes. The list is
 # discovered from the SERP rather than hardcoded: master_arbitrage pinned five
@@ -241,6 +300,29 @@ def median_band(profile):
         if cumulative >= 0.50:
             return label
     return None
+
+
+def gap_brackets(profile):
+    """The subset of a profile that may legitimately be fed to find_gaps().
+
+    Only MEASURED shares survive. The two statuses dropped here are the ones that
+    would each produce a confident wrong verdict:
+
+      * `filter_ignored` returned the unfiltered total, so find_gaps would read it
+        as a fully saturated bracket and rule the market closed.
+      * `unmeasured` has no count at all, and a missing count read as 0 becomes an
+        empty bracket — a wide-open opportunity that was never measured (N-02).
+
+    Returns {(dimension, value): listings}.
+    """
+    out = {}
+    for share in profile.origins:
+        if share.status == "measured":
+            out[("geographic", share.label)] = share.listings
+    for share in profile.delivery:
+        if share.status == "measured":
+            out[("shipping_speed", f"{share.label}_days")] = share.listings
+    return out
 
 
 # --- per-listing origin ------------------------------------------------------------------
@@ -378,3 +460,54 @@ def listing_shipping(public_api, listing_id, today=None):
                              else None),
         "free_shipping": bool(_re.search(r"\bFREE shipping\b", html, _re.I)) or None,
     }
+
+
+# --- origin by sampling (the replacement for locationQuery) ------------------------------
+
+def sample_origins(public_api, query, sample_size=20, today=None):
+    """The real origin distribution, read one listing at a time.
+
+    locationQuery cannot answer this (see LOCATION_QUERY_IS_NOT_A_FILTER), so the
+    only honest route is to open listings and read their declared shipping origin.
+    Costs `sample_size` requests, which is why it is a sample and why the sample
+    size is reported alongside every share it produces.
+
+    Two things this deliberately does NOT do:
+      * extrapolate to the whole market — the SERP is relevance-ranked, not random,
+        so this describes *what a buyer sees first*, which is the competitive
+        question anyway. It is labelled as such, never as market composition.
+      * count a listing whose origin failed to parse as domestic. Those land in
+        `unknown` and are excluded from the denominator of every share.
+
+    Returns {query, sampled, resolved, origins: {country: (count, share)},
+             lead_days: {...}, unknown}.
+    """
+    serp = public_api.get_public_search(query)
+    cards = (serp or {}).get("cards") or []
+    ids = [c["listing_id"] for c in cards if c.get("listing_id")][:sample_size]
+
+    counts, lead, unknown = {}, [], 0
+    for lid in ids:
+        info = listing_shipping(public_api, lid, today=today)
+        country = (info or {}).get("country")
+        if not country:
+            unknown += 1
+            continue
+        counts[country] = counts.get(country, 0) + 1
+        d = (info or {}).get("delivery")
+        if d and d.get("days_max") is not None:
+            lead.append(d["days_max"])
+
+    resolved = sum(counts.values())
+    origins = {c: (n, round(n / resolved, 4)) for c, n in
+               sorted(counts.items(), key=lambda kv: -kv[1])} if resolved else {}
+
+    lead_stats = None
+    if lead:
+        lead.sort()
+        lead_stats = {"n": len(lead), "fastest": lead[0], "slowest": lead[-1],
+                      "median": lead[len(lead) // 2]}
+
+    return {"query": query, "sampled": len(ids), "resolved": resolved,
+            "unknown": unknown, "origins": origins, "lead_days": lead_stats,
+            "basis": "top-of-SERP sample, not a market-wide census"}

@@ -6,6 +6,7 @@ import time
 from etsy.engines.master_niche_finder import MasterNicheFinder
 from etsy.api.public.api import EtsyPublicAPI
 from etsy.analytics.gaps import PHYSICAL, find_gaps, summarise
+from etsy.analytics import sourcing
 from core.database import MarketDatabase
 from core.guards import report_failures, reset_failures
 from core.runlog import stage
@@ -75,14 +76,13 @@ class HybridArbitrageEngine:
         # STEP 2: PUBLIC ARBITRAGE LOOP
         print("\n[PHASE 2] Executing Geographic & Format Arbitrage (Public API)...")
         
-        # Arbitrage Locales to Test (using Etsy's GeoNames IDs for locationQuery)
-        locales = {
-            "USA (Domestic)": "6252001",
-            "United Kingdom": "2635167",
-            "Germany": "2921044",
-            "Australia": "2077456",
-            "Canada": "6251999"
-        }
+        # Origins are NOT measured with locationQuery. That filter returns a broader
+        # result set than the search it filters (see sourcing's
+        # LOCATION_QUERY_IS_NOT_A_FILTER), so its counts are not shares of anything.
+        # This engine used to derive geo_arbitrage from exactly those counts. Origin
+        # now comes from sampling listings, which costs requests but is true — and
+        # can see countries Etsy's filter list omits entirely, Turkey among them.
+        origin_sample_size = 20
         
         arbitrage_results = []
         # ~24 public requests per niche. Recorded so question 4 — "what did the budget
@@ -130,21 +130,51 @@ class HybridArbitrageEngine:
             bracket_counts[("format", "digital")] = dig_total
             print(f"         [!] Digital Saturation: {niche_report['format_arbitrage']['digital_saturation_percent']}% ({dig_total} digital items)")
             
-            # --- B. GEOGRAPHIC ARBITRAGE (Shop Location / Local Monopoly) ---
-            print(f"      -> Checking Geographic Loopholes (Shop Located In)...")
-            
-            for country_name, country_code in locales.items():
-                time.sleep(1)
-                geo_data = self.public_api.get_public_search(keyword, filters={"locationQuery": country_code})
-                geo_total = geo_data.get("total_results", 0) if geo_data else 0
-                
-                niche_report["geo_arbitrage"][country_name] = geo_total
-                bracket_counts[("geographic", country_name)] = geo_total
+            # --- B. SOURCING: WHERE FROM, AND HOW FAST (origin + lead time) ---
+            # Answers the operator's question directly: a competitor undercutting the
+            # market may simply be manufacturing overseas, which is not something to
+            # out-execute. Origin and lead time are measured together because neither
+            # is interpretable alone — 7-day delivery from China and from Ohio are
+            # different businesses.
+            print(f"      -> Measuring lead time (delivery brackets)...")
+            # countries=() on purpose: the delivery brackets are sound, the origin
+            # brackets are not. Asking for origins here would spend seven requests
+            # producing numbers the guard then has to throw away.
+            profile = sourcing.fetch_profile(self.public_api, keyword, countries=())
 
-                # No verdict here: a low count is only a gap if demand holds inside the
-                # bracket — that judgement is made once, by find_gaps(), below.
-                print(f"         [{country_code}] Shops located in {country_name}: {geo_total}")
-                
+            # The delivery_days brackets are CUMULATIVE — <=14 contains the <=7
+            # listings. This engine previously reported them as two independent
+            # bands, which double-counts the fast sellers and hides the slow tail.
+            bands = sourcing.delivery_distribution(profile)
+            for band, val in bands:
+                print(f"         [delivery] {band}: {val:.1%}")
+
+            print(f"      -> Sampling listing origins ({origin_sample_size} listings)...")
+            origins = sourcing.sample_origins(self.public_api, keyword,
+                                              sample_size=origin_sample_size)
+            for country, (n, share) in origins["origins"].items():
+                print(f"         [origin] {country}: {n}/{origins['resolved']} ({share:.0%})")
+            if origins["unknown"]:
+                print(f"         [origin] {origins['unknown']} listing(s) did not "
+                      f"declare an origin — excluded, not counted as domestic")
+
+            # geo_arbitrage keeps its key for continuity, but the value is now a
+            # sample with its basis attached rather than a filter count posing as a
+            # market share.
+            niche_report["geo_arbitrage"] = origins
+            niche_report["sourcing"] = {
+                "delivery_bands": [{"band": b, "share": v} for b, v in bands],
+                "median_delivery_band": sourcing.median_band(profile),
+                "sampled_lead_days": origins["lead_days"],
+                "findings": sourcing.read(profile),
+                "notes": list(profile.notes),
+            }
+            # Delivery brackets may become gap brackets; origins may not — a sample
+            # of 20 cannot support a saturation claim about 200,000 listings.
+            bracket_counts.update(sourcing.gap_brackets(profile))
+            for line in niche_report["sourcing"]["findings"]:
+                print(f"         → {line}")
+
             # --- C. QUALITY ARBITRAGE (Star Seller, Etsy's Pick, 5-Star Reviews) ---
             print(f"      -> Checking Quality Saturation (Star Seller, Etsy's Pick, 5-Star Reviews)...")
             time.sleep(1)
@@ -232,29 +262,6 @@ class HybridArbitrageEngine:
             print(f"         [!] Free Shipping Saturation: {niche_report['feature_arbitrage']['free_shipping_percent']}%")
             print(f"         [!] Gift Wrapping Saturation: {niche_report['feature_arbitrage']['gift_wrap_percent']}%")
             
-            # --- F. SHIPPING SPEED ARBITRAGE (Delivery Days) ---
-            print(f"      -> Checking Shipping Speed Arbitrage (Delivery within 7 vs 14 days)...")
-            time.sleep(1)
-            
-            fast_ship_data = self.public_api.get_public_search(keyword, filters={"delivery_days": "7"})
-            fast_ship_total = fast_ship_data.get("total_results", 0) if fast_ship_data else 0
-            
-            time.sleep(1)
-            std_ship_data = self.public_api.get_public_search(keyword, filters={"delivery_days": "14"})
-            std_ship_total = std_ship_data.get("total_results", 0) if std_ship_data else 0
-            
-            niche_report["shipping_arbitrage"] = {
-                "fast_shipping_listings": fast_ship_total,
-                "standard_shipping_listings": std_ship_total,
-                "fast_shipping_percent": round((fast_ship_total / gen_total * 100) if gen_total > 0 else 0, 2),
-                "standard_shipping_percent": round((std_ship_total / gen_total * 100) if gen_total > 0 else 0, 2)
-            }
-            bracket_counts[("shipping_speed", "7_days")] = fast_ship_total
-            bracket_counts[("shipping_speed", "14_days")] = std_ship_total
-            
-            print(f"         [!] Fast Shipping (7 Days) Saturation: {niche_report['shipping_arbitrage']['fast_shipping_percent']}% ({fast_ship_total} items)")
-            print(f"         [!] Standard Shipping (14 Days) Saturation: {niche_report['shipping_arbitrage']['standard_shipping_percent']}% ({std_ship_total} items)")
-            
             # --- G. COLOR ARBITRAGE (attr_1) ---
             print(f"      -> Measuring Color Bracket Saturation...")
             
@@ -316,9 +323,11 @@ class HybridArbitrageEngine:
                     print(f"         [{b.status}] {b.dimension}={b.value} "
                           f"({b.share:.1%}){' - ' + b.note if b.note else ''}")
 
-            # Every get_public_search above: format 2, geo 5, quality 3, occasion 1,
-            # feature 4, shipping 2, colour 7.
-            public_calls += 24
+            # Every public request above: format 2, delivery brackets 4, origin
+            # sample 20, quality 3, occasion 1, feature 4, colour 7. Sourcing
+            # replaced the old geo 5 + shipping 2; the origin sample is the
+            # expensive part and the only part that is actually true.
+            public_calls += 41
             arbitrage_results.append(niche_report)
 
         # STEP 3: SAVE MASTER REPORT

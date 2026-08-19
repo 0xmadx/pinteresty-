@@ -153,6 +153,7 @@ account costs the business.
 | **Etsy has its own momentum** | `wow_data.value` — week-over-week %, free, in the same response. |
 | **Unused, verified to exist** | `predicted_days` (Pinterest 91-day forecast), `page` (pagination), `include_trendline`. See `08_capability_map.md`. |
 | **`similar_search_terms` and `market_gap_recommendations` are EMPTY** | Recorded earlier as free unread signals. Probed 2026-08-15 on `felt garland`, `mom necklace`, `christmas ornament`: all returned `total_results_count: 0` and a null gap block. The keys are in the schema; Etsy returns nothing in them. **Do not build on them.** |
+| **`locationQuery` is not a filter** | It returns a *broader* result set than the search it filters. On `monogrammed waffle weave towel` (10,011 unfiltered) Germany returned 28,271 and seven countries summed to **1116%** of the market they claim to partition. Origin share is **not obtainable from the SERP** — use `sourcing.sample_origins()`, which reads each listing's declared origin and can see countries Etsy's list omits (it found a Turkish seller). `delivery_days` was checked the same way and **is** sound: monotonic, cumulative, never above total. |
 | **The DISCOVER front door works** | `trending-search-terms-v2` returns rising terms with real volumes and no quota cost. Only **7** taxonomy ids are populated (1, 66, 199, 323, 891, 1429, 1633) — several plausible ones (Jewelry, Clothing, Craft Supplies) return nothing. 28 candidates total. |
 
 ---
