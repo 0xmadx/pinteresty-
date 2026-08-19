@@ -31,6 +31,7 @@ the worst failure mode for an agent, so `preflight` gates every live tool.
 there room here", which internally touches four modules. An agent should not have
 to know this codebase's file layout to use it.
 """
+import functools
 import json
 import os
 import traceback
@@ -67,7 +68,17 @@ def _fail(error, fix=None, **meta):
 
 
 def _guarded(fn):
-    """Turn any exception into a structured refusal rather than a protocol error."""
+    """Turn any exception into a structured refusal rather than a protocol error.
+
+    functools.wraps is load-bearing, not tidiness. MCP builds each tool's input
+    schema by inspecting the callable's signature, and a bare `*a, **kw` wrapper
+    publishes a schema demanding two required arguments called `a` and `kw`. Every
+    tool then registers cleanly and fails on every actual call — which an
+    in-process `list_tools()` check cannot see, and only a real stdio round trip
+    catches. `wraps` sets __wrapped__, which inspect.signature follows back to the
+    true parameters.
+    """
+    @functools.wraps(fn)
     def wrapper(*a, **kw):
         try:
             return fn(*a, **kw)
@@ -76,8 +87,6 @@ def _guarded(fn):
                          fix="See traceback in `detail`; most failures here are a "
                              "stale session vault or a missing config value.",
                          detail=traceback.format_exc()[-1200:])
-    wrapper.__name__ = fn.__name__
-    wrapper.__doc__ = fn.__doc__
     return wrapper
 
 
@@ -484,6 +493,26 @@ def settings_summary() -> dict:
                 "all_verdicts_provisional": not confirmed,
                 "note": "Nothing confirmed means every margin and capacity figure "
                         "rests on defaults, not on this operator's real costs."})
+
+
+@mcp.tool()
+@_guarded
+def verdict_history(subject: str) -> dict:
+    """Has this verdict changed, and which inputs moved underneath it?
+
+    "It changed from watch to list-now" is not actionable; "supply grew 40% while
+    volume held" is. Reports what moved and by how much, ranked by relative change,
+    and explicitly does NOT attribute cause — several inputs usually move together
+    and nothing here can isolate them.
+
+    An input that was measured before and is unmeasured now comes back as
+    `became_unmeasured`, never as a fall to zero: a scraper that broke overnight
+    looks exactly like a market that collapsed.
+    """
+    from etsy.analytics import verdict_log
+    state = verdict_log.explain(subject)
+    return _ok({"state": state, "findings": verdict_log.read(state),
+                "basis": "measured" if state.get("readings") else "unmeasured"})
 
 
 def main():
