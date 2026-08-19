@@ -519,3 +519,56 @@ def sample_origins(public_api, query, sample_size=20, today=None):
     return {"query": query, "sampled": len(ids), "resolved": resolved,
             "unknown": unknown, "origins": origins, "lead_days": lead_stats,
             "basis": "top-of-SERP sample, not a market-wide census"}
+
+
+def explain_cheap_listings(public_api, query, n=5, today=None):
+    """Why are the cheapest listings on this SERP cheap? Origin, one listing at a time.
+
+    The operator's actual question — "is that competitor undercutting me because
+    they manufacture abroad?" — asked of the listings where it matters, instead of
+    of the market in aggregate. Aggregate origin cannot be measured anyway (see
+    LOCATION_QUERY_IS_NOT_A_FILTER), and the average is the wrong question: what
+    sets the price floor is the cheap tail, not the mean.
+
+    Costs one request per listing examined.
+    """
+    serp = public_api.get_public_search(query)
+    cards = [c for c in (serp or {}).get("cards") or []
+             if c.get("price") is not None and not c.get("is_ad")]
+    cheapest = sorted(cards, key=lambda c: c["price"])[:n]
+
+    out = []
+    for c in cheapest:
+        info = listing_shipping(public_api, c["listing_id"], today=today) or {}
+        out.append({"listing_id": c["listing_id"], "shop": c.get("shop_name"),
+                    "price": c["price"], "country": info.get("country"),
+                    "ships_from": info.get("ships_from"),
+                    "delivery": info.get("delivery"),
+                    "free_shipping": c.get("free_shipping")})
+    return out
+
+
+def read_cheap_listings(rows, domestic="US"):
+    """Plain-language reading of explain_cheap_listings()."""
+    if not rows:
+        return ["No priced organic listings were readable on this SERP."]
+
+    resolved = [r for r in rows if r.get("country")]
+    if not resolved:
+        return [f"None of the {len(rows)} cheapest listings declared an origin — "
+                f"unmeasured, not domestic."]
+
+    foreign = [r for r in resolved if r["country"] != domestic]
+    out = [f"Of the {len(resolved)} cheapest listings with a readable origin, "
+           f"{len(foreign)} ship from outside {domestic}."]
+    if not foreign:
+        out.append("The price floor here is set by DOMESTIC sellers. Overseas "
+                   "sourcing does not explain it, so neither would matching it.")
+    else:
+        where = ", ".join(sorted({r['country'] for r in foreign}))
+        out.append(f"The cheap tail includes {where} — competing on price against "
+                   f"that is competing against a different cost base.")
+    if len(resolved) < len(rows):
+        out.append(f"{len(rows) - len(resolved)} listing(s) did not declare an "
+                   f"origin and are excluded, not assumed domestic.")
+    return out

@@ -137,6 +137,31 @@ class GraphDB:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_rank_obs "
                          "ON rank_observations(listing_id, observed_at)")
+
+            # The other half of the outcome. Rank is a proxy; this is the thing the
+            # prediction was actually about. A listing can sit at rank 3 and sell
+            # nothing, and scoring the model on rank alone would call that a success.
+            #
+            # Append-only with collected_at in the key (D-04). Every metric is
+            # NULLABLE and no metric is derived from another: the operator reads
+            # these off Etsy's own stats page, and a partial reading ("I know the
+            # sales, not the views") must be recordable without inventing the rest.
+            # Absent is not zero (N-02) — a launch with no outcome row has not been
+            # measured, which is different from one that sold nothing.
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS launch_outcomes (
+                    listing_id TEXT NOT NULL,
+                    collected_at TEXT NOT NULL,
+                    sales INTEGER,
+                    revenue REAL,
+                    views INTEGER,
+                    favorites INTEGER,
+                    note TEXT,
+                    PRIMARY KEY (listing_id, collected_at)
+                )
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_launch_outcomes "
+                         "ON launch_outcomes(listing_id, collected_at)")
             
             self._migrate(conn)
             conn.commit()
@@ -204,6 +229,31 @@ class GraphDB:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_rank_obs "
                          "ON rank_observations(listing_id, observed_at)")
+
+            # The other half of the outcome. Rank is a proxy; this is the thing the
+            # prediction was actually about. A listing can sit at rank 3 and sell
+            # nothing, and scoring the model on rank alone would call that a success.
+            #
+            # Append-only with collected_at in the key (D-04). Every metric is
+            # NULLABLE and no metric is derived from another: the operator reads
+            # these off Etsy's own stats page, and a partial reading ("I know the
+            # sales, not the views") must be recordable without inventing the rest.
+            # Absent is not zero (N-02) — a launch with no outcome row has not been
+            # measured, which is different from one that sold nothing.
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS launch_outcomes (
+                    listing_id TEXT NOT NULL,
+                    collected_at TEXT NOT NULL,
+                    sales INTEGER,
+                    revenue REAL,
+                    views INTEGER,
+                    favorites INTEGER,
+                    note TEXT,
+                    PRIMARY KEY (listing_id, collected_at)
+                )
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_launch_outcomes "
+                         "ON launch_outcomes(listing_id, collected_at)")
 
     def add_node(self, node_data):
         """Upsert the node's latest state AND append the metric snapshot to
@@ -494,6 +544,56 @@ class GraphDB:
                   competitor_count))
             conn.commit()
 
+    def record_launch_outcome(self, listing_id, sales=None, revenue=None, views=None,
+                              favorites=None, note=None, collected_at=None):
+        """Append one reading of how a launch actually performed.
+
+        Every field optional on purpose. The operator reads these off Etsy's stats
+        page, and refusing a partial reading would mean recording nothing at all on
+        the days they only know the sales count — which is most days.
+
+        Raises if the listing was never launched: an outcome for a listing the system
+        has no prediction for cannot be scored, and silently creating one would put a
+        row in the LEARN set that can never be joined.
+        """
+        if not any(v is not None for v in (sales, revenue, views, favorites, note)):
+            raise ValueError("nothing to record — pass at least one metric or a note")
+        now = collected_at or _utcnow()
+        with sqlite3.connect(self.db_path) as conn:
+            known = conn.execute("SELECT 1 FROM launches WHERE listing_id = ?",
+                                 (listing_id,)).fetchone()
+            if not known:
+                raise ValueError(
+                    f"listing {listing_id} has no recorded launch, so there is no "
+                    f"prediction to score this against. Record the launch first: "
+                    f"python -m etsy.analytics.launch --seed TERM --listing-id {listing_id}")
+            conn.execute("""
+                INSERT OR REPLACE INTO launch_outcomes (
+                    listing_id, collected_at, sales, revenue, views, favorites, note
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (listing_id, now, sales, revenue, views, favorites, note))
+            conn.commit()
+        return {"listing_id": listing_id, "collected_at": now}
+
+    def latest_outcome(self, listing_id):
+        """The most recent outcome reading for a launch, or None if never measured."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute("""
+                SELECT * FROM launch_outcomes WHERE listing_id = ?
+                 ORDER BY collected_at DESC LIMIT 1
+            """, (listing_id,)).fetchone()
+            return dict(row) if row else None
+
+    def outcome_history(self, listing_id):
+        """Every reading for one launch, oldest first — the sales curve."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            return [dict(r) for r in conn.execute("""
+                SELECT * FROM launch_outcomes WHERE listing_id = ?
+                 ORDER BY collected_at ASC
+            """, (listing_id,))]
+
     def get_launches(self, term_id=None):
         """Every launch, newest first. Optionally filtered to one term."""
         sql = "SELECT * FROM launches"
@@ -554,7 +654,15 @@ class GraphDB:
                          ORDER BY r.observed_at DESC LIMIT 1) AS latest_rank,
                        (SELECT r.observed_at FROM rank_observations r
                          WHERE r.listing_id = l.listing_id
-                         ORDER BY r.observed_at DESC LIMIT 1) AS latest_observed_at
+                         ORDER BY r.observed_at DESC LIMIT 1) AS latest_observed_at,
+                       (SELECT COUNT(*) FROM launch_outcomes o
+                         WHERE o.listing_id = l.listing_id) AS outcome_readings,
+                       (SELECT o.sales FROM launch_outcomes o
+                         WHERE o.listing_id = l.listing_id
+                         ORDER BY o.collected_at DESC LIMIT 1) AS latest_sales,
+                       (SELECT o.revenue FROM launch_outcomes o
+                         WHERE o.listing_id = l.listing_id
+                         ORDER BY o.collected_at DESC LIMIT 1) AS latest_revenue
                   FROM launches l
                  ORDER BY l.launched_at DESC
             """)]

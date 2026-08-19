@@ -200,3 +200,49 @@ def read(option, product_type=profit.PERSONALIZED, market_bands=None, config=Non
     for n in option.notes:
         out.append(f"[!] {n}")
     return out
+
+
+def affordable_cogs(price, product_type, shipping_cost=0.0, shipping_charged=0.0,
+                    labor_minutes=0.0, config=None, tolerance=0.005):
+    """The most a unit may cost to make and still clear the floor at this price.
+
+    The other inverse, and the one that turns a rejection into a negotiation. When
+    required_price() says "charge $45.78" against a market that pays $16.60, the
+    useful follow-up is not "no" — it is "then I need to source this for under
+    $X", which is a number a supplier can be asked about.
+
+    Returns None when even a FREE product misses the floor at this price, which
+    means the price itself is too low to carry Etsy's fees plus labour. That is a
+    real and common answer: it says the problem is not the supplier.
+    """
+    def margin_at(c):
+        return profit.unit_economics(price, product_type, c, shipping_cost,
+                                     shipping_charged, labor_minutes, config)["margin"]
+
+    floor = (config or profit.ProfitConfig()).floors.for_type(product_type)
+    if margin_at(0.0) < floor:
+        return None
+
+    lo, hi = 0.0, max(price, 1.0)
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        if margin_at(mid) >= floor:
+            lo = mid
+        else:
+            hi = mid
+        if hi - lo < tolerance:
+            break
+    # FLOOR to the cent, the mirror of required_price's ceil: rounding a maximum
+    # cost up would authorise a supplier price that misses the floor.
+    return math.floor(lo * 100) / 100
+
+
+def cogs_ladder(prices, product_type, shipping_cost=0.0, labor_minutes=0.0, config=None):
+    """[(price, max affordable COGS)] across a range of prices.
+
+    Read against what the market actually pays, this shows where a product becomes
+    possible rather than just whether today's supplier works.
+    """
+    return [(p, affordable_cogs(p, product_type, shipping_cost=shipping_cost,
+                                labor_minutes=labor_minutes, config=config))
+            for p in prices]

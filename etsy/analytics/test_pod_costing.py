@@ -1,7 +1,7 @@
 """Offline checks for POD costing. No network."""
 from etsy.analytics import profit
-from etsy.analytics.pod_costing import (PodOption, faster_share, read,
-                                        required_price)
+from etsy.analytics.pod_costing import (PodOption, affordable_cogs, cogs_ladder,
+                                        faster_share, read, required_price)
 
 PASS = FAIL = 0
 
@@ -91,6 +91,37 @@ def main():
     lines = read(opt(cogs=900.0), market_bands=bands)
     check("an impossible product is named as impossible, not priced anyway",
           any("cannot be made to pay" in l for l in lines), lines)
+
+    # --- the other inverse: what may this cost to make? ---------------------------------
+    print()
+    m = affordable_cogs(45.78, profit.PERSONALIZED, shipping_cost=7.99)
+    check("a price yields a maximum affordable COGS", m is not None, m)
+    ok = profit.unit_economics(45.78, profit.PERSONALIZED, m, 7.99)
+    check("at that COGS the floor is cleared", ok["margin"] >= floor, ok["margin"])
+    over = profit.unit_economics(45.78, profit.PERSONALIZED, m + 0.25, 7.99)
+    check("and a cent more misses it -- it really is the maximum",
+          over["margin"] < floor, over["margin"])
+    check("required_price and affordable_cogs are consistent inverses",
+          abs(m - 10.10) < 0.30, m)
+    check("a higher price affords a more expensive product",
+          affordable_cogs(80.0, profit.PERSONALIZED, shipping_cost=7.99) > m)
+    check("at the market's actual price the product is impossible even FREE",
+          affordable_cogs(16.60, profit.PERSONALIZED, shipping_cost=7.99) is None)
+    # 45 minutes of the operator's time at $45.78 leaves nothing for a supplier at
+    # all -- affordable_cogs returns None, not a smaller number. That is the honest
+    # answer: the problem is the labour, and no sourcing decision fixes it.
+    with_labour = affordable_cogs(45.78, profit.PERSONALIZED, shipping_cost=7.99,
+                                  labor_minutes=45)
+    check("labour can make a price impossible outright, not merely tighter",
+          with_labour is None, with_labour)
+    check("with less labour it becomes possible again, and is tighter than with none",
+          0 < affordable_cogs(45.78, profit.PERSONALIZED, shipping_cost=7.99,
+                              labor_minutes=5) < m)
+    ladder = cogs_ladder([16.60, 30.0, 45.78, 80.0], profit.PERSONALIZED,
+                         shipping_cost=7.99)
+    check("the ladder returns one entry per price", len(ladder) == 4)
+    check("it shows where a product BECOMES possible, not just that it failed",
+          ladder[0][1] is None and ladder[-1][1] is not None, ladder)
 
     print(f"\n{PASS} passed, {FAIL} failed")
     return FAIL
