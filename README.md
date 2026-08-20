@@ -84,7 +84,7 @@ Re-audits which Etsy SERP filters can be believed. **9 of 12 currently cannot.**
 ```bash
 .venv/Scripts/python.exe -m core.test_graph_db
 ```
-One of ~48 offline suites, **1,253 assertions**, no network required.
+One of ~50 offline suites, **1,283 assertions**, no network required.
 
 ---
 
@@ -98,7 +98,7 @@ One of ~48 offline suites, **1,253 assertions**, no network required.
                   └───────┬───────┘
                           │
      core/         session vault (Redis) · cache · run log · guards
-     mcp_server/   15 read-only tools for Claude / Antigravity
+     mcp_server/   16 read-only tools for Claude / Antigravity
 ```
 
 | Directory | Holds |

@@ -728,3 +728,37 @@ at — those are different facts.
 **A default CVR is a blocker, not a footnote.** A term with an excellent
 demand/supply ratio and a guessed conversion rate still gets a no, naming the guess
 as the reason.
+
+
+---
+
+## D-39 — Discover finds the long tail, and folds the walls rather than filtering them
+
+**Date:** 2026-08-20
+
+**Context.** The system judged terms the operator typed. It should also FIND them,
+because the winnable ground is in the long tail (D-31) and the operator cannot type
+what they have not thought of.
+
+**Chosen.** Expand every watched seed through the LLM keyword endpoint — ~120
+neighbours, each carrying its own volume and supply, so one private call sizes a
+hundred candidates. Rank by demand-per-listing, attach the seasonal moment, store
+the whole pool.
+
+Live proof: `custom family name necklace` (ratio 1.744, winnable) was found by
+expanding `mom necklace`, which is itself a wall. The operator never typed it.
+
+**Fold the walls, do not filter them.** A pool of 1,170 is 1,163 walls behind 7
+terms worth a look. The screen leads with the 7 and folds the walls into one
+counted line. That is a display choice — every candidate is stored, and the hidden
+count is always shown — not a filter that would let "the pool was small" masquerade
+as "nothing was discovered".
+
+**Rejected: dropping walls at storage time.** "These 130 neighbours are all walls"
+is a real answer worth keeping: it is 130 dead-ends the operator does not retype,
+and a later run can show a wall becoming contested as supply shifts. Time is
+first-class; a wall today is data tomorrow.
+
+**Rejected: ranking by volume even here.** `personalized gift` has 230,715 searches
+and a 0.364 ratio; `custom family name necklace` has 11,642 and 1.744. A volume
+sort floats the big wall to the top of the very screen built to prevent that.

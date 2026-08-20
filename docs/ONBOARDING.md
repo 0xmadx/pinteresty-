@@ -85,7 +85,7 @@ Four checks, in this order:
 
 1. **Does the function exist?** A capability is real when it is a function, not a
    paragraph. Count functions.
-2. **Does a test cover it?** ~1,253 assertions across ~48 offline suites. A test
+2. **Does a test cover it?** ~1,283 assertions across ~50 offline suites. A test
    that fails in a way you did not predict has found a real bug — twice this week.
 3. **What does the wire say?** The vault is usually green; probing is faster and
    more truthful than reasoning. This is explicitly allowed.
