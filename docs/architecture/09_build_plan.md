@@ -165,7 +165,7 @@ everything else or it accumulates over time.
 | 2 | ~~**Competitor outcome tracker**~~ | ✅ **done 2026-08-15** — `competitor_tracker.py`, 31 assertions (`ea425a1`, `e6b17b5`) |
 | 3 | ~~**Scheduler**~~ | ✅ **done 2026-08-15** — `core/scheduler.py`, 22 assertions |
 | 4 | **Seed shops + one bridge run** | ⚠️ **partly done** — bridge now runs weekly and writes 99 rows (86 topics + 13 **moments**). 2 shops seeded, both **stars**; a mid-tier shop is still missing (B-01). |
-| 5 | ~~**The clock actually running**~~ | ✅ **done 2026-08-19** — `run_scheduler.cmd` registered as the Windows task `EtsyScrapperDaily`, 07:00. Five jobs: shop_sweep, keyword_sweep, calendar (daily), rank_check (56h), pinterest_bridge (weekly). |
+| 5 | ~~**The clock actually running**~~ | ✅ **done 2026-08-19** — `run_scheduler.cmd` registered as the Windows task `EtsyScrapperDaily`, 07:00. Six jobs: shop_sweep, keyword_sweep, **competition_sweep**, calendar (daily), rank_check (56h), pinterest_bridge (weekly). |
 
 #### What the wire taught us building item 2
 
@@ -360,7 +360,7 @@ even express.
 |---|---|---|
 | 16 | **Settings** | already Phase 0 — the data side |
 | 17 | ~~**Calendar** (home)~~ | ✅ **done 2026-08-20** — list now / list by / watching, plus `.ics` |
-| 18 | ~~**Cockpit**~~ | ✅ **done 2026-08-20** — three source panels → conflicts → verdict. Gap and plan sections still to add. |
+| 18 | ~~**Cockpit**~~ | ✅ **done 2026-08-20** — three source panels → conflicts → verdict, with page-one saturation joined into the supply panel (stored by `competition_sweep`, never merged with market-wide counts). Plan/blueprint section still to add. |
 | 19 | **Blueprint** | title, 13 tags, price band, flaws to solve |
 | 20 | **Performance** | last — needs launch history to exist |
 
