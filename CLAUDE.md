@@ -45,6 +45,13 @@ fail (S-2):
 .venv/Scripts/python.exe -m core.vault_status
 ```
 
+🔒 **This project reads Redis db 1, not db 0** (separated 2026-08-19). db 0 is the
+**shared** vault the extension + Go server write to, and which the `pinterest-apify`
+project also reads. `core/vault_mirror.py` copies it one-way into db 1 so our
+evictions, prunes and leases can never touch their sessions. **Anything that judges
+db 1 must sync first** — `preflight` and `vault_status` both do; a copy older than
+300s reads as an empty vault. Full detail: `docs/VAULT_SEPARATION.md`.
+
 ⚠️ **Two Redis servers share port 6379** on this machine (D-30). `localhost` reaches a
 stale native one; the real vault is the Docker container at the address in `.env`. If
 the vault suddenly reads empty, that is the first suspect — `vault_status` detects it

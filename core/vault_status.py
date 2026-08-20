@@ -161,6 +161,24 @@ def find_shadow_vaults(configured_url, timeout=2):
     return sorted(candidates, key=lambda c: -c[1])
 
 
+def separation_check():
+    """Is this project actually reading its own vault, or the shared one?
+
+    Returns (ok, message). A merged configuration is not an error — everything
+    still works — which is exactly why it needs saying out loud: the failure it
+    causes is our prune deleting a session the other project depends on, days
+    later, with nothing linking the two events.
+    """
+    from core.vault_mirror import SOURCE_URL
+    ours = ScraperConfig().REDIS_URL
+    if ours == SOURCE_URL:
+        return False, (f"NOT SEPARATED — this project is reading the SHARED vault "
+                       f"({ours}). Our evictions and prunes can reach "
+                       f"the other project's sessions, and theirs can shrink "
+                       f"our pool. Set REDIS_URL to a different db index in .env.")
+    return True, f"separated: ours={ours}  shared={SOURCE_URL} (read-only mirror source)"
+
+
 def scan(platforms=("etsy", "etsy_private", "pinterest")):
     """The vault's state per platform. Never blocks, never writes."""
     config = ScraperConfig()
@@ -304,7 +322,28 @@ def apply_prune(client, doomed, backup_path):
 
 def main(verbose=False):
     config = ScraperConfig()
-    print(f"Vault: {config.REDIS_URL}\n")
+
+    ok, message = separation_check()
+    print(f"Vault: {config.REDIS_URL}")
+    print(("[separated] " if ok else "[MERGED] ") + message)
+
+    # Refresh from the shared vault BEFORE reporting. Without this the
+    # diagnostic lies in the most confusing way available: our private copy
+    # ages past HEARTBEAT_MAX_AGE between runs, so every profile reads
+    # 'stale' and the tool announces an empty vault while the extension is
+    # beaming perfectly good cookies into db 0. The mirror is what makes
+    # db 1 current, so the tool that judges db 1 has to run it.
+    if ok:
+        try:
+            from core.vault_mirror import sync
+            result = sync()
+            print(f"[mirror] refreshed {result.get('copied', 0)} profile(s) "
+                  f"from {result.get('source')}")
+        except Exception as exc:
+            print(f"[mirror] could NOT refresh from the shared vault: {exc}")
+            print("         What follows describes the copy we already hold, "
+                  "which may be older than what Chrome has beamed.")
+    print()
     try:
         report = scan()
     except redis.exceptions.ConnectionError as exc:
