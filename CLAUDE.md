@@ -237,7 +237,7 @@ verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
 (`core/vault_mirror.py`) · session-layer hardening · **the Calendar screen**
 (`etsy/ui/calendar_page.py`, + `.ics` export) · saturation recovered from listings
 (`etsy/analytics/card_saturation.py`) · **14 MCP tools** (`mcp_server/`).
-**~1,329 assertions** across ~52 offline suites.
+**~1,333 assertions** across ~52 offline suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend
@@ -247,9 +247,10 @@ observations into a table that had held zero.
 history now covers 8 watched terms; **0 launches**, so LEARN cannot start. **Value compounds only with time** — a daily
 delta needs two readings a day apart and cannot be backfilled.
 
-**Still provisional:** `config/settings.json` has `"confirmed": []`, so every profit
-verdict rests on default fees and costs. `settings_store set <path> <value>` marks a
-value confirmed.
+**Settings confirmed 2026-08-20:** fees verified against Etsy's published schedule,
+operator rate $25/hr, capacity 10 hrs/week. Profit verdicts now read `derived`, not
+provisional. (Read confirmation via `settings.basis()`, NOT a `.confirmed` attribute
+— there isn't one; that getattr bug reported everything provisional forever.)
 
 **Next:** see `09_build_plan.md`.
 
