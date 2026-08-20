@@ -305,6 +305,15 @@ class MarketDatabase:
                     cursor.execute(
                         f"ALTER TABLE trend_observations ADD COLUMN {column} {decl}")
 
+            comp_cols = {row[1] for row in
+                         cursor.execute("PRAGMA table_info(keyword_competition)")}
+            if "delivery_json" not in comp_cols:
+                # The lead-time (délai) distribution — how fast this market ships,
+                # from the trusted delivery_days brackets. Its own column, JSON, so
+                # the bands and the "over 30 days" tail survive to the reader.
+                cursor.execute(
+                    "ALTER TABLE keyword_competition ADD COLUMN delivery_json TEXT")
+
             shop_cols = {row[1] for row in
                          cursor.execute("PRAGMA table_info(shop_observations)")}
             for column, decl in [
@@ -709,6 +718,7 @@ class MarketDatabase:
     def record_keyword_competition(self, keyword, total_results=None,
                                    organic_sample=None, ranked_ids_count=None,
                                    saturation=None, median_delivery=None,
+                                   delivery_bands=None,
                                    collected_at=None, source="etsy_public"):
         """Append one public-SERP competition reading. Never overwrites.
 
@@ -719,14 +729,15 @@ class MarketDatabase:
         """
         now = collected_at or datetime.now(timezone.utc).isoformat()
         blob = json.dumps(saturation, default=str) if saturation is not None else None
+        dblob = json.dumps(delivery_bands, default=str) if delivery_bands is not None else None
         with self.get_connection() as conn:
             conn.execute('''
                 INSERT OR REPLACE INTO keyword_competition (
                     keyword, collected_at, source, total_results, organic_sample,
-                    ranked_ids_count, saturation_json, median_delivery
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ranked_ids_count, saturation_json, median_delivery, delivery_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (keyword, now, source, total_results, organic_sample,
-                  ranked_ids_count, blob, median_delivery))
+                  ranked_ids_count, blob, median_delivery, dblob))
             conn.commit()
         return {"keyword": keyword, "collected_at": now}
 
@@ -784,6 +795,8 @@ class MarketDatabase:
         out = dict(row)
         out["saturation"] = (json.loads(out.pop("saturation_json"))
                              if out.get("saturation_json") else None)
+        out["delivery_bands"] = (json.loads(out.pop("delivery_json"))
+                                 if out.get("delivery_json") else None)
         return out
 
     def get_shop_history(self, shop_name):

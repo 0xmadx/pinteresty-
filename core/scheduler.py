@@ -374,12 +374,20 @@ def job_competition_sweep():
                 continue
             prof = card_saturation.profile(serp.get("cards"))
             organic = [c for c in (serp.get("cards") or []) if not c.get("is_ad")]
+            # The lead-time (délai) distribution, from the delivery_days brackets —
+            # trusted (D-32), 4 extra requests. countries=() skips the origin
+            # sample, which is one request per listing and too heavy for a daily
+            # sweep; origin stays on-demand via the sourcing MCP tool.
+            dprofile = sourcing.fetch_profile(api, term, countries=())
+            bands = sourcing.delivery_distribution(dprofile)
             db.record_keyword_competition(
                 term,
                 total_results=serp.get("total_results"),
                 organic_sample=len(organic),
                 ranked_ids_count=len(serp.get("organic_listing_ids") or []),
-                saturation={f"{d}|{v}": m for (d, v), m in prof.items()})
+                saturation={f"{d}|{v}": m for (d, v), m in prof.items()},
+                delivery_bands=[{"band": b, "share": sh} for b, sh in bands],
+                median_delivery=sourcing.median_band(dprofile))
             recorded.append(term)
         except Exception as e:
             failed.append({"term": term, "why": f"{type(e).__name__}: {e}"})

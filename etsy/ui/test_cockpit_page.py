@@ -44,7 +44,8 @@ def state(**kw):
                        "decisive": [{"dimension": "quality", "value": "star_seller",
                                      "share": 1.0, "low": 0.61, "high": 1.0}],
                        "upgrade": "2 dimension(s) could not be called from 6 "
-                                  "listings; 41 ranked listings are available."}},
+                                  "listings; 41 ranked listings are available.",
+                       "median_delivery": "15-21 days", "fast_share": 0.02}},
         "profit": None,
         "combined": {"call": "no", "blockers": ["supply overwhelms demand"],
                      "conflicts": ["Pinterest times this well but Etsy says you "
@@ -87,6 +88,10 @@ def main():
           "page-one sample" in h)
     check("the upgrade path is surfaced when the sample is thin",
           "ranked listings are available" in h)
+    check("the délai — median delivery — reaches the decision screen",
+          "median delivery" in h and "15-21 days" in h)
+    check("with the fast-ship share, the opening POD cannot reach",
+          "2% ship within a week" in h)
 
     # --- a wall is unmissable ------------------------------------------------------------
     print()

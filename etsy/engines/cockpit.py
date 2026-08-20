@@ -138,9 +138,18 @@ def _competition(db_path, keyword):
                    f"listings; {ranked} ranked listings are available. A deeper "
                    f"sample would likely decide them.")
 
+    # The délai — how fast this market actually ships. The single most decision-
+    # relevant number for a personalized/POD product, and the question this whole
+    # analysis started from. `fast_share` is what ships within a week; a thin fast
+    # bracket is a real opening, but D-10 still applies — thin supply is not demand.
+    bands = row.get("delivery_bands") or []
+    fast = next((b["share"] for b in bands if b["band"] == "0-7 days"), None)
+
     return {"basis": "measured", "measured_at": row.get("collected_at"),
             "organic_sample": sample, "ranked_ids": ranked,
-            "decisive": decisive, "withheld": withheld, "upgrade": upgrade}
+            "decisive": decisive, "withheld": withheld, "upgrade": upgrade,
+            "median_delivery": row.get("median_delivery"),
+            "fast_share": fast, "delivery_bands": bands}
 
 
 def _timing(db_path, keyword, lead_weeks, now):
@@ -287,6 +296,11 @@ def read(state):
         for d in comp.get("decisive", []):
             out.append(f"      {d['dimension']}={d['value']}: {d['share']:.0%} of "
                        f"page one ({d['low']:.0%}–{d['high']:.0%})")
+        if comp.get("median_delivery"):
+            fast = comp.get("fast_share")
+            fast_txt = f", only {fast:.0%} within a week" if fast is not None else ""
+            out.append(f"      delivery: this market's median is "
+                       f"{comp['median_delivery']}{fast_txt}")
         if comp.get("upgrade"):
             out.append(f"      note: {comp['upgrade']}")
     else:

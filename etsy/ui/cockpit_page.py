@@ -96,6 +96,14 @@ def _supply_panel(s):
                 f'{d["low"]:.0%}–{d["high"]:.0%}, page-one sample</span></dd></div>')
     upgrade = (f'<p class="note">{html.escape(comp["upgrade"])}</p>'
                if comp.get("upgrade") else "")
+    delivery = ""
+    if comp.get("median_delivery"):
+        fast = comp.get("fast_share")
+        fast_txt = (f' — only {fast:.0%} ship within a week'
+                    if fast is not None else "")
+        delivery = (f'<p class="note">Délai: median delivery '
+                    f'<strong>{html.escape(comp["median_delivery"])}</strong>'
+                    f'{fast_txt}</p>')
     return _panel("Etsy Public", "competition", f'''
         <div class="big">{s["listings"]:,}<span class="unit"> listings</span></div>
         <dl class="facts">
@@ -105,6 +113,7 @@ def _supply_panel(s):
               <span class="basis">derived</span></dd></div>
           {sat}
         </dl>
+        {delivery}
         {'<p class="wall">You cannot rank here — supply overwhelms demand.</p>'
          if wall else '<p class="note">Rankable on the demand/supply ratio.</p>'}
         {upgrade}''',

@@ -57,7 +57,10 @@ def seed(path):
                                     "sample": 6, "can_discriminate": True},
             "free_shipping|true": {"share": 0.33, "low": 0.10, "high": 0.70,
                                    "sample": 6, "can_discriminate": False},
-        })
+        },
+        median_delivery="15-21 days",
+        delivery_bands=[{"band": "0-7 days", "share": 0.02},
+                        {"band": "15-21 days", "share": 0.30}])
     return db
 
 
@@ -188,6 +191,10 @@ def main():
           comp["withheld"] == 1, comp)
     check("the upgrade path names the concrete next step",
           comp["upgrade"] and "41 ranked" in comp["upgrade"], comp["upgrade"])
+    check("the délai is carried — median delivery band",
+          comp["median_delivery"] == "15-21 days", comp)
+    check("and the fast-delivery share, the opening a POD seller cannot reach",
+          comp["fast_share"] == 0.02, comp)
     check("a term with no competition reading says unmeasured, not zero saturation",
           cockpit.build("backpack name tag", db_path=path, now=NOW)["supply"]
           .get("competition", {}).get("basis") == "unmeasured")
