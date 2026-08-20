@@ -46,3 +46,6 @@ look her/
 
 # redis dump artifact
 dump.rdb
+
+# Generated home screen — rebuilt daily by the scheduler from the database.
+etsy/data/ui/

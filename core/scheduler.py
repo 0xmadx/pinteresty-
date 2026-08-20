@@ -296,9 +296,15 @@ def job_calendar():
                     "demand_per_listing": best.get("demand_per_listing")},
             basis="derived from measured takeoff dates and keyword observations",
             note=row["reason"])
+    # Render the home screen from the same rows that were just judged, rather than
+    # rebuilding it — two renders of one morning's data must not disagree.
+    from etsy.ui import calendar_page
+    written = calendar_page.write(rows=rows)
+
     urgent = [r["moment"] for r in rows if r["state"] == "list_now"]
     return {"moments": len(rows), "list_now": urgent,
-            "actionable": [r["moment"] for r in rows if r["actionable"]]}
+            "actionable": [r["moment"] for r in rows if r["actionable"]],
+            "page": written["html"], "ics": written["ics"]}
 
 
 def job_pinterest_bridge():
