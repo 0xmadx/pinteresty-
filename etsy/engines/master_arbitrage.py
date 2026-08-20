@@ -5,8 +5,8 @@ import time
 
 from etsy.engines.master_niche_finder import MasterNicheFinder
 from etsy.api.public.api import EtsyPublicAPI
-from etsy.analytics.gaps import PHYSICAL, find_gaps, summarise
-from etsy.analytics import bracket_demand, filter_trust, sourcing
+from etsy.analytics.gaps import PHYSICAL, analyse_bracket, find_gaps, summarise
+from etsy.analytics import bracket_demand, card_saturation, filter_trust, sourcing
 from core.database import MarketDatabase
 from core.guards import report_failures, reset_failures
 from core.runlog import stage
@@ -360,6 +360,42 @@ class HybridArbitrageEngine:
             classified = find_gaps(bracket_counts, self.product_type,
                                    total_listings=gen_total,
                                    demand_by_bracket=demand_by_bracket)
+
+            # --- dimensions recovered from the listings themselves (D-36) ---------
+            # The filter audit took away star-seller, free-shipping, discount and
+            # rating. Every one is a FIELD on the cards already fetched above, so
+            # they are counted directly instead of asked for — zero extra requests,
+            # and a count of listings we can name rather than a filter's claim
+            # about a result set that may not be a subset of this market.
+            #
+            # Classified SEPARATELY, and this separation is load-bearing: these
+            # counts are out of the ~6-11 organic cards on page one, not out of
+            # gen_total. Putting "6 of 9" into the same dict as a 217,213-listing
+            # denominator would report 67% saturation as 0.003% — a catastrophic
+            # wrong number produced by mixing two units.
+            saturation = card_saturation.profile(general_data.get("cards") if general_data else [])
+            usable = card_saturation.usable_brackets(saturation)
+            print(f"      -> Saturation from the listings themselves "
+                  f"({len(usable)}/{len(saturation)} dimensions decisive)...")
+            for line in card_saturation.read(saturation):
+                print(f"         {line}")
+
+            card_classified = []
+            for (dim, val), (matched, sample) in usable.items():
+                card_classified.append(analyse_bracket(
+                    dim, val, listings=matched, total_listings=sample,
+                    product_type=self.product_type, trusted=True,
+                    demand_in_bracket=None))
+
+            niche_report["card_saturation"] = {
+                f"{d}={v}": m for (d, v), m in saturation.items()}
+            niche_report["card_gap_analysis"] = {
+                "denominator": "organic listings on page one, NOT total supply",
+                "brackets": [{"dimension": b.dimension, "value": b.value,
+                              "listings": b.listings, "sample": b.total_listings,
+                              "share": round(b.share, 4), "status": b.status}
+                             for b in card_classified],
+            }
             niche_report["gap_analysis"] = {
                 "product_type": self.product_type,
                 "summary": summarise(classified),

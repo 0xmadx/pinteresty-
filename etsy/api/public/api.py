@@ -99,10 +99,22 @@ class EtsyPublicAPI:
             "cards": [],
         }
 
-        # The ranked organic id list for this page, in rank order. The array that sits
-        # next to `result_count` is the page-level one; the other matches are per-card
-        # analytics payloads holding a single id.
-        for m in re.finditer(r'"result_count"\s*:\s*\d+.{0,200}?"listing_ids"\s*:\s*\[([\d,]+)\]', html, re.DOTALL):
+        # The ranked organic id list for this page, in rank order.
+        #
+        # This used to require `"result_count"` within 200 characters BEFORE the
+        # array, on the theory that proximity identified the page-level list. It
+        # does not: measured on the wire 2026-08-20, the nearest preceding keys are
+        # `bucket_id` / `user_id` / `is_async`, and `result_count` is nowhere near.
+        # So the pattern never matched and `organic_listing_ids` was ALWAYS EMPTY —
+        # silently, because an empty list is a plausible value for a page with no
+        # results.
+        #
+        # The array itself is the identifying feature: per-card analytics payloads
+        # carry a single id, the page-level one carries the full ranking (41 on
+        # "personalized towel", against 6 organic cards that render server-side).
+        # Taking the longest match is what distinguishes them, and that check was
+        # already here — it was the proximity constraint that was wrong.
+        for m in re.finditer(r'"listing_ids"\s*:\s*\[([\d,\s]+)\]', html):
             ids = [int(x) for x in m.group(1).split(',') if x.strip()]
             if len(ids) > len(result["organic_listing_ids"]):
                 result["organic_listing_ids"] = ids
