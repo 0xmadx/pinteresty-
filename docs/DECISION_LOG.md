@@ -762,3 +762,36 @@ first-class; a wall today is data tomorrow.
 **Rejected: ranking by volume even here.** `personalized gift` has 230,715 searches
 and a 0.364 ratio; `custom family name necklace` has 11,642 and 1.744. A volume
 sort floats the big wall to the top of the very screen built to prevent that.
+
+
+---
+
+## D-40 — The Blueprint is on demand and live, and momentum is a first-class warning
+
+**Date:** 2026-08-20
+
+**Context.** Every screen reads the database and never calls the network, because
+a dashboard must render instantly. The Blueprint is the exception, and the
+exception is principled.
+
+**Chosen: live, on demand.** A blueprint is built once, when the operator has
+decided to list something, and it needs the CURRENT page-one tags. Stale tags would
+seed a new listing with last month's competition. So `blueprint_page` fetches live
+(demand + ~6 competitor listings) and is a command you run, not a page that must be
+fresh on open. This does not violate the "a click never waits on a provider" rule —
+there is no click; it is a deliberate generation step.
+
+**Momentum is promoted to the top of the page.** The generator already carried
+`wow_change`; the screen makes it a banner, because a winnable-looking term
+collapsing week-over-week is the single most common way a high demand-per-listing
+ratio misleads. Proven on the live run: `custom family name necklace` has a 1.744
+ratio (Discover called it the best winnable term) and reads **-80% week-over-week**.
+The ratio said go; the momentum said trap. Both are now on the same page.
+
+**The generator's refusals reach the screen intact.** Only 2 of 13 tags had
+measured support; four page-one tags exceed Etsy's 20-char limit and are shown
+struck through, not copied. A thin blueprint is the honest output for a term whose
+winners tag in phrases too long to reuse — and a full set copied blind would have
+lost exactly those tags silently. The warnings block is rendered prominently
+because it is the useful part when a candidate is weak; a strong blueprint shows
+none.

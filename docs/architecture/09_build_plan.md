@@ -364,7 +364,7 @@ even express.
 | 16 | **Settings** | already Phase 0 — the data side |
 | 17 | ~~**Calendar** (home)~~ | ✅ **done 2026-08-20** — list now / list by / watching, plus `.ics` |
 | 18 | ~~**Cockpit**~~ | ✅ **done 2026-08-20** — three source panels → conflicts → verdict, with page-one saturation joined into the supply panel (stored by `competition_sweep`, never merged with market-wide counts). Plan/blueprint section still to add. |
-| 19 | **Blueprint** | title, 13 tags, price band, flaws to solve |
+| 19 | ~~**Blueprint**~~ | ✅ **done 2026-08-20** — `etsy/ui/blueprint_page.py`. On-demand (live) title/tags/price/click-checklist for a chosen candidate, with a momentum banner. Only measured tags; refuses over-long ones and money-losing prices. |
 | 20 | **Performance** | last — needs launch history to exist |
 
 ### Deferred by decision
