@@ -415,13 +415,17 @@ def job_calendar():
             note=row["reason"])
     # Render the home screen from the same rows that were just judged, rather than
     # rebuilding it — two renders of one morning's data must not disagree.
-    from etsy.ui import calendar_page
+    from etsy.ui import calendar_page, home
     written = calendar_page.write(rows=rows)
+    # The home index and a cockpit per watched term, so the whole UI is one fresh
+    # surface after this job rather than scattered pages of different ages.
+    ui = home.write()
 
     urgent = [r["moment"] for r in rows if r["state"] == "list_now"]
     return {"moments": len(rows), "list_now": urgent,
             "actionable": [r["moment"] for r in rows if r["actionable"]],
-            "page": written["html"], "ics": written["ics"]}
+            "page": written["html"], "ics": written["ics"],
+            "home": ui["index"], "cockpits_refreshed": ui["cockpits"]}
 
 
 def job_pinterest_bridge():
