@@ -604,3 +604,47 @@ than none.
 `rate_limited` / `malformed` / `auth_expired` / `blocked`. Only the last two evict,
 so neither Etsy throttling nor a bug in our own request can retire the seller
 account — the old code evicted on 429.
+
+---
+
+## D-36 — Measure saturation from listings, and refuse the verdict the sample cannot support
+
+**Date:** 2026-08-20
+
+**Context.** D-32 left three trustworthy SERP filters out of twelve. The gap
+analysis was designed around ten dimensions. The question was whether to find
+substitutes or shrink the analysis.
+
+**Chosen: both, honestly.** The lost dimensions — star seller, free shipping,
+discounting, rating — are not gone from the *data*, only from the *filters*. Each
+is a field on the SERP cards already fetched, so they are counted directly. That
+is better in kind: a card count is something observed about listings we can name;
+a filter count is a number about a result set that may not be a subset of this
+market.
+
+**And it is usually still not enough.** Twelve slots render server-side, about half
+are ads, so the organic sample is 6–11. A share from six observations has a 95%
+Wilson interval spanning both the thin (5%) and crowded (30%) thresholds, so it
+cannot place the bracket on either side. Every measurement therefore carries
+`low`/`high`, and `can_discriminate()` withholds any bracket whose interval
+straddles a threshold — the same refusal `scoring.can_discriminate()` makes.
+
+> **0 out of 6 does not establish an empty bracket.** The true share could still
+> be 39%. D-10's original trap — reading 0% saturation as a loophole — is now
+> caught by the statistics before any rule has to fire.
+
+**Rejected: reporting the point estimate alone.** "33% offer free shipping" from
+two hits in six is exactly the well-formed wrong number this project is named
+after.
+
+**Rejected: one combined classification.** Card counts are out of ~9 listings;
+filter counts are out of total supply. Mixing them would report 67% saturation as
+0.003%. Two classifications, two denominators, labelled.
+
+**The unlock, found while doing this.** `organic_listing_ids` had *always* been
+empty — the regex required `"result_count"` within 200 characters of the array and
+the real neighbours are `bucket_id` / `user_id` / `is_async`. It failed silently
+because an empty list is plausible for a page with no results. Anchoring on the
+array returns 39–51 ranked ids. Fetching those pages is the affordable "measure it
+per listing", and is what turns these intervals decisive. It also unblocks rank
+tracking, which had been reading an empty list all along.

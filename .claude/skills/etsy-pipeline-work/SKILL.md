@@ -40,14 +40,22 @@ Then **diff the response keys against the keys the code reads.** That one check 
 highest-value thing in this document.
 
 **You may fetch live data while building — check the vault first.** Sessions come from
-Redis now (D-28), and an empty pool makes the call **hang forever**, not fail:
+Redis (D-28), and this project reads its **own** database, db 1, mirrored one-way
+from the shared db 0 the extension writes (D-33):
 
 ```bash
-.venv/Scripts/python.exe -m core.vault_status     # one second; run it before any long job
+.venv/Scripts/python.exe -m core.vault_status     # syncs the mirror, then reports
 ```
 
-A `401`/`403` means the profile is not authenticated as a seller — auth, *not* a rate
-limit. See `docs/architecture/10_session_layer.md`.
+**A stale mirror reads as an EMPTY VAULT.** `HEARTBEAT_MAX_AGE` is 300s, so a copy
+five minutes old shows every profile stale while Chrome is beaming fine cookies into
+db 0. `preflight` and `vault_status` sync before judging; **an ad-hoc script that
+constructs an API client directly does not** — call `core.vault_mirror.sync()` first
+or you will debug an outage that does not exist.
+
+A `401` is a dead session; a `403` carrying "invalid request" is OUR bug and must
+never evict a profile (`session_manager.classify()`, D-35). A `429` is throttling and
+the session is fine. See `docs/SESSION_LAYER_FIX.md`.
 
 **When a private endpoint returns nothing, check the session BEFORE the code.** A dead
 seller session (browser/extension off) and a broken endpoint look identical from the
@@ -57,6 +65,24 @@ response was diagnosed as a code fault. The order of suspicion is fixed:
 
 1. `python -m core.vault_status` — is there a live `etsy_private` profile?
 2. only then diff the response keys against the code
+
+**Two more ways this repo has produced a silent empty result**, both found by
+probing rather than reasoning, both worth checking before you believe an absence:
+
+* **A join that discards everything.** `trends_bridge` stored a takeoff date only
+  when a featured *topic* shared a *moment's* name — 86 topics, 13 moments, zero
+  overlap. Every moment was computed in full and dropped, and the calendar had
+  never rendered. A doc had called this "not connected"; the halves were connected
+  and the join leaked.
+* **A regex with a proximity constraint that does not hold.**
+  `organic_listing_ids` required `"result_count"` within 200 characters of the
+  array. The real neighbours are `bucket_id` / `user_id`. It returned `[]` on every
+  page for the life of the project, silently, because an empty list is plausible
+  for a page with no results. It is 39–51 ids.
+
+The shared shape: **an empty collection is a plausible value, so an extraction bug
+looks exactly like an absence.** When a list is empty, prove the pattern matches
+before concluding the data is not there.
 
 The private clients now raise **`SessionDown`** on a 401/403 rather than returning
 `None`, so this can't be silently mistaken again. If you add a private endpoint, raise
@@ -106,6 +132,8 @@ Every one of these exists because the alternative was a confident wrong number:
 |---|---|
 | pool below `MIN_POOL_SIZE` | `PoolTooSmall`, not a score |
 | dimensions cannot separate the pool | `can_discriminate()` returns a labelled **filter**, no score |
+| a share measured on ~9 listings | `card_saturation` attaches a Wilson interval and **withholds** the bracket when it straddles a threshold. 0 of 6 does not establish an empty bracket — the true share could be 39% (D-36) |
+| a SERP filter that did not pass the audit | `find_gaps` returns `untrusted_source`, outranking every other rule (D-32). **9 of 12 filters cannot be believed** — check `config/filter_trust.json` before using one |
 | only survivors visible | a **bound**, and 100% reads `uninformative`, never "healthy" |
 | badge-derived sales | an **upper bound**, clamped to the shop's measured rate |
 | fetch failed | not cached, not stored as 0 |

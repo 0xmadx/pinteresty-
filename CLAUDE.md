@@ -162,6 +162,8 @@ account costs the business.
 | **Unused, verified to exist** | `predicted_days` (Pinterest 91-day forecast), `page` (pagination), `include_trendline`. See `08_capability_map.md`. |
 | **`similar_search_terms` and `market_gap_recommendations` are EMPTY** | Recorded earlier as free unread signals. Probed 2026-08-15 on `felt garland`, `mom necklace`, `christmas ornament`: all returned `total_results_count: 0` and a null gap block. The keys are in the schema; Etsy returns nothing in them. **Do not build on them.** |
 | **`locationQuery` is not a filter** | It returns a *broader* result set than the search it filters. On `monogrammed waffle weave towel` (10,011 unfiltered) Germany returned 28,271 and seven countries summed to **1116%** of the market they claim to partition. Origin share is **not obtainable from the SERP** — use `sourcing.sample_origins()`, which reads each listing's declared origin and can see countries Etsy's list omits (it found a Turkish seller). `delivery_days` was checked the same way and **is** sound: monotonic, cumulative, never above total. |
+| **`organic_listing_ids` was ALWAYS empty** | Parser bug fixed 2026-08-20. The regex demanded `"result_count"` within 200 chars of the array; the real neighbours are `bucket_id`/`user_id`. It returned `[]` on every page for the project's life — silently, because an empty list is plausible for a page with no results. Now 39–51 ranked ids, which also unblocks rank tracking. |
+| **A page-one share is ~9 listings, not a market share** | `card_saturation` recovers the dimensions the filter audit took away by counting card fields, then attaches a Wilson interval and **withholds** any bracket whose bounds straddle a threshold. **0 of 6 does not establish an empty bracket** — the true share could be 39% (D-36). |
 | **The calendar exists (2026-08-19)** | `python -m etsy.engines.calendar_engine`. Moments were being computed and DISCARDED — `trends_bridge` only stored a takeoff date when a featured topic shared a moment's name, and the overlap is zero. All 13 moments were dropped; `takeoff_timestamp` was NULL in every row. Also stores `peak_date`/`phase` now, without which "late vs missed" was being guessed. |
 | **Gaps can finally resolve** | `bracket_demand.py` supplies D-10's missing half. Demand inside a bracket is inferred from the review counts of the listings in it, because Etsy reports volume per TERM and never per bracket (D-34). Before this, `demand_by_bracket={}` meant no bracket could EVER be a gap. |
 | **9 of 12 SERP filters cannot be believed** | Audited 2026-08-19, recorded in `config/filter_trust.json`, enforced by `find_gaps`. Trusted: `delivery_days`, `gift_wrap`, `is_personalizable`. Ignored: `min_rating` (returns 4.8-rated listings), `best_by_etsy`, `holiday`. Not a subset: `attr_1` (colours sum to 562%), `is_digital`. Unstable: `is_star_seller`, `is_discounted`, `free_shipping`, `locationQuery`. Re-audit: `python -m etsy.analytics.filter_trust`. |
@@ -228,8 +230,10 @@ origin sampling (`etsy/analytics/sourcing.py`) · POD costing and both profit
 inverses (`etsy/analytics/pod_costing.py`) · Printify client
 (`etsy/api/printify/`) · LEARN outcome capture (`etsy/analytics/learn.py`) ·
 verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
-(`core/vault_mirror.py`) · session-layer hardening · **14 MCP tools**
-(`mcp_server/`). **~1,108 assertions** across ~40 offline suites.
+(`core/vault_mirror.py`) · session-layer hardening · **the Calendar screen**
+(`etsy/ui/calendar_page.py`, + `.ics` export) · saturation recovered from listings
+(`etsy/analytics/card_saturation.py`) · **14 MCP tools** (`mcp_server/`).
+**~1,163 assertions** across ~43 offline suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

@@ -43,6 +43,7 @@ time.
 | # | Stage | Status | Gap |
 |---|---|---|---|
 | 1 | **DISCOVER** — find candidates | ✅ | `discover.py` front door works; Pinterest wide crawl still unwired |
+| — | **The Calendar screen** | ✅ | **done 2026-08-20** — `etsy/ui/calendar_page.py` renders the home screen + an `.ics` export; regenerated daily by the scheduler |
 | 2 | **MEASURE** — volume, CVR, supply, competitors, saturation | ✅ | daily `keyword_sweep` running; pagination still missing |
 | 3 | **JUDGE** — profit gate, survivor bound, gaps, ranking | ✅ | gaps can now resolve POSITIVELY (D-34); only 3 filter dimensions are trustworthy (D-32) |
 | 4 | **TIME** — takeoff → "list by Sept 22" | ✅ | **done 2026-08-19** — `calendar_engine.py`. Moments were being computed and discarded; see §3b |
@@ -330,9 +331,11 @@ consequence and it needs a decision, not a workaround.
 
 | # | Build | Status |
 |---|---|---|
-| a | **Substitute measurements from listing pages** — origin, colour and rating read per listing rather than from SERP counts, the way `sample_origins` already replaced `locationQuery` | ⬜ |
-| b | **Or: accept a three-axis gap analysis and say so** in the output, rather than showing a thin dimension list as if it were the whole picture | ⬜ |
+| a | ~~**Substitute measurements**~~ | ✅ **done 2026-08-20** — `card_saturation.py`, 26 assertions. Star seller, free shipping, discount and rating counted from SERP card fields; zero extra requests (D-36). |
+| b | ~~**Say so when the sample cannot support a verdict**~~ | ✅ **done** — every share carries a Wilson interval and `can_discriminate()` withholds straddling brackets. Live: 2 of 4 dimensions decisive on one keyword, 1 of 4 on another. |
 | c | **Re-audit on a schedule** — verdicts go stale after 90 days; Etsy changes | ⬜ |
+| d | **Per-listing sampling** — now affordable: `organic_listing_ids` was always empty (parser bug, fixed 2026-08-20) and returns 39–51 ranked ids. Fetching those pages gives n≈40 instead of n≈9, which is what turns the intervals decisive. **The highest-value remaining item.** | ⬜ |
+| e | **Colour and format** — `attr_1` and `is_digital` are not on a card. Colour needs image analysis; format needs the listing page (already parsed by `product_type.detect_from_html`). Fold into (d). | ⬜ |
 
 **(a) is the better answer where it is affordable.** Per-listing measurement costs
 one request per listing and returns the truth; a SERP count costs one request and

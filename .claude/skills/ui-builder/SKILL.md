@@ -106,13 +106,32 @@ Build in this order because inward views need history the system hasn't collecte
 on day one:
 
 1. **Settings** — first. Nothing else works without the operator's costs/fees/labor.
-2. **Discover** — the ranked candidate pool (the home screen).
-3. **Cockpit** — the decision screen (the product's core).
-4. **Radar + Calendar** — trend feed and timing.
+2. **Calendar** — **the home screen** (D-20), and ✅ **built 2026-08-20**
+   (`etsy/ui/calendar_page.py`). This moved up from #4: the operator chose a
+   calendar-first product, and `06_ui_structure.md` was updated to match. An older
+   version of this list put Discover here; that is superseded.
+3. **Cockpit** — the decision screen for one candidate (the product's core).
+4. **Discover** — the ranked candidate pool, reached from the search bar.
 5. **Market + X-ray** — competitive depth.
 6. **My Shops / Performance** — inward views, LAST, once launches and ranks exist.
 
 Ship 1–3 as a usable product. Do not build 4–6 until 1–3 work on real data.
+
+### There is no read API, and that changes the stack question
+
+`06_ui_structure.md` specifies a React SPA calling `GET /launch-plans`. **No such
+endpoint exists** — the only HTTP server in the repo is `core/cookie_server.py`,
+which is dead code nothing imports. The prime directive above therefore bites on the
+whole stack, not just on one component.
+
+The Calendar was built as a **generated page** for that reason: no server, no build
+step, no daemon — matching how everything else here runs — and it satisfies the
+read-only contract absolutely, because a file cannot trigger a fetch. Regenerated
+daily by the scheduler, plus an `.ics` export so deadlines land in the operator's
+real calendar rather than in a tool they must remember to open.
+
+Build the next screen the same way unless a read API exists by then. If you add one,
+the SPA replaces these renderers without touching the engine underneath.
 
 ## Empty states are a feature, not a fallback
 

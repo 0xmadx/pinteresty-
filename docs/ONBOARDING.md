@@ -73,6 +73,8 @@ wrong; one live call settled it in seconds.
 | **Docs describe things that were never built** | When a doc and the code disagree, believe the code — then check the wire. `BIASES_AND_BLIND_SPOTS.md` is self-declared unverified and 2 of its 10 claims were wrong. |
 | **`similar_search_terms` / `market_gap_recommendations`** | In the schema, always empty. Probed on three keywords: `total_results_count: 0` every time. Do not build on them. |
 | **There is no quota** | `results-data` reports `quota_data {total: 15, remaining: 15}` and three consecutive distinct calls left it at 15/15. This endpoint does not consume it. |
+| **An empty collection hides an extraction bug** | `organic_listing_ids` returned `[]` on every page for the project's life because a regex proximity constraint never held. Empty is a *plausible* value, so nothing looked wrong. When a list is empty, prove the pattern matches before believing the data is absent. |
+| **A page-one sample is ~9 listings** | Etsy renders 12 slots, about half ads. A saturation share from 6 observations spans both the thin and crowded thresholds and cannot tell them apart. `card_saturation` withholds those brackets (D-36). |
 | **Filters are cumulative, not exclusive** | `delivery_days=14` *contains* the `≤7` listings. Reading brackets as bands double-counts. |
 
 ---
@@ -83,7 +85,7 @@ Four checks, in this order:
 
 1. **Does the function exist?** A capability is real when it is a function, not a
    paragraph. Count functions.
-2. **Does a test cover it?** ~1,108 assertions across ~40 offline suites. A test
+2. **Does a test cover it?** ~1,163 assertions across ~43 offline suites. A test
    that fails in a way you did not predict has found a real bug — twice this week.
 3. **What does the wire say?** The vault is usually green; probing is faster and
    more truthful than reasoning. This is explicitly allowed.

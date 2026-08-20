@@ -20,6 +20,8 @@ reaching the operator. Recent examples, all found by probing rather than reasoni
 | "US 83% / China 3.1% of listings" | Etsy's ships-from filter returns a *broader* set than the search. Seven countries summed to **1116%** of the market. |
 | `min_rating=5` saturation percentage | The filter is silently ignored; its own results are rated 4.8 and 4.9. |
 | 7-day and 14-day delivery as two bands | They are cumulative — `≤14` contains `≤7`. Reading them as bands double-counts fast sellers. |
+| An empty list of ranked listing ids | The extraction regex never matched. It returned `[]` on every page for years — silently, because empty is a plausible value. There are 39–51. |
+| "0% of listings offer this — a gap!" | Measured on 6 listings, the true share could be 39%. The sample cannot tell thin from crowded. |
 
 ---
 
@@ -76,7 +78,7 @@ Re-audits which Etsy SERP filters can be believed. **9 of 12 currently cannot.**
 ```bash
 .venv/Scripts/python.exe -m core.test_graph_db
 ```
-One of ~40 offline suites, **1,108 assertions**, no network required.
+One of ~43 offline suites, **1,163 assertions**, no network required.
 
 ---
 
