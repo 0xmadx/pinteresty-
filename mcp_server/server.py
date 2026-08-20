@@ -557,6 +557,28 @@ def calendar(lead_weeks: int = 6, product_type: str = "personalized",
     })
 
 
+@mcp.tool()
+@_guarded
+def cockpit(keyword: str, product_type: str = "personalized",
+            lead_weeks: int = 6) -> dict:
+    """Everything known about ONE candidate, with the three sources kept apart.
+
+    `timing` (Pinterest), `demand` (Etsy Private) and `supply` (Etsy Public) are
+    separate readings and must be reported separately. `combined.conflicts` is the
+    most important field: when Pinterest times a term well and Etsy says it cannot
+    be ranked, those are two clear opposite readings, not a middling score.
+
+    Reads the database only — no live calls, so it is fast and repeatable. A
+    `trend` with basis `refused` means the comparison would have measured our own
+    instrument rather than the market; report it as refused, never as no change.
+    """
+    from etsy.engines import cockpit as ck
+    state = ck.build(keyword, product_type=product_type, lead_weeks=lead_weeks)
+    return _ok({"candidate": state, "findings": ck.read(state),
+                "basis": "measured where stated; the verdict is provisional until "
+                         "settings are confirmed"})
+
+
 def main():
     mcp.run(transport="stdio")
 
