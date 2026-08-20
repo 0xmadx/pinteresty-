@@ -49,6 +49,12 @@ a zero delta means "moved less than the counter can show", not "sold nothing".
 The system was reporting `sales_per_day: 0.0, basis: measured_delta` for a
 25,000-sale shop across 4.7 days. It now reports a bound.
 
+**Moments were computed and then discarded.** `trends_bridge` stored a takeoff
+date only when a featured *topic* shared a *moment's* name — 86 topics, 13
+moments, zero overlap. All 13 were dropped, `takeoff_timestamp` was NULL in every
+row, and the calendar had never once rendered. The build plan called this "both
+halves exist, not connected"; the halves were connected and the join leaked.
+
 **The lesson each time was the same: probe the wire, do not reason about it.**
 Three plausible, documented explanations for the empty tables (D-24) were all
 wrong; one live call settled it in seconds.
@@ -59,7 +65,8 @@ wrong; one live call settled it in seconds.
 
 | Trap | Reality |
 |---|---|
-| **An empty session vault HANGS** | `get_valid_account` sleeps in an unbounded loop. It never returns and never errors. Always `python -m core.vault_status` first; use `vault_status.scan()` in code, never `get_valid_account`. |
+| **The vault is db 1, and a stale copy reads as EMPTY** | This project reads its own Redis database; `vault_mirror` copies from the shared one (D-33). `HEARTBEAT_MAX_AGE` is 300s, so a copy five minutes old shows every profile stale and the vault empty while Chrome is beaming fine cookies. **Anything that judges db 1 must sync first** — `preflight` and `vault_status` do. A direct API call from an ad-hoc script does not. |
+| **A signed-out jar still has 30+ cookies** | The vault now checks for `session-key-www` (Etsy) / `_auth` (Pinterest), not merely that cookies exist. Without that, requests go out anonymous and Etsy answers with plausible PUBLIC data — the run "succeeds" while collecting the wrong thing. |
 | **Two Redis servers share port 6379** | `localhost` reaches a stale native one; the real vault is the Docker container at the address in `.env`. If the vault suddenly reads empty, this is the first suspect. |
 | **snake_case vs camelCase** | Etsy Private returns snake_case. Seven modules read camelCase and got `None` for the project's whole life. Always go through `parse_results_data` / `parse_term_summaries`. |
 | **`.env` and `dump.rdb` hold live secrets** | Both are gitignored. `dump.rdb` contains session cookies. Never `git add -A` in this repo — it has already leaked credentials twice (`.env`, `registry.json`). |
@@ -76,7 +83,7 @@ Four checks, in this order:
 
 1. **Does the function exist?** A capability is real when it is a function, not a
    paragraph. Count functions.
-2. **Does a test cover it?** ~593 assertions across ~35 offline suites. A test
+2. **Does a test cover it?** ~1,108 assertions across ~40 offline suites. A test
    that fails in a way you did not predict has found a real bug — twice this week.
 3. **What does the wire say?** The vault is usually green; probing is faster and
    more truthful than reasoning. This is explicitly allowed.
@@ -87,21 +94,26 @@ Four checks, in this order:
 
 ## 5. What is real right now
 
-**Built and tested:** four API clients (Etsy public, Etsy private, Pinterest,
+**The calendar renders** (`python -m etsy.engines.calendar_engine`) and gaps can
+resolve positively. Both were structurally impossible until 2026-08-19 — see D-34
+and §3b of the build plan.
+
+**Built and tested:** the calendar and demand-in-bracket · four API clients (Etsy public, Etsy private, Pinterest,
 Printify) · profit gate with per-type margin floors and a weekly capacity ceiling
 · `required_price` and `affordable_cogs` (its two inverses) · survivor bound ·
 gap analysis gated on filter trust · sourcing, origin sampling and lead time ·
 POD costing · scoring with a discrimination check · request cache · run log ·
-scheduler · LEARN scaffold · 12 MCP tools.
+scheduler running daily · verdict change log · vault separation · LEARN
+scaffold · 14 MCP tools.
 
 **Empty or thin — and this is the real constraint:**
 
 ```
-     84  trend_observations      (written today, first ever)
-    304  listing_observations
-      6  shop_observations       (3 readings x 2 shops)
-      1  keyword_observations
-      0  launches                <-- LEARN cannot start
+     trend_observations      accumulating; 13 of them are DATED moments
+     listing_observations    accumulating
+     shop_observations       accumulating (the delta needs two readings)
+     keyword_observations    8 watched terms, sweeping daily
+              0  launches    <-- LEARN cannot start
 ```
 
 **Value compounds only with time.** A daily delta is the difference between two
@@ -124,9 +136,14 @@ and every verdict says `provisional: true`.
 ## 6. Scope boundaries that are not yours to move
 
 **No Playwright, no Puppeteer, no headless browser — ever.** `requests` and
-`curl_cffi` are fine. Sessions come from the Chrome extension via the Go cookie
-server into Redis. Read that layer, document it, never extend it. If a task seems
-to require new session-handling code, stop and say so.
+`curl_cffi` are fine.
+
+**The access layer is read-only to you unless the operator says otherwise.**
+Sessions come from the Chrome extension via the Go cookie server into Redis. It
+was hardened once, on 2026-08-19, with explicit permission — heartbeat, signed-out
+check, lease, and `classify()` so a 429 or a bug in our own request can no longer
+burn the seller session (D-35, `docs/SESSION_LAYER_FIX.md`). That permission was
+for that work. If a task seems to require new session-handling code, stop and ask.
 
 **Never put a competitor's `shop_id` in a private URL.** The `{shop_id}` in a
 private endpoint is *who we are*, not who we are asking about. A burned buyer

@@ -469,3 +469,138 @@ into making scraping prettier.
 | ~~O-5~~ | ~~The three source-doc contradictions~~ | ✅ closed — see `WHATS_ACTUALLY_THERE.md` |
 | **O-6** | Which Etsy public parameters exist beyond the 13 in use (`page`, `min`/`max`, `attr_2/3`)? | reading Etsy's own filter UI — guessing is what this project keeps getting burned by |
 | ~~O-7~~ | ~~Calendar or search box as the home screen?~~ | ✅ closed — **calendar first, search as second door** (D-20) |
+
+---
+
+## D-32 — A filter is trusted because it passed, not because it exists
+
+**Date:** 2026-08-19
+
+**Context.** `locationQuery` was found to return a *broader* result set than the
+search it filters. On a query with 10,011 listings, Germany returned 28,271 and
+seven countries summed to **1116%** of the market they claim to partition. Every
+number was real, well-formed, and meaningless as a share — and `find_gaps` had
+been reading them as saturation percentages for the life of the project.
+
+Eleven other filters fed the same analysis and had never been checked.
+
+**Chosen.** Audit every filter, record the verdict in `config/filter_trust.json`
+with its raw evidence, and make `find_gaps` **refuse** any bracket whose filter
+did not pass — returning `untrusted_source`, which outranks every other rule,
+including a thin bracket with proven demand.
+
+**The result:** 9 of 12 cannot be believed.
+
+| status | filters |
+|---|---|
+| trusted | `delivery_days`, `gift_wrap`, `is_personalizable` |
+| ignored | `min_rating` (returns 4.8-rated listings), `best_by_etsy`, `holiday` |
+| not a subset | `attr_1` (colours sum to 562%), `is_digital` |
+| unstable | `is_star_seller`, `is_discounted`, `free_shipping`, `locationQuery` |
+
+**Rejected: trusting a filter until it visibly breaks.** `unverified` is the
+default status and is deliberately *not* `trusted`. Absence of evidence is exactly
+what let `locationQuery` run unchallenged.
+
+**A second finding made the first pass too harsh.** `organic_listings_count` is an
+**estimate** — identical unfiltered searches returned 217,196 / 217,196 / 217,395.
+`COUNT_JITTER` (2%) absorbs that drift. Reclassifying the *stored evidence* rather
+than re-probing moved three filters from "broken" to the accurate "ignored", which
+is why the registry keeps every raw observation.
+
+Verdicts go stale after 90 days. Etsy changes.
+
+---
+
+## D-33 — Two projects, one browser, separate vaults
+
+**Date:** 2026-08-19
+
+**Context.** The Chrome extension, the Go cookie server, the Redis container and
+`docker-compose.yml` all belong to this repo. A second project (`pinterest-apify`)
+is a guest on that infrastructure, reading `cookie:pinterest:*` from the same
+`db 0`. Both projects *manage* that store: our `plan_prune` iterated all three
+platforms and would delete profiles they depend on; their `mark_blocked` shrinks
+our pool. Not a bug in either — two owners of one mutable store.
+
+**Chosen.** Keep the write path exactly as it is (one browser, one extension, one
+Go server, writing db 0) and stop *reading* it. This project reads **db 1**;
+`core/vault_mirror.py` copies one-way into it. Same server, separate logical
+database, and nothing on their side changes at all.
+
+**Rejected: routing the Go server to two databases.** It would have required
+editing the writer both projects depend on, and a mistake there starves the other
+project silently — which happened once during this work and was caught only by
+re-reading the compose file.
+
+**The trap it creates, and the rule that closes it.** A copy goes stale;
+`HEARTBEAT_MAX_AGE` is 300s, so five minutes after a sync every profile reads
+stale and the vault looks **empty** while Chrome is beaming fine cookies into
+db 0. So **anything that judges db 1 must refresh it first** — `preflight` and
+`vault_status` both do. `ScraperConfig.REDIS_URL` also *defaults* to db 1, so an
+unloaded `.env` cannot silently re-merge the projects.
+
+---
+
+## D-34 — Demand inside a bracket is inferred from its listings, and refused when thin
+
+**Date:** 2026-08-19
+
+**Context.** D-10 requires demand to be shown *inside* a bracket before it can be
+called a gap. Nothing ever supplied it, so `find_gaps` received `{}` and every
+thin bracket returned `thin_but_unproven`. The 🎯 feature was structurally
+incapable of a positive result for the project's whole life.
+
+**The constraint.** Etsy reports search volume per **term**, never per bracket.
+There is no "how many people searched for gift-wrapped mugs" anywhere, so this
+cannot be looked up.
+
+**Chosen.** Infer it from the listings that occupy the bracket, using the only
+per-listing demand evidence the public SERP carries: review counts. Each of the
+evidence's limits becomes a refusal rather than a caveat —
+
+* reviews are **lifetime**, so they are labelled demand *evidence*, never a rate,
+  and never multiplied into a projection;
+* a card whose count did not parse is **excluded**, not zeroed (N-02);
+* ads are excluded — a paid slot proves spending, not conversion;
+* fewer than 4 organic cards yields **no median at all**: two listings with 400
+  reviews each are `unmeasured`, because a median of two is arithmetic;
+* an untrusted filter is **refused by name** (D-32), distinct from unmeasured —
+  we did not fail to look, we declined to.
+
+**Rejected: requiring the bracket to beat the market median.** In a market where
+nobody buys, every bracket would look healthy. An absolute floor decides; the
+market baseline is reported alongside so the comparison stays checkable.
+
+---
+
+## D-35 — An unverifiable session is deprioritised, not destroyed
+
+**Date:** 2026-08-19
+
+**Context.** `cookie_vault` checked freshness only `if last_updated:`, so a
+profile with **no heartbeat** skipped the check entirely and was served forever —
+a missing heartbeat read as a fresh one, N-02 inside the access layer. The
+reference implementation in `pinterest-apify` evicts these outright.
+
+**Chosen.** Prefer profiles with a fresh heartbeat; fall back to a heartbeat-less
+one only when nothing better exists, and say so loudly. **Do not evict it.**
+
+**Why the departure.** That project can afford eviction — its extension actively
+beams the one account it needs. Here `private_seller_1` has no heartbeat and *is*
+the operator's seller session; `plan_prune` preserves it deliberately as "the one
+verified-working seller profile [which] predates the heartbeat field", and nothing
+beams it back. Unknown freshness is not freshness, but it is also not proof of
+death, and destroying the irreplaceable on a suspicion is the expensive direction
+of this error (D-29).
+
+**Also rejected: making "no heartbeat" a blocking problem in the diagnostic.** It
+was tried and reverted within minutes — `test_vault_status` failed and its
+docstring explained why an earlier version had made exactly that mistake, reporting
+a vault of 20 working profiles as "0 usable". A diagnostic that cries wolf is worse
+than none.
+
+**Related, same commit:** `session_manager.classify()` now separates
+`rate_limited` / `malformed` / `auth_expired` / `blocked`. Only the last two evict,
+so neither Etsy throttling nor a bug in our own request can retire the seller
+account — the old code evicted on 429.

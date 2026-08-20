@@ -33,15 +33,22 @@ reaching the operator. Recent examples, all found by probing rather than reasoni
 **Everything is a module**, run from the repo root; never `python path/to/file.py`.
 
 **Check the vault before any live run.** Sessions come from a Redis vault filled
-by a Chrome extension, not from `.env`. An empty pool does not fail — it *hangs*,
-in an unbounded sleep loop.
+by a Chrome extension, not from `.env`. This project reads its own database
+(db 1); `core/vault_mirror.py` copies from the shared one, so a second project
+sharing the browser cannot disturb these sessions and vice versa (D-33).
 
 ### The things you will actually run
 
 ```bash
+.venv/Scripts/python.exe -m etsy.engines.calendar_engine
+```
+**The front door.** What to list and by when — Pinterest takeoff dates joined to
+Etsy demand, ranked by winnability.
+
+```bash
 .venv/Scripts/python.exe -m etsy.analytics.discover
 ```
-Cheap front door — trending terms with real volumes, no quota cost.
+Cheap keyword front door — trending terms with real volumes, no quota cost.
 
 ```bash
 .venv/Scripts/python.exe -m etsy.engines.master_arbitrage
@@ -69,7 +76,7 @@ Re-audits which Etsy SERP filters can be believed. **9 of 12 currently cannot.**
 ```bash
 .venv/Scripts/python.exe -m core.test_graph_db
 ```
-One of ~35 offline suites, **593 assertions**, no network required.
+One of ~40 offline suites, **1,108 assertions**, no network required.
 
 ---
 
@@ -83,7 +90,7 @@ One of ~35 offline suites, **593 assertions**, no network required.
                   └───────┬───────┘
                           │
      core/         session vault (Redis) · cache · run log · guards
-     mcp_server/   12 read-only tools for Claude / Antigravity
+     mcp_server/   14 read-only tools for Claude / Antigravity
 ```
 
 | Directory | Holds |
@@ -109,9 +116,10 @@ One of ~35 offline suites, **593 assertions**, no network required.
    `below_resolution` and `uninformative` are all real answers.
 5. **Time is append-only.** `*_observations` have `collected_at` in the primary
    key. Derivations may be recomputed; observations may not be overwritten.
-6. **Do not touch the access layer.** `core/session_manager.py`,
-   `core/cookie_vault.py`, `cookie_server_go/`, `chrome_extension/` — read them,
-   never extend them. **No Playwright or headless browsers, ever.**
+6. **Do not touch the access layer** without the operator's explicit say-so.
+   `core/session_manager.py`, `core/cookie_vault.py`, `cookie_server_go/`,
+   `chrome_extension/`. It was hardened once, on 2026-08-19, with permission —
+   see `docs/SESSION_LAYER_FIX.md`. **No Playwright or headless browsers, ever.**
 7. **Rank by winnability, never market size.** A term with 2M listings is a wall.
 8. **Public unless seller access is mandatory.** `etsy_private` authenticates as
    the operator's own seller account — the one unreplaceable asset here.
@@ -120,13 +128,14 @@ One of ~35 offline suites, **593 assertions**, no network required.
 
 ## Current state
 
-**Working:** all four API clients · profit gate and its two inverses · survivor
-bound · gap analysis with a filter-trust gate · sourcing and lead time · POD
-costing · scoring with a discrimination check · scheduler · LEARN scaffold ·
-12 MCP tools.
+**Working:** **the calendar** · all four API clients · profit gate and its two
+inverses · survivor bound · gap analysis with a filter-trust gate and working
+demand-in-bracket · sourcing and lead time · POD costing · scoring with a
+discrimination check · scheduler running daily · verdict change log · LEARN
+scaffold · 14 MCP tools.
 
-**Thin:** the data. 84 trend observations, 304 listing observations, 6 shop
-readings, 1 keyword observation, **0 launches**. The machine is built and has
+**Thin:** the data. Trend, listing and shop observations accumulate daily;
+keyword history covers 8 watched terms; **0 launches**. The machine is built and has
 barely been switched on, and **value here compounds only with time** — a daily
 delta needs two readings a day apart, and LEARN needs 10 launches. None of it
 can be backfilled.
@@ -147,6 +156,8 @@ rather than the operator's own.
 |---|---|
 | `docs/ONBOARDING.md` | **start here** — what is true, what is a trap, what to read |
 | `docs/MCP.md` | wiring the MCP server into Claude / Antigravity, and where DeepSeek belongs |
+| `docs/VAULT_SEPARATION.md` | why this project reads Redis db 1, and what that guarantees |
+| `docs/SESSION_LAYER_FIX.md` | the four session-layer gaps and how they were closed |
 | `docs/HOW_WE_WORK.md` | the three seats and the loop |
 | `docs/market_map/` | per-platform endpoint reference and what each signal is worth |
 | `docs/architecture/09_build_plan.md` | what is being built, in what order |

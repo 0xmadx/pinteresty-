@@ -42,14 +42,18 @@ time.
 
 | # | Stage | Status | Gap |
 |---|---|---|---|
-| 1 | **DISCOVER** — find candidates | ⚠️ | front door (`get_trending_terms`) never called; Pinterest wide crawl unwired |
-| 2 | **MEASURE** — volume, CVR, supply, competitors, saturation | ✅ | *(fixed 2026-08-12 — see §3)*; pagination and a filter registry still missing |
-| 3 | **JUDGE** — profit gate, survivor bound, gaps, ranking | ✅ | done and tested |
-| 4 | **TIME** — takeoff → "list by Sept 22" | ❌ | both halves exist, not connected |
+| 1 | **DISCOVER** — find candidates | ✅ | `discover.py` front door works; Pinterest wide crawl still unwired |
+| 2 | **MEASURE** — volume, CVR, supply, competitors, saturation | ✅ | daily `keyword_sweep` running; pagination still missing |
+| 3 | **JUDGE** — profit gate, survivor bound, gaps, ranking | ✅ | gaps can now resolve POSITIVELY (D-34); only 3 filter dimensions are trustworthy (D-32) |
+| 4 | **TIME** — takeoff → "list by Sept 22" | ✅ | **done 2026-08-19** — `calendar_engine.py`. Moments were being computed and discarded; see §3b |
 | 5 | **DECIDE** — where to list | ❌ | designed (D-11), deferred by D-21 |
 | 6 | **GENERATE** — title, tags, price, flaws | ⚠️ | tags done; no demographics injection |
-| 7 | **TRACK** — launches, ranks, deltas | ✅ | built, never run |
-| 8 | **LEARN** — did predictions hold | ✅ | schema ready, needs 10 launches |
+| 7 | **TRACK** — launches, ranks, deltas | ✅ | daily scheduler running since 2026-08-19 |
+| 8 | **LEARN** — did predictions hold | ⚠️ | outcome capture built (sales/revenue, not just rank); **0 launches recorded** |
+
+**Every stage is now built.** What remains is a UI, the dimensions the filter audit
+took away, and time — the LEARN loop cannot start until launches exist, and no
+amount of building substitutes for that.
 
 ---
 
@@ -95,6 +99,31 @@ week-over-week momentum), `similar_search_terms`, and `market_gap_recommendation
 
 ---
 
+## 3b. The second finding that reset the calendar (2026-08-19)
+
+The TIME loop was recorded above as "both halves exist, not connected". The halves
+*were* connected — **the join discarded everything.**
+
+`trends_bridge` iterated the 86 **featured topics** and attached a takeoff date
+only when a topic happened to share a moment's name. Measured live: 86 topics, 13
+moments, and the overlap is **zero** — topics are "Senior Spirit Jeans and Pants",
+moments are "christmas". So all 13 moments were fetched, their launch plans
+computed in full, and dropped. `takeoff_timestamp` was NULL in all 84 stored rows.
+
+`christmas` sat in that discarded set carrying `list_by 2026-09-16` — the exact row
+this product exists to show, calculated correctly and deleted.
+
+**The peak was being dropped too**, and it is what separates LATE from MISSED. And
+while it was missing, `classify` still answered "late, not missed" — a claim *about
+the peak*, made without one, in the optimistic direction. It put Independence Day
+(April) on the list-now row in August. There is now an `UNTIMED` state: deadline
+gone, peak unmeasured, cannot tell.
+
+This is D-24 again, in a third costume. The doc said "not connected" and nobody
+checked whether the connection existed and leaked.
+
+---
+
 ## 4. Build order
 
 ### Phase 0a — Turn the vault green (blocks everything below)
@@ -133,7 +162,8 @@ everything else or it accumulates over time.
 | 1 | ~~**Settings** — config file + CLI~~ | ✅ **done 2026-08-14** — `core/settings_store.py`, `config/settings.json`, 28 assertions. See below. |
 | 2 | ~~**Competitor outcome tracker**~~ | ✅ **done 2026-08-15** — `competitor_tracker.py`, 31 assertions (`ea425a1`, `e6b17b5`) |
 | 3 | ~~**Scheduler**~~ | ✅ **done 2026-08-15** — `core/scheduler.py`, 22 assertions |
-| 4 | **Seed shops + one bridge run** | ⚠️ **partly done** — 2 shops seeded, 228 observations. Both are **stars**; a mid-tier shop is still missing and `settings_store` warns about it (B-01). Pinterest bridge not yet run. |
+| 4 | **Seed shops + one bridge run** | ⚠️ **partly done** — bridge now runs weekly and writes 99 rows (86 topics + 13 **moments**). 2 shops seeded, both **stars**; a mid-tier shop is still missing (B-01). |
+| 5 | ~~**The clock actually running**~~ | ✅ **done 2026-08-19** — `run_scheduler.cmd` registered as the Windows task `EtsyScrapperDaily`, 07:00. Five jobs: shop_sweep, keyword_sweep, calendar (daily), rank_check (56h), pinterest_bridge (weekly). |
 
 #### What the wire taught us building item 2
 
@@ -243,11 +273,11 @@ not *"they listed something"*.
 
 | # | Build | Why |
 |---|---|---|
-| 7 | **TIME loop** — `moments` → Etsy `holiday` filter → `list_by` | The calendar's engine. Both halves exist. |
+| 7 | ~~**TIME loop**~~ | ✅ **done 2026-08-19** — `calendar_engine.py`, 30 assertions. NOT via the `holiday` filter, which the audit found Etsy silently ignores (D-32); the join is moment → takeoff → `list_by`, with watched terms and their measured demand attached. |
 | 8 | ~~**DISCOVER front door**~~ | ✅ **done 2026-08-15** — `discover.py`, 18 assertions. 28 candidates, no keyword typed. Two findings below. |
 | 9 | **Forecast** — `predicted_days=56` + the missing `split_forecast()` | The ⚪ WATCHING row. Pinterest ships a 91-day forecast nobody uses. |
-| 10 | **Demand-in-bracket** | 🎯 "gap found" can never fire without it. |
-| 11 | **Filter registry** — product-type gated, gates the *request* | Stops asking digital products about shipping; replaces 150 lines of pasted calls. |
+| 10 | ~~**Demand-in-bracket**~~ | ✅ **done 2026-08-19** — `bracket_demand.py`, 31 assertions. Inferred from the review counts of the listings occupying the bracket, because Etsy reports volume per TERM and never per bracket (D-34). |
+| 11 | **Filter registry** — product-type gated, gates the *request* | ⚠️ **superseded in scope by D-32.** A trust registry now exists and gates the *verdict*; 9 of 12 filters cannot be believed. The remaining work is gating the *request* by product type, which is now mostly moot — there are only 3 usable dimensions left to ask about. |
 
 #### What DISCOVER turned up
 
@@ -291,6 +321,24 @@ the only winnable one on the screen.
 the price earn the *click*. Everything this repo generates today (titles, 13 tags) acts
 at the impression stage, so a listing with a click problem gets confident, useless
 advice.
+
+### Phase 2c — what the filter audit took away (added 2026-08-19)
+
+D-32 left three trustworthy dimensions: `delivery_days`, `gift_wrap`,
+`is_personalizable`. The gap analysis was designed around ten. This is the honest
+consequence and it needs a decision, not a workaround.
+
+| # | Build | Status |
+|---|---|---|
+| a | **Substitute measurements from listing pages** — origin, colour and rating read per listing rather than from SERP counts, the way `sample_origins` already replaced `locationQuery` | ⬜ |
+| b | **Or: accept a three-axis gap analysis and say so** in the output, rather than showing a thin dimension list as if it were the whole picture | ⬜ |
+| c | **Re-audit on a schedule** — verdicts go stale after 90 days; Etsy changes | ⬜ |
+
+**(a) is the better answer where it is affordable.** Per-listing measurement costs
+one request per listing and returns the truth; a SERP count costs one request and
+returns a number that may not be a share of anything. The towel work proved the
+pattern: `sample_origins` found a Turkish seller that Etsy's country filter cannot
+even express.
 
 ### Phase 3 — Pinterest's unused half
 
