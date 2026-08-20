@@ -607,6 +607,36 @@ def discover(limit: int = 40) -> dict:
     })
 
 
+@mcp.tool()
+@_guarded
+def tracked_market() -> dict:
+    """The competitor shop window: tracked shops and their listings that match a
+    watched term, ranked by review velocity.
+
+    Two numbers to read carefully. `sales_per_day` is a BOUND — Etsy's counter is
+    quantised, so "fewer than 21/day" is honest and "0/day" is not. Review velocity
+    is a FLOOR — reviews undercount sales, so a listing gaining reviews sells at
+    least that fast. Both tracked shops are stars (B-01): this shows what winners
+    do, not what works.
+    """
+    from etsy.ui import market_page
+    data = market_page.gather()
+    return _ok({
+        "shops": [{
+            "shop": d["shop"],
+            "lifetime_sales": (d["latest"] or {}).get("total_sales"),
+            "sales_per_day_bound": d["rate_bound"],
+            "matched_listings": [{
+                "title": m.get("title"), "matches": m.get("matched_term"),
+                "review_velocity_floor": (m.get("velocity") or {}).get("velocity"),
+                "velocity_basis": (m.get("velocity") or {}).get("basis"),
+            } for m in d["matched"]],
+        } for d in data],
+        "basis": "measured; sales-per-day is a bound, review velocity a floor",
+        "warning": "all tracked shops are star sellers — survivor bias (B-01)",
+    })
+
+
 def main():
     mcp.run(transport="stdio")
 

@@ -195,6 +195,7 @@ footer{{margin-top:24px;padding-top:14px;border-top:1px solid var(--line);
 <nav class="nav">
   <a href="calendar.html">Calendar<span>what to list, and by when</span></a>
   <a href="discover.html">Discover<span>terms worth a look</span></a>
+  <a href="market.html">Market<span>competitor shop window</span></a>
   <a href="calendar.ics">Calendar feed<span>.ics for your calendar app</span></a>
 </nav>
 
@@ -220,10 +221,16 @@ def write(out_dir=OUT_DIR, db_path="market_intelligence.db", lead_weeks=6,
           now=None, render_cockpits=True):
     """Render the index, and a fresh cockpit for every watched term."""
     from core.settings_store import load
-    from etsy.ui import cockpit_page
+    from etsy.ui import cockpit_page, market_page
 
     terms = load().terms()
     os.makedirs(out_dir, exist_ok=True)
+
+    # The competitor window, refreshed alongside the index.
+    try:
+        market_page.write(out_dir=out_dir, db_path=db_path, now=now)
+    except Exception as e:
+        print(f"[!] market page not rendered: {e}")
 
     if render_cockpits:
         for term in terms:
