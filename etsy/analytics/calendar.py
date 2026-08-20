@@ -25,6 +25,10 @@ LIST_NOW = "list_now"
 LIST_BY = "list_by"
 WATCHING = "watching"
 PASSED = "passed"
+# Deadline gone AND no peak measured. Not a state of the world — a state of our
+# knowledge, and it must not be collapsed into either PASSED (pessimistic, discards
+# a live moment) or LIST_NOW (optimistic, puts a dead one on the operator's list).
+UNTIMED = "untimed"
 
 # Inside this many weeks the deadline is the news, not the date.
 URGENT_WEEKS = 2.0
@@ -64,6 +68,16 @@ def classify(plan, now=None):
     if days_to_peak is not None and days_to_peak < 0:
         return {**plan, "state": PASSED, "days_to_peak": days_to_peak,
                 "reason": f"peak was {abs(days_to_peak)} days ago — wait for next year"}
+
+    if weeks_left <= 0 and days_to_peak is None:
+        # The deadline has gone and we do not know where the peak is. "Late, not
+        # missed" is a claim about the peak, so without one it cannot be made —
+        # and it is the optimistic direction, which would put a dead moment on the
+        # operator's list-now row. Refuse and say which reading is missing.
+        return {**plan, "state": UNTIMED, "days_to_peak": None, "is_late": True,
+                "reason": (f"deadline passed {abs(weeks_left):.1f} weeks ago and the "
+                           f"peak date is UNMEASURED — cannot tell late from missed. "
+                           f"Re-run the Pinterest bridge to get a peak.")}
 
     if weeks_left <= 0:
         # Late, but the peak is ahead. A real chance, at a cost worth naming: less
@@ -121,13 +135,13 @@ def build(moments, terms=None, lead_weeks=6, now=None, include_passed=False):
         row["terms"] = match_terms_to_moment(row["moment"], terms)
         rows.append(row)
 
-    order = {LIST_NOW: 0, LIST_BY: 1, WATCHING: 2, PASSED: 3}
+    order = {LIST_NOW: 0, LIST_BY: 1, WATCHING: 2, UNTIMED: 3, PASSED: 4}
     return sorted(rows, key=lambda r: (order[r["state"]], r["list_by"]))
 
 
 def render(rows):
     """Plain-text calendar — the terminal stand-in for the home screen."""
-    icon = {LIST_NOW: "🔴", LIST_BY: "🟡", WATCHING: "⚪", PASSED: "⬛"}
+    icon = {LIST_NOW: "🔴", LIST_BY: "🟡", WATCHING: "⚪", UNTIMED: "❔", PASSED: "⬛"}
     lines = []
     for row in rows:
         late = "  ⚠️ LATE" if row.get("is_late") else ""

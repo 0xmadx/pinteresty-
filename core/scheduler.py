@@ -269,6 +269,38 @@ def job_rank_check():
     return track_ranks()
 
 
+def job_calendar():
+    """Daily: recompute the calendar and record any verdict that moved.
+
+    Cheap — it reads the database and makes no requests. Daily because `weeks_left`
+    changes every day even when nothing else does, and a moment crossing from
+    "list by" into "list now" is exactly the thing the operator must not miss.
+
+    Recording it also gives verdict_log something to diff, so "christmas flipped to
+    list-now on the 16th" becomes answerable later.
+    """
+    from etsy.analytics import verdict_log
+    from etsy.engines import calendar_engine
+
+    rows = calendar_engine.build()
+    for row in rows:
+        best = (row["evidence"] or [{}])[0]
+        verdict_log.record(
+            subject=f"moment:{row['moment']}",
+            verdict=row["state"],
+            inputs={"list_by": row["list_by"], "peak": row.get("peak"),
+                    "weeks_left": row.get("weeks_left"),
+                    "terms": len(row["evidence"]),
+                    "actionable": row["actionable"],
+                    "lead_term": best.get("term"),
+                    "demand_per_listing": best.get("demand_per_listing")},
+            basis="derived from measured takeoff dates and keyword observations",
+            note=row["reason"])
+    urgent = [r["moment"] for r in rows if r["state"] == "list_now"]
+    return {"moments": len(rows), "list_now": urgent,
+            "actionable": [r["moment"] for r in rows if r["actionable"]]}
+
+
 def job_pinterest_bridge():
     """Weekly: Pinterest momentum joined to the Etsy terms we care about.
 
@@ -285,6 +317,8 @@ def default_jobs():
             description="competitor shop totals, inventory and review counts"),
         Job("keyword_sweep", 24, job_keyword_sweep, platforms=("etsy_private",),
             description="volume, supply, CVR and price band for every watched term"),
+        Job("calendar", 24, job_calendar, platforms=(),
+            description="recompute list-by dates and record verdict changes"),
         Job("rank_check", 56, job_rank_check, platforms=("etsy",),
             description="rank of our launched listings (~3x/week)"),
         Job("pinterest_bridge", 168, job_pinterest_bridge, platforms=("pinterest",),

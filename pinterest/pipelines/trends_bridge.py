@@ -162,8 +162,53 @@ def run(country="US", lead_weeks=LEAD_WEEKS, dry_run=False, now=None):
             db.record_trend(**fields)
         written += 1
 
+    # MOMENTS ARE WRITTEN IN THEIR OWN RIGHT, not merely as enrichment of a topic.
+    #
+    # The loop above only records a takeoff date when a FEATURED TOPIC happens to
+    # share a moment's name. Measured live 2026-08-19: 86 topics, 13 moments, and
+    # the overlap is ZERO — topics are things like "Senior Spirit Jeans and Pants"
+    # while moments are "christmas", "halloween". So every moment was computed in
+    # full and then discarded, and `takeoff_timestamp` was NULL in all 84 stored
+    # rows.
+    #
+    # That is the entire basis of the calendar. `christmas` was sitting in that
+    # discarded set with list_by 2026-09-16 and 3.9 weeks left — the exact row this
+    # product exists to show.
+    #
+    # A moment is a different KIND of observation from a topic: it carries dates and
+    # no colour or velocity, so it gets its own `source` rather than being forced
+    # into the topic shape. Nothing here is derived to fill the gaps — a moment has
+    # no dominant colour and that stays absent.
+    for key, plan in sorted(moments.items()):
+        fields = dict(
+            trend_name=plan["moment"],
+            source="pinterest_moments",
+            country=country,
+            collected_at=collected_at,
+            takeoff_timestamp=plan.get("takeoff"),
+            list_by=plan.get("list_by"),
+            takeoff_basis="measured",
+            # The peak decides LATE vs MISSED, which is the calendar's most
+            # valuable call: a deadline that passed while the peak is still ahead
+            # is a live chance, not a lost one. Storing takeoff alone discarded it.
+            peak_date=plan.get("peak"),
+            peak_length_days=plan.get("peak_length_days"),
+            phase=plan.get("phase"),
+            # A moment carries no colour, demographic or velocity. Absent, not zero.
+            color_basis="absent",
+            demographic_basis="absent",
+            velocity_basis="absent",
+        )
+        if dry_run:
+            print(f"    [moment] {plan['moment'][:24]:24} takeoff={plan.get('takeoff')}"
+                  f"  list_by={plan.get('list_by')}  phase={plan.get('phase')}")
+        else:
+            db.record_trend(**fields)
+        written += 1
+
     verb = "would write" if dry_run else "wrote"
-    print(f"[BRIDGE] {verb} {written} trend observations at {collected_at}")
+    print(f"[BRIDGE] {verb} {written} trend observations at {collected_at} "
+          f"({len(topics)} topics + {len(moments)} moments)")
     return written
 
 

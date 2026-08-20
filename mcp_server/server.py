@@ -520,6 +520,43 @@ def verdict_history(subject: str) -> dict:
                 "basis": "measured" if state.get("readings") else "unmeasured"})
 
 
+@mcp.tool()
+@_guarded
+def calendar(lead_weeks: int = 6, product_type: str = "personalized",
+             country: str = "US") -> dict:
+    """What should be listed, and by when? The front door.
+
+    Joins Pinterest takeoff dates to Etsy demand: each dated moment gets a list-by
+    deadline (takeoff minus `lead_weeks`) and the watched terms that belong to it,
+    each with volume, supply and demand-per-listing.
+
+    Read `is_wall` before recommending anything. A term can clear the margin gate
+    and still be unrankable — "christmas ornament" is 25,477 searches against
+    1,405,731 listings, profitable and impossible. Rank by demand_per_listing,
+    never by volume.
+
+    `state` is list_now / list_by / watching / untimed / passed. `untimed` means the
+    deadline has passed and no peak was measured, so late cannot be told from
+    missed — report it as unknown, never as an opportunity.
+    """
+    from etsy.engines import calendar_engine
+    rows = calendar_engine.build(country=country, lead_weeks=lead_weeks,
+                                 product_type=product_type)
+    return _ok({
+        "lead_weeks": lead_weeks,
+        "moments": [{
+            "moment": r["moment"], "state": r["state"], "list_by": r["list_by"],
+            "peak": r.get("peak"), "is_late": r.get("is_late"),
+            "reason": r["reason"], "actionable": r["actionable"],
+            "terms": r["evidence"],
+        } for r in rows],
+        "basis": "measured (Pinterest takeoff dates + Etsy keyword observations); "
+                 "profit verdicts are provisional until settings are confirmed",
+        "note": "A moment with no terms is dated but has nothing aimed at it — that "
+                "is 'we have not looked', not 'no opportunity'.",
+    })
+
+
 def main():
     mcp.run(transport="stdio")
 

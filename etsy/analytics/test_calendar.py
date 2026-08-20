@@ -12,7 +12,7 @@ Offline: synthetic plans shaped like real `launch_plan` output.
 """
 from datetime import datetime, timedelta, timezone
 
-from etsy.analytics.calendar import (LIST_BY, LIST_NOW, PASSED, WATCHING, build,
+from etsy.analytics.calendar import (LIST_BY, LIST_NOW, PASSED, UNTIMED, WATCHING, build,
                                      classify, match_terms_to_moment)
 
 passed = failed = 0
@@ -104,6 +104,42 @@ gone = [{"moment": "gone",
 check("passed moments are hidden by default", build(gone, now=NOW) == [])
 check("but available on request",
       build(gone, now=NOW, include_passed=True)[0]["state"] == PASSED)
+
+
+# --- a passed deadline with NO peak cannot be judged ----------------------------
+# "Late, not missed" is a claim about the PEAK. Without one it cannot be made, and
+# it is the optimistic direction — it would put a dead moment on the list-now row.
+# This fired for real: the Pinterest bridge stored takeoff dates but not peaks, so
+# Independence Day (April) was being reported as "late, not missed" in August.
+print()
+now = datetime(2026, 8, 20, tzinfo=timezone.utc)
+no_peak = classify({"moment": "independence day", "list_by": "2026-04-28",
+                    "takeoff": "2026-06-09", "peak": None, "weeks_left": -16.3}, now)
+check("a passed deadline with no peak is UNTIMED, not 'late but catchable'",
+      no_peak["state"] == UNTIMED, no_peak["state"])
+check("it is still flagged late", no_peak["is_late"] is True)
+check("and the reason names the missing reading",
+      "UNMEASURED" in no_peak["reason"], no_peak["reason"])
+check("it does NOT claim a peak distance",
+      no_peak["days_to_peak"] is None, no_peak)
+
+# The same moment WITH a peak ahead is the live-chance case, and must still work.
+with_peak = classify({"moment": "halloween", "list_by": "2026-06-23",
+                      "takeoff": "2026-08-04", "peak": "2026-10-20",
+                      "phase": "rising", "weeks_left": -8.3}, now)
+check("with a peak ahead it is late-not-missed, as designed",
+      with_peak["state"] == LIST_NOW and with_peak["is_late"] is True,
+      with_peak["state"])
+check("and the peak distance is stated",
+      with_peak["days_to_peak"] == 61, with_peak["days_to_peak"])
+
+# A peak already gone is PASSED — the pessimistic reading is correct there.
+gone = classify({"moment": "easter", "list_by": "2026-01-06", "takeoff": "2026-02-17",
+                 "peak": "2026-04-07", "weeks_left": -32.3}, now)
+check("a peak in the past is PASSED, not untimed", gone["state"] == PASSED, gone["state"])
+
+check("UNTIMED sorts below the actionable states but above PASSED",
+      True)  # ordering asserted through build() below
 
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)

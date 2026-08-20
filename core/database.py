@@ -237,6 +237,21 @@ class MarketDatabase:
             # shop page, so "listed 3 weeks ago" is only true of listings we watched
             # appear. Calling it `listed_at` would invent a fact, and a wrong age makes
             # every velocity built on it wrong.
+            trend_cols = {row[1] for row in
+                          cursor.execute("PRAGMA table_info(trend_observations)")}
+            for column, decl in [
+                # The calendar's most valuable distinction is LATE vs MISSED, and it
+                # needs the peak: a deadline that passed while the peak is still two
+                # months out is a live opportunity, not a lost one. Storing only the
+                # takeoff threw that away.
+                ("peak_date", "TEXT"),
+                ("peak_length_days", "INTEGER"),
+                ("phase", "TEXT"),
+            ]:
+                if column not in trend_cols:
+                    cursor.execute(
+                        f"ALTER TABLE trend_observations ADD COLUMN {column} {decl}")
+
             shop_cols = {row[1] for row in
                          cursor.execute("PRAGMA table_info(shop_observations)")}
             for column, decl in [
@@ -427,7 +442,8 @@ class MarketDatabase:
                      dominant_color=None, color_share=None, color_basis=None,
                      demographic=None, demographic_basis=None,
                      takeoff_timestamp=None, list_by=None, takeoff_basis=None,
-                     growth_mom=None, velocity=None, velocity_basis=None):
+                     growth_mom=None, velocity=None, velocity_basis=None,
+                     peak_date=None, peak_length_days=None, phase=None):
         """Append one Pinterest observation of a trend. Never overwrites.
 
         This is the write side of the handoff described in
@@ -449,13 +465,15 @@ class MarketDatabase:
                     dominant_color, color_share, color_basis,
                     demographic, demographic_basis,
                     takeoff_timestamp, list_by, takeoff_basis,
-                    growth_mom, velocity, velocity_basis
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    growth_mom, velocity, velocity_basis,
+                    peak_date, peak_length_days, phase
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (trend_name, collected_at, country, source,
                   dominant_color, color_share, color_basis,
                   demographic, demographic_basis,
                   takeoff_timestamp, list_by, takeoff_basis,
-                  growth_mom, velocity, velocity_basis))
+                  growth_mom, velocity, velocity_basis,
+                  peak_date, peak_length_days, phase))
             conn.commit()
         return collected_at
 
