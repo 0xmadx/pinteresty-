@@ -6,12 +6,19 @@ import time
 from etsy.engines.master_niche_finder import MasterNicheFinder
 from etsy.api.public.api import EtsyPublicAPI
 from etsy.analytics.gaps import PHYSICAL, analyse_bracket, find_gaps, summarise
-from etsy.analytics import bracket_demand, card_saturation, filter_trust, sourcing
+from etsy.analytics import (bracket_demand, card_saturation, filter_trust,
+                            listing_sample, sourcing)
 from core.database import MarketDatabase
 from core.guards import report_failures, reset_failures
 from core.runlog import stage
 
 class HybridArbitrageEngine:
+    # Listings to open per niche for the decisive saturation sample. ONE PUBLIC
+    # REQUEST EACH, so it is off by default: a 40-listing sample across 5 niches is
+    # 200 requests, and that has to be a decision rather than something a run does
+    # on the operator's behalf.
+    LISTING_SAMPLE = 0
+
     def __init__(self, seed_keyword, max_depth=1, max_nodes=10, product_type=PHYSICAL,
                  product_profile=None):
         """
@@ -386,6 +393,25 @@ class HybridArbitrageEngine:
                     dim, val, listings=matched, total_listings=sample,
                     product_type=self.product_type, trusted=True,
                     demand_in_bracket=None))
+
+            # The decisive version, when the operator has asked for it. The card
+            # sample above is free and usually cannot separate thin from crowded;
+            # this opens listings until it can. Note the two are different
+            # instruments as well as different sizes — a disagreement between them
+            # is a finding, not an error, and both are kept.
+            if self.LISTING_SAMPLE and general_data:
+                ids = general_data.get("organic_listing_ids") or []
+                print(f"      -> Sampling {min(self.LISTING_SAMPLE, len(ids))} listing "
+                      f"page(s) for a decisive saturation reading...")
+                rows, failed = listing_sample.sample(
+                    self.public_api, ids, sample_size=self.LISTING_SAMPLE)
+                deep = listing_sample.profile(rows)
+                for line in listing_sample.read(rows, deep, failed):
+                    print(f"         {line}")
+                niche_report["listing_saturation"] = {
+                    f"{d}={v}": m for (d, v), m in deep.items()}
+                niche_report["listing_saturation"]["_sampled"] = len(rows)
+                public_calls += len(rows) + failed
 
             niche_report["card_saturation"] = {
                 f"{d}={v}": m for (d, v), m in saturation.items()}
