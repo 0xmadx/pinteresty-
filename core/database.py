@@ -134,6 +134,32 @@ class MarketDatabase:
                     WHERE keyword = k.keyword)
             ''')
 
+            # Competition observations — the PUBLIC-SERP counterpart to
+            # keyword_observations (which is private-API demand). Kept separate on
+            # purpose: it is a different source, a different cadence, and its
+            # saturation numbers are a page-one SAMPLE with confidence bounds, not
+            # the market-wide counts keyword_observations carries. Blending the two
+            # would be the unit-mixing error card_saturation exists to prevent.
+            #
+            # saturation_json holds card_saturation.profile() verbatim, so the
+            # Wilson interval and can_discriminate flag survive to the reader.
+            # ranked_ids_count is the upgrade signal: how many listing pages a
+            # deeper sample could open (39-51 typically), against the ~9 cards this
+            # row measured.
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS keyword_competition (
+                    keyword          TEXT NOT NULL,
+                    collected_at     TEXT NOT NULL,
+                    source           TEXT NOT NULL DEFAULT 'etsy_public',
+                    total_results    INTEGER,
+                    organic_sample   INTEGER,
+                    ranked_ids_count INTEGER,
+                    saturation_json  TEXT,
+                    median_delivery  TEXT,
+                    PRIMARY KEY (keyword, collected_at, source)
+                )
+            ''')
+
             # Listing Observations — append-only replacement for `listings`.
             #
             # estimated_sales used to hold two different quantities depending on which
@@ -652,6 +678,44 @@ class MarketDatabase:
                 'SELECT * FROM shop_observations WHERE shop_name = ? '
                 'ORDER BY collected_at DESC LIMIT 1', (shop_name,)).fetchone()
             return dict(row) if row else None
+
+    def record_keyword_competition(self, keyword, total_results=None,
+                                   organic_sample=None, ranked_ids_count=None,
+                                   saturation=None, median_delivery=None,
+                                   collected_at=None, source="etsy_public"):
+        """Append one public-SERP competition reading. Never overwrites.
+
+        `saturation` is card_saturation.profile() — stored as JSON so the interval
+        and the can_discriminate flag reach the reader untouched. Nothing here is
+        derived from keyword_observations; the two tables are joined only at read
+        time, in the Cockpit, and never merged into one denominator.
+        """
+        now = collected_at or datetime.now(timezone.utc).isoformat()
+        blob = json.dumps(saturation, default=str) if saturation is not None else None
+        with self.get_connection() as conn:
+            conn.execute('''
+                INSERT OR REPLACE INTO keyword_competition (
+                    keyword, collected_at, source, total_results, organic_sample,
+                    ranked_ids_count, saturation_json, median_delivery
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (keyword, now, source, total_results, organic_sample,
+                  ranked_ids_count, blob, median_delivery))
+            conn.commit()
+        return {"keyword": keyword, "collected_at": now}
+
+    def latest_keyword_competition(self, keyword):
+        """The most recent competition reading for a term, or None. Parses the JSON."""
+        with self.get_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                'SELECT * FROM keyword_competition WHERE keyword = ? '
+                'ORDER BY collected_at DESC LIMIT 1', (keyword,)).fetchone()
+        if not row:
+            return None
+        out = dict(row)
+        out["saturation"] = (json.loads(out.pop("saturation_json"))
+                             if out.get("saturation_json") else None)
+        return out
 
     def get_shop_history(self, shop_name):
         """Every reading for a shop, oldest first."""

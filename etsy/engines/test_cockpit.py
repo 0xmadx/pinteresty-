@@ -47,6 +47,17 @@ def seed(path):
     db.record_keyword("backpack name tag", volume=69874, competition=25031,
                       cvr=0.00279, cvr_source="measured", price_low=18.0,
                       price_high=22.0, collected_at="2026-08-19T12:00:00+00:00")
+    # A page-one competition reading: one dimension decisive, others withheld, and
+    # far more ranked ids than were sampled.
+    db.record_keyword_competition(
+        "christmas ornament", total_results=1405731, organic_sample=6,
+        ranked_ids_count=41,
+        saturation={
+            "quality|star_seller": {"share": 1.0, "low": 0.61, "high": 1.0,
+                                    "sample": 6, "can_discriminate": True},
+            "free_shipping|true": {"share": 0.33, "low": 0.10, "high": 0.70,
+                                   "sample": 6, "can_discriminate": False},
+        })
     return db
 
 
@@ -164,6 +175,29 @@ def main():
           c6["call"] == "no", c6)
     check("and the guess is named as the reason",
           any("DEFAULT" in b for b in c6["blockers"]), c6["blockers"])
+
+    # --- page-one competition is joined at read time, never merged --------------------
+    print()
+    comp = cockpit.build("christmas ornament", db_path=path, now=NOW)["supply"]["competition"]
+    check("a stored saturation reading is attached to supply",
+          comp["basis"] == "measured", comp)
+    check("only DECISIVE dimensions are surfaced",
+          [d["dimension"] + "=" + d["value"] for d in comp["decisive"]]
+          == ["quality=star_seller"], comp["decisive"])
+    check("a withheld dimension is counted, not shown as a share",
+          comp["withheld"] == 1, comp)
+    check("the upgrade path names the concrete next step",
+          comp["upgrade"] and "41 ranked" in comp["upgrade"], comp["upgrade"])
+    check("a term with no competition reading says unmeasured, not zero saturation",
+          cockpit.build("backpack name tag", db_path=path, now=NOW)["supply"]
+          .get("competition", {}).get("basis") == "unmeasured")
+
+    # The saturation denominators must never touch the market-wide ones: page-one
+    # star-seller is 100% of 6, market supply is 1.4M listings. They are different
+    # units and the join keeps them apart.
+    sup = cockpit.build("christmas ornament", db_path=path, now=NOW)["supply"]
+    check("market supply and page-one share live in separate fields",
+          sup["listings"] == 1405731 and comp["decisive"][0]["share"] == 1.0, sup)
 
     # --- the rendering keeps the order ------------------------------------------------------
     print()

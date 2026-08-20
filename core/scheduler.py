@@ -269,6 +269,62 @@ def job_rank_check():
     return track_ranks()
 
 
+def job_competition_sweep():
+    """Daily: page-one competition for every watched term, from the PUBLIC SERP.
+
+    The private sweep gives demand and market-wide supply; this gives the shape of
+    the competition a buyer actually meets — saturation of star-seller, free
+    shipping, discount and rating, each with a confidence interval. One public
+    request per term.
+
+    Deliberately a SEPARATE job from keyword_sweep: public and private are
+    different sessions, and a public 429 must not cost the private demand reading
+    or vice versa. A term that fails is recorded and the sweep continues.
+
+    The saturation here is a ~9-listing page-one sample and usually cannot separate
+    thin from crowded — `card_saturation` says so per dimension. The ranked-id
+    count is stored alongside so the Cockpit can show how much a deeper sample
+    (listing_sample) could tighten it.
+    """
+    import urllib.parse
+    from core.database import MarketDatabase
+    from core.settings_store import load
+    from etsy.analytics import card_saturation, sourcing
+    from etsy.api.public.api import EtsyPublicAPI
+
+    terms = load().terms()
+    if not terms:
+        return {"skipped": "no watched terms"}
+
+    db, api = MarketDatabase(), EtsyPublicAPI()
+    recorded, failed = [], []
+    for term in terms:
+        try:
+            # Bypass the TTL cache: this is a scheduled reading and must be fresh,
+            # and the parser fix for organic_listing_ids means cached blobs from
+            # before it are stale in exactly the field we now need.
+            url = "https://www.etsy.com/search?" + urllib.parse.urlencode(
+                {"q": term, "explicit": "1"})
+            html = api.session.request("GET", url, headers=api.headers,
+                                       platform="etsy").text
+            serp = api.parse_search_html(html, term)
+            if not serp:
+                failed.append({"term": term, "why": "SERP did not parse"})
+                continue
+            prof = card_saturation.profile(serp.get("cards"))
+            organic = [c for c in (serp.get("cards") or []) if not c.get("is_ad")]
+            db.record_keyword_competition(
+                term,
+                total_results=serp.get("total_results"),
+                organic_sample=len(organic),
+                ranked_ids_count=len(serp.get("organic_listing_ids") or []),
+                saturation={f"{d}|{v}": m for (d, v), m in prof.items()})
+            recorded.append(term)
+        except Exception as e:
+            failed.append({"term": term, "why": f"{type(e).__name__}: {e}"})
+    return {"recorded": len(recorded), "terms": recorded, "failed": failed}
+
+
 def job_calendar():
     """Daily: recompute the calendar and record any verdict that moved.
 
@@ -323,6 +379,8 @@ def default_jobs():
             description="competitor shop totals, inventory and review counts"),
         Job("keyword_sweep", 24, job_keyword_sweep, platforms=("etsy_private",),
             description="volume, supply, CVR and price band for every watched term"),
+        Job("competition_sweep", 24, job_competition_sweep, platforms=("etsy",),
+            description="page-one saturation (star seller, free shipping, rating) per term"),
         Job("calendar", 24, job_calendar, platforms=(),
             description="recompute list-by dates and record verdict changes"),
         Job("rank_check", 56, job_rank_check, platforms=("etsy",),

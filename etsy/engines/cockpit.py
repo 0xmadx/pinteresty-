@@ -105,6 +105,44 @@ def _trend(rows):
                     f"several readings on one evening are one reading"}
 
 
+def _competition(db_path, keyword):
+    """Page-one saturation shape, from the stored public-SERP reading.
+
+    Returns only the dimensions whose interval is decisive — a share that cannot be
+    placed against a threshold is measured but withheld, the same rule
+    card_saturation applies. When the sample is thin (it usually is) and more
+    ranked ids exist, that is surfaced as the concrete next step rather than a
+    vague "low confidence".
+    """
+    from core.database import MarketDatabase
+    row = MarketDatabase(db_path).latest_keyword_competition(keyword)
+    if not row or not row.get("saturation"):
+        return {"basis": "unmeasured",
+                "note": "no page-one competition reading yet — the competition "
+                        "sweep fills this"}
+
+    decisive, withheld = [], 0
+    for label, m in row["saturation"].items():
+        dim, _, val = label.partition("|")
+        if m.get("can_discriminate"):
+            decisive.append({"dimension": dim, "value": val,
+                             "share": m.get("share"),
+                             "low": m.get("low"), "high": m.get("high")})
+        elif m.get("sample"):
+            withheld += 1
+
+    upgrade = None
+    ranked, sample = row.get("ranked_ids_count") or 0, row.get("organic_sample") or 0
+    if withheld and ranked > sample + 4:
+        upgrade = (f"{withheld} dimension(s) could not be called from {sample} "
+                   f"listings; {ranked} ranked listings are available. A deeper "
+                   f"sample would likely decide them.")
+
+    return {"basis": "measured", "measured_at": row.get("collected_at"),
+            "organic_sample": sample, "ranked_ids": ranked,
+            "decisive": decisive, "withheld": withheld, "upgrade": upgrade}
+
+
 def _timing(db_path, keyword, lead_weeks, now):
     """Pinterest's answer: is this term attached to a dated moment?"""
     from etsy.engines.calendar_engine import latest_moments
@@ -150,7 +188,8 @@ def build(keyword, db_path=DB_PATH, product_type=profit.PERSONALIZED,
         supply = {"basis": "measured", "measured_at": latest["collected_at"],
                   "listings": supply_n,
                   "demand_per_listing": round(ratio, 4) if ratio else None,
-                  "is_wall": (ratio is not None and ratio < WALL_RATIO)}
+                  "is_wall": (ratio is not None and ratio < WALL_RATIO),
+                  "competition": _competition(db_path, keyword)}
         verdict = profit.verdict(price=price, product_type=product_type) if price else None
 
     return {"keyword": keyword, "product_type": product_type,
@@ -244,6 +283,12 @@ def read(state):
         wall = "  <- WALL, you cannot rank here" if s["is_wall"] else ""
         out.append(f"    {s['listings']:,} listings · "
                    f"{s['demand_per_listing']:.3f} demand per listing{wall}")
+        comp = s.get("competition") or {}
+        for d in comp.get("decisive", []):
+            out.append(f"      {d['dimension']}={d['value']}: {d['share']:.0%} of "
+                       f"page one ({d['low']:.0%}–{d['high']:.0%})")
+        if comp.get("upgrade"):
+            out.append(f"      note: {comp['upgrade']}")
     else:
         out.append(f"    {s['note']}")
 

@@ -88,6 +88,14 @@ def _supply_panel(s):
         return _panel("Etsy Public", "competition",
                       f'<p class="empty">{html.escape(s["note"])}</p>', "unknown")
     wall = s.get("is_wall")
+    comp = s.get("competition") or {}
+    sat = ""
+    for d in comp.get("decisive", []):
+        sat += (f'<div><dt>{html.escape(d["dimension"])}={html.escape(d["value"])}</dt>'
+                f'<dd>{d["share"]:.0%} <span class="basis">'
+                f'{d["low"]:.0%}–{d["high"]:.0%}, page-one sample</span></dd></div>')
+    upgrade = (f'<p class="note">{html.escape(comp["upgrade"])}</p>'
+               if comp.get("upgrade") else "")
     return _panel("Etsy Public", "competition", f'''
         <div class="big">{s["listings"]:,}<span class="unit"> listings</span></div>
         <dl class="facts">
@@ -95,9 +103,11 @@ def _supply_panel(s):
             <dd class="{'bad' if wall else 'good'} derived">
               {s["demand_per_listing"]:.3f}
               <span class="basis">derived</span></dd></div>
+          {sat}
         </dl>
         {'<p class="wall">You cannot rank here — supply overwhelms demand.</p>'
-         if wall else '<p class="note">Rankable on the demand/supply ratio.</p>'}''',
+         if wall else '<p class="note">Rankable on the demand/supply ratio.</p>'}
+        {upgrade}''',
                   "bad" if wall else "good")
 
 

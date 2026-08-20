@@ -38,7 +38,13 @@ def state(**kw):
                    "price_low": 7.2, "price_high": 8.8, "readings": 1,
                    "trend": {"basis": "unmeasured", "note": "one reading"}},
         "supply": {"basis": "measured", "listings": 1405731,
-                   "demand_per_listing": 0.0181, "is_wall": True},
+                   "demand_per_listing": 0.0181, "is_wall": True,
+                   "competition": {"basis": "measured", "organic_sample": 6,
+                       "ranked_ids": 41, "withheld": 2,
+                       "decisive": [{"dimension": "quality", "value": "star_seller",
+                                     "share": 1.0, "low": 0.61, "high": 1.0}],
+                       "upgrade": "2 dimension(s) could not be called from 6 "
+                                  "listings; 41 ranked listings are available."}},
         "profit": None,
         "combined": {"call": "no", "blockers": ["supply overwhelms demand"],
                      "conflicts": ["Pinterest times this well but Etsy says you "
@@ -73,6 +79,14 @@ def main():
     check("derived has a styling rule of its own, so it does not merely say 'derived'",
           "dd.derived .basis" in h, "no dedicated rule for derived provenance")
     check("the verdict states it is provisional", "provisional" in h)
+
+    # --- page-one competition, when present ------------------------------------------
+    check("a decisive saturation dimension appears in the supply panel",
+          "star_seller" in h and "61%" in h, "saturation not rendered")
+    check("the page-one interval is shown, so it does not read as a market share",
+          "page-one sample" in h)
+    check("the upgrade path is surfaced when the sample is thin",
+          "ranked listings are available" in h)
 
     # --- a wall is unmissable ------------------------------------------------------------
     print()
