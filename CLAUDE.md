@@ -163,6 +163,7 @@ account costs the business.
 | **`similar_search_terms` and `market_gap_recommendations` are EMPTY** | Recorded earlier as free unread signals. Probed 2026-08-15 on `felt garland`, `mom necklace`, `christmas ornament`: all returned `total_results_count: 0` and a null gap block. The keys are in the schema; Etsy returns nothing in them. **Do not build on them.** |
 | **`locationQuery` is not a filter** | It returns a *broader* result set than the search it filters. On `monogrammed waffle weave towel` (10,011 unfiltered) Germany returned 28,271 and seven countries summed to **1116%** of the market they claim to partition. Origin share is **not obtainable from the SERP** — use `sourcing.sample_origins()`, which reads each listing's declared origin and can see countries Etsy's list omits (it found a Turkish seller). `delivery_days` was checked the same way and **is** sound: monotonic, cumulative, never above total. |
 | **`organic_listing_ids` was ALWAYS empty** | Parser bug fixed 2026-08-20. The regex demanded `"result_count"` within 200 chars of the array; the real neighbours are `bucket_id`/`user_id`. It returned `[]` on every page for the project's life — silently, because an empty list is plausible for a page with no results. Now 39–51 ranked ids, which also unblocks rank tracking. |
+| **Two screens exist** | `etsy.ui.calendar_page` (home, + `.ics`) and `etsy.ui.cockpit_page` (one candidate). Generated files, not a server — no read API exists, so a SPA would have nothing to call. |
 | **Buy the sample when it matters** | `listing_sample.py` opens ranked listing pages at 1 request each; n=25 made free shipping decisive where 6 cards could not. `LISTING_SAMPLE` defaults to 0 — 200 requests is the operator's call (D-37). |
 | **A page-one share is ~9 listings, not a market share** | `card_saturation` recovers the dimensions the filter audit took away by counting card fields, then attaches a Wilson interval and **withholds** any bracket whose bounds straddle a threshold. **0 of 6 does not establish an empty bracket** — the true share could be 39% (D-36). |
 | **The calendar exists (2026-08-19)** | `python -m etsy.engines.calendar_engine`. Moments were being computed and DISCARDED — `trends_bridge` only stored a takeoff date when a featured topic shared a moment's name, and the overlap is zero. All 13 moments were dropped; `takeoff_timestamp` was NULL in every row. Also stores `peak_date`/`phase` now, without which "late vs missed" was being guessed. |
@@ -234,7 +235,7 @@ verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
 (`core/vault_mirror.py`) · session-layer hardening · **the Calendar screen**
 (`etsy/ui/calendar_page.py`, + `.ics` export) · saturation recovered from listings
 (`etsy/analytics/card_saturation.py`) · **14 MCP tools** (`mcp_server/`).
-**~1,193 assertions** across ~45 offline suites.
+**~1,244 assertions** across ~48 offline suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

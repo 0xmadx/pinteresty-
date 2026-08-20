@@ -48,6 +48,12 @@ sharing the browser cannot disturb these sessions and vice versa (D-33).
 Etsy demand, ranked by winnability.
 
 ```bash
+.venv/Scripts/python.exe -m etsy.engines.cockpit "christmas ornament"
+```
+**One candidate, examined.** Three sources read separately, then a verdict — and
+the disagreement between them when there is one.
+
+```bash
 .venv/Scripts/python.exe -m etsy.analytics.discover
 ```
 Cheap keyword front door — trending terms with real volumes, no quota cost.
@@ -78,7 +84,7 @@ Re-audits which Etsy SERP filters can be believed. **9 of 12 currently cannot.**
 ```bash
 .venv/Scripts/python.exe -m core.test_graph_db
 ```
-One of ~45 offline suites, **1,193 assertions**, no network required.
+One of ~48 offline suites, **1,244 assertions**, no network required.
 
 ---
 
@@ -92,7 +98,7 @@ One of ~45 offline suites, **1,193 assertions**, no network required.
                   └───────┬───────┘
                           │
      core/         session vault (Redis) · cache · run log · guards
-     mcp_server/   14 read-only tools for Claude / Antigravity
+     mcp_server/   15 read-only tools for Claude / Antigravity
 ```
 
 | Directory | Holds |

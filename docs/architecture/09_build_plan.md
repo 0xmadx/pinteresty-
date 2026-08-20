@@ -44,6 +44,7 @@ time.
 |---|---|---|---|
 | 1 | **DISCOVER** — find candidates | ✅ | `discover.py` front door works; Pinterest wide crawl still unwired |
 | — | **The Calendar screen** | ✅ | **done 2026-08-20** — `etsy/ui/calendar_page.py` renders the home screen + an `.ics` export; regenerated daily by the scheduler |
+| — | **The Cockpit screen** | ✅ | **done 2026-08-20** — `etsy/engines/cockpit.py` + `etsy/ui/cockpit_page.py`. Three source panels, then the verdict; conflicts reported rather than averaged (B-05) |
 | 2 | **MEASURE** — volume, CVR, supply, competitors, saturation | ✅ | daily `keyword_sweep` running; pagination still missing |
 | 3 | **JUDGE** — profit gate, survivor bound, gaps, ranking | ✅ | gaps can now resolve POSITIVELY (D-34); only 3 filter dimensions are trustworthy (D-32) |
 | 4 | **TIME** — takeoff → "list by Sept 22" | ✅ | **done 2026-08-19** — `calendar_engine.py`. Moments were being computed and discarded; see §3b |
@@ -358,8 +359,8 @@ even express.
 | # | Screen | Notes |
 |---|---|---|
 | 16 | **Settings** | already Phase 0 — the data side |
-| 17 | **Calendar** (home) | 🔴 list now · 🟡 list by · ⚪ watching |
-| 18 | **Cockpit** | three source cards → verdict → gap → plan |
+| 17 | ~~**Calendar** (home)~~ | ✅ **done 2026-08-20** — list now / list by / watching, plus `.ics` |
+| 18 | ~~**Cockpit**~~ | ✅ **done 2026-08-20** — three source panels → conflicts → verdict. Gap and plan sections still to add. |
 | 19 | **Blueprint** | title, 13 tags, price band, flaws to solve |
 | 20 | **Performance** | last — needs launch history to exist |
 

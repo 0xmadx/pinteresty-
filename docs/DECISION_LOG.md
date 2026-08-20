@@ -688,3 +688,43 @@ their behalf.
 **Rejected: inferring discount from the listing page.** No reliable field exists
 there, and the prose is ambiguous. It stays a card-only measurement — missing
 beats faked.
+
+
+---
+
+## D-38 — A disagreement between sources is the output, not a problem to resolve
+
+**Date:** 2026-08-20
+
+**Context.** The Cockpit shows one candidate. The obvious design is a single score
+combining Pinterest timing, Etsy demand and Etsy supply.
+
+**Chosen.** Three panels, each read on its own, and the verdict **last and below
+them** — physically, so a reader cannot reach the conclusion without passing the
+evidence. When the sources point opposite ways, that is stated as a conflict.
+
+Live on `christmas ornament`: Pinterest times it perfectly (list by 16 September,
+peak 9 December) and Etsy says 0.018 demand per listing — unrankable. A blended
+score calls that middling. It is not middling; it is two confident readings
+pointing opposite ways, and their average describes neither.
+
+**Why this specifically.** The sources fail *differently*. Pinterest can be
+confident about timing for a term nobody searches; Etsy Private can report healthy
+volume behind two million listings. One number hides exactly the case worth seeing.
+
+**Two refusals in the trend, which is where a confident lie was easiest.**
+
+* **Readings minutes apart are not history.** A term swept five times in one
+  evening has five rows and no trend. "0% change over eight minutes" would be
+  worse than reporting nothing.
+* **A change against a degraded baseline is not a change.** `ceramic planter pot`
+  reads 4,776 → 589, an 88% collapse — against a reading that had fallen back to a
+  default CVR. That difference measures our instrument. Refused, with the reason.
+
+**Rejected: hiding a sub-threshold move.** A 2% change is reported and flagged as
+noise. The operator should see that nothing happened, not that nothing was looked
+at — those are different facts.
+
+**A default CVR is a blocker, not a footnote.** A term with an excellent
+demand/supply ratio and a guessed conversion rate still gets a no, naming the guess
+as the reason.
