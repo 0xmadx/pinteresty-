@@ -329,7 +329,10 @@ def profit_verdict(price: float, product_type: str, cogs: float = 0.0,
     v = profit.verdict(price, product_type, demand_units_per_week=demand_units_per_week,
                        cogs=cogs, shipping_cost=shipping_cost,
                        shipping_charged=shipping_charged, labor_minutes=labor_minutes)
-    confirmed = bool(getattr(settings, "confirmed", None))
+    # settings.basis() is the accessor; there is no `.confirmed` attribute, and a
+    # getattr for one returns None forever — reporting every verdict provisional
+    # even after the operator confirms the inputs.
+    confirmed = settings.basis()["basis"] == "operator"
     return _ok({
         "verdict": v,
         "basis": "derived" if confirmed else "provisional",
@@ -551,7 +554,7 @@ def calendar(lead_weeks: int = 6, product_type: str = "personalized",
             "terms": r["evidence"],
         } for r in rows],
         "basis": "measured (Pinterest takeoff dates + Etsy keyword observations); "
-                 "profit verdicts are provisional until settings are confirmed",
+                 "profit verdicts follow the settings basis — see settings_summary",
         "note": "A moment with no terms is dated but has nothing aimed at it — that "
                 "is 'we have not looked', not 'no opportunity'.",
     })
@@ -574,9 +577,10 @@ def cockpit(keyword: str, product_type: str = "personalized",
     """
     from etsy.engines import cockpit as ck
     state = ck.build(keyword, product_type=product_type, lead_weeks=lead_weeks)
+    from core.settings_store import load
+    prov = "provisional (settings not confirmed)" if load().basis()["basis"] != "operator" else "derived (settings confirmed)"
     return _ok({"candidate": state, "findings": ck.read(state),
-                "basis": "measured where stated; the verdict is provisional until "
-                         "settings are confirmed"})
+                "basis": f"measured where stated; profit verdict is {prov}"})
 
 
 @mcp.tool()

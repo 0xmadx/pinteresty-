@@ -37,10 +37,14 @@ def _settings_blockers():
     from core.settings_store import load
     settings = load()
     out = []
-    if not getattr(settings, "confirmed", None):
-        out.append("Fees, COGS and hourly rate are DEFAULTS — every profit verdict "
-                   "is provisional until you confirm them "
-                   "(settings_store set global.operator.hourly_rate ...).")
+    # `basis()` is the accessor; a bare `.confirmed` attribute does not exist, and
+    # reading one via getattr would make this blocker fire forever even after the
+    # operator confirmed everything (which it did, silently, until 2026-08-20).
+    if settings.basis()["basis"] != "operator":
+        missing = ", ".join(settings.basis()["unconfirmed"])
+        out.append(f"Fee/cost inputs are DEFAULTS — every profit verdict is "
+                   f"provisional until confirmed ({missing}). "
+                   f"settings_store set <field> <value>.")
     shops = settings.shop_names()
     if shops and len(shops) < 3:
         out.append(f"Only {len(shops)} competitor shop(s) tracked, and tracking only "

@@ -164,5 +164,27 @@ check("but both are listed for the caller to choose",
 # Guessing which of two physical profiles to apply would be a silent decision about
 # cost, and cost drives the verdict.
 
+
+# --- confirming every verdict-critical value flips the basis to operator ---------
+# Regression: home.py and the MCP tools read settings.basis(), NOT a bare
+# `.confirmed` attribute. getattr(settings, "confirmed", None) returns None
+# forever, which made the "confirm your fees" blocker fire even after the
+# operator confirmed everything (found live 2026-08-20).
+import tempfile, os as _os, json as _json
+from core.settings_store import Settings, VERDICT_CRITICAL, DEFAULT_PATH
+with tempfile.TemporaryDirectory() as d:
+    path = _os.path.join(d, "s.json")
+    st = Settings.load(path)
+    check("a fresh settings file has basis 'default'",
+          st.basis()["basis"] == "default")
+    for field in VERDICT_CRITICAL:
+        st.set(field, st.get(field))
+    check("confirming every critical value flips basis to 'operator'",
+          st.basis()["basis"] == "operator", st.basis())
+    check("and leaves nothing in the unconfirmed list",
+          st.basis()["unconfirmed"] == [], st.basis())
+    check("Settings has NO bare `confirmed` attribute — basis() is the accessor",
+          not hasattr(st, "confirmed"))
+
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)

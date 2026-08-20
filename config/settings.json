@@ -2,7 +2,7 @@
   "version": 1,
   "global": {
     "fees": {
-      "verified": "2026-01",
+      "verified": "2026-08",
       "listing_fee": 0.2,
       "transaction_rate": 0.065,
       "processing_rate": 0.03,
@@ -12,7 +12,7 @@
     },
     "operator": {
       "hourly_rate": 25.0,
-      "labor_hours_per_week": 15.0
+      "labor_hours_per_week": 10.0
     },
     "floors": {
       "digital": 0.7,
@@ -20,7 +20,17 @@
       "personalized": 0.5
     }
   },
-  "confirmed": [],
+  "confirmed": [
+    "fees.listing_fee",
+    "fees.transaction_rate",
+    "fees.processing_rate",
+    "fees.processing_flat",
+    "fees.offsite_rate_under_10k",
+    "fees.offsite_rate_over_10k",
+    "fees.verified",
+    "operator.hourly_rate",
+    "operator.labor_hours_per_week"
+  ],
   "product_profiles": {
     "Felt decor": {
       "product_type": "physical",
@@ -73,5 +83,8 @@
     "ceramic planter pot",
     "christmas ornament",
     "personalized christmas stocking"
-  ]
+  ],
+  "updated": {
+    "operator.labor_hours_per_week": "2026-08-20T10:26:04.535575+00:00"
+  }
 }
