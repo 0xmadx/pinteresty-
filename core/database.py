@@ -146,6 +146,33 @@ class MarketDatabase:
             # ranked_ids_count is the upgrade signal: how many listing pages a
             # deeper sample could open (39-51 typically), against the ~9 cards this
             # row measured.
+            # Discovered candidates — the ranked opportunity POOL, terms the
+            # operator has not typed. Populated by discover_sweep from the LLM
+            # keyword endpoint, whose edges carry their own volume and supply so
+            # winnability is computable without a call per term.
+            #
+            # Append-only, keyed by the run, so a later sweep does not overwrite an
+            # earlier pool — the same term can be discovered from two seeds, or move
+            # between runs, and both facts are worth keeping. `demand_per_listing`
+            # is stored so the pool can be ranked without recomputing, and `verdict`
+            # is the coarse winnable/contested/wall label (D-31): never a score.
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS discovered_candidates (
+                    term               TEXT NOT NULL,
+                    collected_at       TEXT NOT NULL,
+                    seed               TEXT,
+                    volume             INTEGER,
+                    supply             INTEGER,
+                    demand_per_listing REAL,
+                    cvr                REAL,
+                    verdict            TEXT,
+                    moment             TEXT,
+                    list_by            TEXT,
+                    timing             TEXT,
+                    PRIMARY KEY (term, collected_at, seed)
+                )
+            ''')
+
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS keyword_competition (
                     keyword          TEXT NOT NULL,
@@ -702,6 +729,48 @@ class MarketDatabase:
                   ranked_ids_count, blob, median_delivery))
             conn.commit()
         return {"keyword": keyword, "collected_at": now}
+
+    def record_discovered(self, term, seed=None, volume=None, supply=None,
+                          demand_per_listing=None, cvr=None, verdict=None,
+                          moment=None, list_by=None, timing=None, collected_at=None):
+        """Append one discovered candidate. Never overwrites (append-only pool)."""
+        now = collected_at or datetime.now(timezone.utc).isoformat()
+        with self.get_connection() as conn:
+            conn.execute('''
+                INSERT OR REPLACE INTO discovered_candidates (
+                    term, collected_at, seed, volume, supply, demand_per_listing,
+                    cvr, verdict, moment, list_by, timing
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (term, now, seed, volume, supply, demand_per_listing, cvr,
+                  verdict, moment, list_by, timing))
+            conn.commit()
+        return {"term": term, "collected_at": now}
+
+    def latest_discovered(self, limit=200):
+        """The most recent discovery run's candidates, best winnability first.
+
+        A term can appear under multiple seeds; the highest demand_per_listing wins,
+        and the losing rows are dropped so the pool reads as a ranked list, not a
+        cross-join. Returns [] when nothing has been discovered yet.
+        """
+        with self.get_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            newest = conn.execute(
+                "SELECT MAX(collected_at) FROM discovered_candidates").fetchone()[0]
+            if not newest:
+                return []
+            rows = [dict(r) for r in conn.execute(
+                "SELECT * FROM discovered_candidates WHERE collected_at = ? "
+                "ORDER BY demand_per_listing DESC", (newest,))]
+        best = {}
+        for r in rows:
+            prev = best.get(r["term"])
+            if not prev or (r["demand_per_listing"] or -1) > (prev["demand_per_listing"] or -1):
+                best[r["term"]] = r
+        ranked = sorted(best.values(),
+                        key=lambda r: (r["demand_per_listing"] is not None,
+                                       r["demand_per_listing"] or -1), reverse=True)
+        return ranked[:limit]
 
     def latest_keyword_competition(self, keyword):
         """The most recent competition reading for a term, or None. Parses the JSON."""

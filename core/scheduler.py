@@ -269,6 +269,67 @@ def job_rank_check():
     return track_ranks()
 
 
+def job_discover():
+    """Weekly: expand every watched term into its long-tail neighbourhood, ranked.
+
+    This is the front door that finds terms the operator has NOT typed. Each
+    watched seed is expanded through the LLM keyword endpoint, whose ~120 edges
+    each carry their own volume and supply — so winnability is computable without a
+    call per term, and one private request per seed produces a hundred ranked
+    candidates.
+
+    Weekly, not daily: the neighbourhood of a seed moves slowly, and the endpoint
+    caches server-side, so a daily re-run would mostly re-read the same pool.
+
+    Stores the whole ranked pool, walls included. "These 130 neighbours are all
+    walls" is a real and useful answer — it is 130 dead-ends the operator does not
+    have to type — so nothing is filtered out; the verdict column carries the
+    winnable/contested/wall label and the reader decides.
+    """
+    from core.database import MarketDatabase
+    from core.settings_store import load
+    from etsy.analytics import discover
+    from etsy.engines.calendar_engine import latest_moments
+    from etsy.analytics import calendar as cal
+    from etsy.api.private.api import EtsyPrivateAPI
+
+    seeds = load().terms()
+    if not seeds:
+        return {"skipped": "no watched terms to expand"}
+
+    db, api = MarketDatabase(), EtsyPrivateAPI()
+    # The calendar rows, so a discovered term can be tagged with its moment.
+    moments = cal.build(latest_moments(), terms=[], lead_weeks=6)
+
+    from datetime import datetime, timezone
+    run_at = datetime.now(timezone.utc).isoformat()
+    stored, failed = 0, []
+    for seed in seeds:
+        try:
+            cands = discover.expand_seed(api, seed)
+        except Exception as e:
+            failed.append({"seed": seed, "why": f"{type(e).__name__}: {e}"})
+            continue
+        ranked = discover.rank_expanded([c for c in cands if c.get("volume")])
+        # Attach the seasonal moment where the term names one.
+        ranked = discover.attach_moments(ranked, moments)
+        for c in ranked:
+            w = c.get("winnability") or {}
+            db.record_discovered(
+                c["term"], seed=seed, volume=c.get("volume"), supply=c.get("supply"),
+                demand_per_listing=w.get("demand_per_listing"), cvr=w.get("cvr"),
+                verdict=w.get("verdict"), moment=c.get("moment"),
+                list_by=c.get("list_by"), timing=c.get("timing"),
+                collected_at=run_at)
+            stored += 1
+    winnable = sum(1 for r in db.latest_discovered(2000)
+                   if r.get("verdict") in ("winnable", "contested"))
+    from etsy.ui import discover_page
+    page = discover_page.write()
+    return {"seeds": len(seeds), "candidates_stored": stored,
+            "winnable_or_contested": winnable, "failed": failed, "page": page}
+
+
 def job_competition_sweep():
     """Daily: page-one competition for every watched term, from the PUBLIC SERP.
 
@@ -385,6 +446,8 @@ def default_jobs():
             description="recompute list-by dates and record verdict changes"),
         Job("rank_check", 56, job_rank_check, platforms=("etsy",),
             description="rank of our launched listings (~3x/week)"),
+        Job("discover", 168, job_discover, platforms=("etsy_private",),
+            description="expand watched terms into ranked long-tail candidates (weekly)"),
         Job("pinterest_bridge", 168, job_pinterest_bridge, platforms=("pinterest",),
             description="Pinterest momentum joined to watched terms (weekly)"),
     ]

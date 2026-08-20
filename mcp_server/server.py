@@ -579,6 +579,34 @@ def cockpit(keyword: str, product_type: str = "personalized",
                          "settings are confirmed"})
 
 
+@mcp.tool()
+@_guarded
+def discover(limit: int = 40) -> dict:
+    """The ranked candidate POOL — terms the operator has not typed.
+
+    Watched terms expanded into their long-tail neighbourhoods and ranked by
+    demand-per-listing, NOT search volume (D-31). Read `verdict`: only `winnable`
+    and `contested` are worth a look; a `wall` is supply overwhelming demand
+    however large its traffic. `moment` names a seasonal deadline when the term has
+    one. These are where to look, not what to make — the Cockpit checks each.
+
+    Reads the stored discover_sweep, so it is fast and empty until that job runs.
+    """
+    from core.database import MarketDatabase
+    pool = MarketDatabase().latest_discovered(2000)
+    good = [r for r in pool if r.get("verdict") in ("winnable", "contested")]
+    return _ok({
+        "worth_a_look": good[:limit],
+        "total_discovered": len(pool),
+        "walls_folded": len(pool) - len(good),
+        "basis": "measured (LLM keyword edges carry their own volume and supply); "
+                 "ranked by demand-per-listing, never by volume",
+        "note": "verdict winnable/contested is a coarse label, not a score. A wall "
+                "is not a bad term, it is an unrankable one for a shop with no "
+                "authority.",
+    })
+
+
 def main():
     mcp.run(transport="stdio")
 
