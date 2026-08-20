@@ -132,6 +132,7 @@ Every one of these exists because the alternative was a confident wrong number:
 |---|---|
 | pool below `MIN_POOL_SIZE` | `PoolTooSmall`, not a score |
 | dimensions cannot separate the pool | `can_discriminate()` returns a labelled **filter**, no score |
+| two sources disagree on the same field | keep BOTH and report the disagreement. A parsed field and a prose marker are different **instruments**; a gap between them is a finding, not one of them being wrong (D-37) |
 | a share measured on ~9 listings | `card_saturation` attaches a Wilson interval and **withholds** the bracket when it straddles a threshold. 0 of 6 does not establish an empty bracket — the true share could be 39% (D-36) |
 | a SERP filter that did not pass the audit | `find_gaps` returns `untrusted_source`, outranking every other rule (D-32). **9 of 12 filters cannot be believed** — check `config/filter_trust.json` before using one |
 | only survivors visible | a **bound**, and 100% reads `uninformative`, never "healthy" |

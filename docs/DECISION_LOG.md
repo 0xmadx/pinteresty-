@@ -648,3 +648,43 @@ because an empty list is plausible for a page with no results. Anchoring on the
 array returns 39–51 ranked ids. Fetching those pages is the affordable "measure it
 per listing", and is what turns these intervals decisive. It also unblocks rank
 tracking, which had been reading an empty list all along.
+
+
+---
+
+## D-37 — Buy the sample when the answer is worth requests, and label the instrument
+
+**Date:** 2026-08-20
+
+**Context.** D-36 recovered the lost gap dimensions by counting card fields, and
+found them usually indecisive: nine organic cards cannot separate thin from
+crowded. The fix is not better arithmetic, it is a bigger n — which
+`organic_listing_ids` can now supply.
+
+**Chosen.** Open listing pages in rank order and measure the same attributes at
+one request each. Live on "personalized towel", 6 cards → 25 listings turned
+free shipping from `33% [10–70%]`, withheld, into `64% [45–80%]`, decisive.
+
+**Rank order, not random.** The top of the ranking is what a buyer meets and is
+the population every saturation claim here is about. A random sample of all 51
+would answer a different question, and answer it worse — the tail is not what
+competes.
+
+**Off by default.** `LISTING_SAMPLE = 0`. A 40-listing sample across 5 niches is
+200 public requests; that is the operator's decision, not something a run does on
+their behalf.
+
+**Two things this does NOT claim.**
+
+1. **That the small sample was wrong.** Free shipping moved 33% → 64%, but the
+   card reads a *parsed field* and the page match is a *prose marker* — different
+   instruments as well as different sizes. Both readings are kept, and a
+   disagreement that large is itself the finding.
+2. **That a bigger n resolves everything.** 5-star sits at 32%, on the crowded
+   threshold, and still refuses at n=25. The interval straddles the line wherever
+   it is centred. A test pins that case, because "32.5%, definitely crowded" is
+   exactly the sentence this work would otherwise invite.
+
+**Rejected: inferring discount from the listing page.** No reliable field exists
+there, and the prose is ambiguous. It stays a card-only measurement — missing
+beats faked.
