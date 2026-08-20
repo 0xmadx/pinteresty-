@@ -237,7 +237,7 @@ verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
 (`core/vault_mirror.py`) · session-layer hardening · **the Calendar screen**
 (`etsy/ui/calendar_page.py`, + `.ics` export) · saturation recovered from listings
 (`etsy/analytics/card_saturation.py`) · **14 MCP tools** (`mcp_server/`).
-**~1,310 assertions** across ~51 offline suites.
+**~1,329 assertions** across ~52 offline suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend
