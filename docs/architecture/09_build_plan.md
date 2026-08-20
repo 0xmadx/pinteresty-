@@ -46,6 +46,7 @@ time.
 | — | **The Calendar screen** | ✅ | **done 2026-08-20** — `etsy/ui/calendar_page.py` renders the home screen + an `.ics` export; regenerated daily by the scheduler |
 | — | **The Cockpit screen** | ✅ | **done 2026-08-20** — `etsy/engines/cockpit.py` + `etsy/ui/cockpit_page.py`. Three source panels, then the verdict; conflicts reported rather than averaged (B-05) |
 | — | **The Discover screen** | ✅ | **done 2026-08-20** — `etsy/ui/discover_page.py` + weekly `discover_sweep`. Ranked candidate pool from expanding watched seeds; found `custom family name necklace` (winnable) from a wall seed |
+| — | **The home index** | ✅ | **done 2026-08-20** — `etsy/ui/home.py`. One entry point (`index.html`) linking every screen + a cockpit per term, with a blockers-first digest. Refreshed daily. |
 | 2 | **MEASURE** — volume, CVR, supply, competitors, saturation | ✅ | daily `keyword_sweep` running; pagination still missing |
 | 3 | **JUDGE** — profit gate, survivor bound, gaps, ranking | ✅ | gaps can now resolve POSITIVELY (D-34); only 3 filter dimensions are trustworthy (D-32) |
 | 4 | **TIME** — takeoff → "list by Sept 22" | ✅ | **done 2026-08-19** — `calendar_engine.py`. Moments were being computed and discarded; see §3b |
