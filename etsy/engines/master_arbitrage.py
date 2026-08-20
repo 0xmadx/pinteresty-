@@ -6,7 +6,7 @@ import time
 from etsy.engines.master_niche_finder import MasterNicheFinder
 from etsy.api.public.api import EtsyPublicAPI
 from etsy.analytics.gaps import PHYSICAL, find_gaps, summarise
-from etsy.analytics import filter_trust, sourcing
+from etsy.analytics import bracket_demand, filter_trust, sourcing
 from core.database import MarketDatabase
 from core.guards import report_failures, reset_failures
 from core.runlog import stage
@@ -330,8 +330,36 @@ class HybridArbitrageEngine:
             # which is the honest reading. When per-bracket demand exists (e.g. bracket-
             # filtered search volume from the private API), wire it in here.
             print(f"      -> Classifying brackets ({self.product_type} product rules)...")
+            # D-10's missing half. Until now this passed {}, so no bracket could
+            # EVER classify as a gap — every thin one came back
+            # `thin_but_unproven`, which was the honest reading and a permanently
+            # stuck one.
+            #
+            # Demand inside a bracket cannot be looked up: Etsy reports volume per
+            # TERM, never per bracket. So it is measured from the listings that
+            # occupy the bracket — their review counts, which are lifetime evidence
+            # that buyers transact there. Costs one request per bracket, and only
+            # trusted filters are asked (bracket_demand refuses the rest).
+            print(f"      -> Measuring demand INSIDE each bracket...")
+            demand_filters = {
+                (dim, val): flt for (dim, val), flt in [
+                    (("shipping_speed", "7_days"), {"delivery_days": "7"}),
+                    (("shipping_speed", "14_days"), {"delivery_days": "14"}),
+                    (("gift_wrap", "true"), {"gift_wrap": "true"}),
+                    (("personalizable", "true"), {"is_personalizable": "true"}),
+                ] if (dim, val) in bracket_counts
+            }
+            demand_by_bracket, demand_evidence = bracket_demand.sweep(
+                self.public_api, keyword, demand_filters)
+            for key, result in demand_evidence.items():
+                print(f"         {bracket_demand.read('='.join(key), result)}")
+            niche_report["bracket_demand"] = {
+                f"{d}={v}": r for (d, v), r in demand_evidence.items()}
+            public_calls += len(demand_filters) + 1
+
             classified = find_gaps(bracket_counts, self.product_type,
-                                   total_listings=gen_total, demand_by_bracket={})
+                                   total_listings=gen_total,
+                                   demand_by_bracket=demand_by_bracket)
             niche_report["gap_analysis"] = {
                 "product_type": self.product_type,
                 "summary": summarise(classified),
