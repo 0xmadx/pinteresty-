@@ -1004,3 +1004,64 @@ stake, so a session failure there skips momentum and keeps every Etsy judgement.
 Observed on the first full run: the Pinterest heartbeats expired mid-sweep, and the
 run completed with all four surviving candidates judged and
 `momentum_note` naming the cause.
+
+## D-45 — Etsy's own seasonal curve was being fetched and discarded
+
+**Date:** 2026-08-20
+
+**Context.** The calendar's timing comes entirely from Pinterest moments — one
+source, unchecked. `combinations.md` §JOIN 1 asks for two independent seasonal
+sources so they can confirm or contradict each other. Looking for the second one, it
+turned out to be already paid for.
+
+**The finding.** `chart-series-data` returns a `series` block carrying a **12-month
+search-volume curve per term**. Every caller in this repo — `master_niche_finder`,
+`private_comparison`, `private_recursive_spider`, `private_scoring_pipeline` — reads
+`term_summaries` and throws `series` away. The system has been buying Etsy's own
+seasonality on every batch call it has ever made and discarding it.
+
+Measured live:
+
+| Term | Peak | Trough | Swing |
+|---|---|---|---|
+| `christmas ornament` | Nov 163,930 | Feb 1,758 | **93.2x** |
+| `felt garland` | Nov 6,784 | Aug 2,012 | 3.4x |
+| `mom necklace` | **Dec** 16,683 | Jun 5,698 | 2.9x |
+
+`mom necklace` peaking in December rather than May is the sort of thing only a
+measured curve says — by search volume it is a Christmas gift before it is a
+Mother's Day one, and the name implies the opposite.
+
+**Rejected: `include_trendline: true`.** `08_capability_map.md` recorded this flag as
+"we decline a free seasonality curve". Probed both ways on `christmas ornament`:
+True and False return **byte-identical key structures**. The flag does nothing on
+this endpoint. The curve was never behind it — it was in `series` the whole time,
+and the note pointed at the wrong thing.
+
+**Two guards, both from measurement.**
+
+*The last bucket is partial.* Etsy sends `is_last_bucket_partial: true` and the final
+point is the current month counted so far. A naive peak/trough scan reads it as a
+collapse — `felt garland`'s apparent trough WAS that artifact. `profile()` drops it
+from every judgement and reports it separately, labelled. The test pins the contrast:
+the same curve reads `evergreen` with the flag honoured and a "5.6x seasonal
+collapse" without it.
+
+*A flat curve is not a season.* Every curve has a maximum, so without a floor each
+evergreen term acquires a peak month, a deadline, and a place on the calendar.
+`SEASONAL_RATIO = 2.0` separates the two, and `peak_month()` returns None for an
+evergreen term — a hole the tests caught after the first implementation gated only on
+`basis == "measured"`, which evergreen profiles satisfy.
+
+**Terms Etsy cannot size are OMITTED, not zeroed.** Asked for four, the response
+carried three. A missing term gets no entry, and `record_seasonality` refuses to
+store a non-measured profile — a row in `keyword_seasonality` means "we read this
+term's year", and storing a refusal would put an unmeasured term into the one table
+built to be joined against Pinterest's calendar.
+
+**`compare()` reports disagreement rather than resolving it** (B-05, D-38), with
+three states: agree, disagree, and `None` for "only one source has a peak". `None` is
+deliberately not `False` — one source cannot confirm itself, and that is different
+from two sources conflicting.
+
+**Cost:** one batched call per sweep for the entire watch list.

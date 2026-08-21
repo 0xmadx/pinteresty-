@@ -173,6 +173,26 @@ class MarketDatabase:
                 )
             ''')
 
+            # Etsy's OWN seasonal shape per term, from the `series` block every
+            # caller used to discard (D-45). Its own table rather than columns on
+            # keyword_observations: a reading there is one point in time, while this
+            # is a property derived from a whole year of them. Append-only, because
+            # the curve moves as the year turns.
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS keyword_seasonality (
+                    keyword       TEXT NOT NULL,
+                    collected_at  TEXT NOT NULL,
+                    verdict       TEXT,
+                    peak_label    TEXT,
+                    peak_value    INTEGER,
+                    trough_label  TEXT,
+                    trough_value  INTEGER,
+                    ratio         REAL,
+                    months_used   INTEGER,
+                    PRIMARY KEY (keyword, collected_at)
+                )
+            ''')
+
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS keyword_competition (
                     keyword          TEXT NOT NULL,
@@ -412,6 +432,39 @@ class MarketDatabase:
             return [dict(r) for r in conn.execute(
                 'SELECT * FROM keyword_observations WHERE keyword = ? '
                 'ORDER BY collected_at ASC', (keyword,))]
+
+    def record_seasonality(self, keyword, profile, collected_at=None):
+        """Append one seasonal reading for a term. Only MEASURED profiles are stored.
+
+        A refusal (`no_curve`, `curve_too_short`) is deliberately not written: a row
+        here means "we read this term's year and this is its shape", and storing a
+        refusal would put an unmeasured term in a table whose whole purpose is to be
+        joined against Pinterest's calendar.
+        """
+        if (profile or {}).get("basis") != "measured":
+            return None
+        now = collected_at or datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self.get_connection() as conn:
+            conn.execute('''
+                INSERT OR REPLACE INTO keyword_seasonality (
+                    keyword, collected_at, verdict, peak_label, peak_value,
+                    trough_label, trough_value, ratio, months_used
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (keyword, now, profile.get("verdict"), profile.get("peak_label"),
+                  profile.get("peak_value"), profile.get("trough_label"),
+                  profile.get("trough_value"), profile.get("ratio"),
+                  profile.get("months_used")))
+            conn.commit()
+        return {"keyword": keyword, "collected_at": now}
+
+    def latest_seasonality(self, keyword):
+        """The most recent seasonal reading for a term, or None if never measured."""
+        with self.get_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                'SELECT * FROM keyword_seasonality WHERE keyword = ? '
+                'ORDER BY collected_at DESC LIMIT 1', (keyword,)).fetchone()
+        return dict(row) if row else None
 
     def measured_cvrs(self):
         """The latest MEASURED CVR per term — the reference pool for D-43's gate.

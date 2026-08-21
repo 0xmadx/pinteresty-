@@ -263,8 +263,29 @@ def job_keyword_sweep():
             recorded.append(term)
         except Exception as e:
             failed.append({"term": term, "why": f"{type(e).__name__}: {e}"})
+
+    # --- Etsy's own seasonal curve, one BATCHED call for every term (D-45) ---------
+    # chart-series-data takes the whole watch list at once, and its `series` block
+    # carries a 12-month volume curve per term that every caller in this repo used to
+    # discard. One request buys the second seasonal source JOIN 1 needs.
+    seasonal = {}
+    try:
+        from etsy.api.private.api import parse_chart_series
+        from etsy.analytics import seasonality as se
+        curves = parse_chart_series(api.get_chart_series(terms, days=365))
+        for term, curve in curves.items():
+            prof = se.profile(curve)
+            # Only measured profiles are stored; a refusal is not a reading.
+            if db.record_seasonality(term, prof):
+                seasonal[term] = f"{prof['verdict']} (peak {prof.get('peak_label')})"
+    except Exception as e:
+        # The demand readings above are already stored and are the job's main
+        # product; seasonality is an addition, so a failure here degrades rather
+        # than losing the sweep.
+        seasonal = {"error": f"{type(e).__name__}: {e}"}
+
     return {"recorded": len(recorded), "terms": recorded, "failed": failed,
-            "retried": retried,
+            "retried": retried, "seasonality": seasonal,
             "note": ("a retry means the vault served a dead profile; run "
                      "`python -m core.vault_status`") if retried else None}
 

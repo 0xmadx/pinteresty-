@@ -175,6 +175,49 @@ def parse_term_summaries(chart):
     return out
 
 
+def parse_chart_series(chart):
+    """The 12-month volume CURVE per term — the half of this response nobody read.
+
+    Every caller of `get_chart_series` reads `term_summaries` and discards `series`,
+    which carries a full monthly search-volume curve for each term. The system has
+    been paying for Etsy's own seasonality on every batch call and throwing it away
+    (D-45). One live response, `days=365`:
+
+        christmas ornament   peak Nov 163,930 · trough Feb 1,758   -> 93.2x
+        mom necklace         peak Dec  16,683 · trough Jun 5,698   ->  2.9x
+
+    ⚠️ **The last bucket is PARTIAL.** The response carries
+    `is_last_bucket_partial: true`, and the final point is the current month counted
+    so far. Read naively it is a collapse — `felt garland`'s apparent trough was the
+    partial month, not a real low. That flag rides on every returned curve so no
+    consumer can miss it.
+
+    ⚠️ **Terms Etsy cannot size are OMITTED, not zeroed.** Asked for four terms, the
+    response carried three; `linen apron` was simply absent. A missing term is
+    unmeasured (N-02) and callers get no entry rather than an empty curve.
+    """
+    chart = chart or {}
+    partial = bool(_pick(chart, "is_last_bucket_partial", "isLastBucketPartial",
+                         default=False))
+    out = {}
+    for entry in _pick(chart, "series", default=[]) or []:
+        term = _pick(entry, "search_term", "searchTerm")
+        # Only the volume series is a demand curve; the endpoint can carry others.
+        if not term or _pick(entry, "series_type", "seriesType") != "search_volume":
+            continue
+        points = []
+        for p in entry.get("points") or []:
+            value = p.get("value")
+            if value is None:
+                continue
+            points.append({"label": p.get("label"), "value": value,
+                           "timestamp": p.get("timestamp")})
+        if points:
+            out[term] = {"points": points, "last_is_partial": partial,
+                         "granularity": _pick(chart, "granularity", default=None)}
+    return out
+
+
 def edge_term(edge):
     """The keyword out of one `get_similar_keywords` edge, whichever key it uses.
 
@@ -243,7 +286,16 @@ class EtsyPrivateAPI:
                                        TTL_METERED, _fetch, source="etsy_private")
 
     def get_chart_series(self, terms, days=365):
-        """Fetches the time-series chart data (burns quota if cold!)"""
+        """Fetches the time-series chart data.
+
+        ⚠️ Callers historically read ONLY `term_summaries` from this response and threw
+        `series` away — a free 12-month volume curve per term, on every call the whole
+        project has ever made. Use `parse_chart_series()` to get it (D-45).
+
+        `include_trendline` is left False deliberately: probed 2026-08-20 against
+        `christmas ornament`, True and False return byte-identical key structures. The
+        flag does nothing on this endpoint, so setting it would only imply it did.
+        """
         url = f"https://www.etsy.com/api/v3/ajax/bespoke/shop/{{shop_id}}/marketplace-insights/chart-series-data"
         payload = {
             "search_terms": terms if isinstance(terms, list) else [terms],
