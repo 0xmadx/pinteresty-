@@ -52,6 +52,20 @@ evictions, prunes and leases can never touch their sessions. **Anything that jud
 db 1 must sync first** — `preflight` and `vault_status` both do; a copy older than
 300s reads as an empty vault. Full detail: `docs/VAULT_SEPARATION.md`.
 
+⚠️ **A stale mirror does NOT fail cleanly — it 401s mid-run** (diagnosed 2026-08-21).
+Nothing refreshes db 1 on its own. `Scheduler.run_job` gets the refresh free because
+it preflights, so the **07:00 scheduled run is fine**; a **direct/CLI run is not**.
+Measured: db 0 fresh at 125s while db 1 held a copy **7,473s** old. The fresh profile
+then ages past the 300s eviction line, the pool falls back to `private_seller_1` —
+which has *no heartbeat and is never evicted by design* (D-35) — and that jar's
+cookies are old enough to return **401**. Symptom to recognise: `vault_status` says
+green, and a run minutes later dies on 401.
+
+**So call `preflight.require(...)` in any entry point that builds a live client.**
+`discover`, `filter_trust` and `master_arbitrage` now do; `calendar_engine`,
+`cockpit` and `learn` are DB-only and need nothing. `core/test_preflight.py` pins
+this — it greps for a live client and demands a matching preflight.
+
 ⚠️ **Two Redis servers share port 6379** on this machine (D-30). `localhost` reaches a
 stale native one; the real vault is the Docker container at the address in `.env`. If
 the vault suddenly reads empty, that is the first suspect — `vault_status` detects it
@@ -64,7 +78,7 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 ```bash
 # Full verification — run before every commit
 .venv/Scripts/python.exe -m core.test_graph_db          # + the other 62 suites
-# 63 offline suites, ~1,602 assertions, no network required
+# 63 offline suites, ~1,608 assertions, no network required
 ```
 
 ---
@@ -247,7 +261,7 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. 63 test suites, ~1,602 assertions, all offline.
+request cache · run log · guards. 63 test suites, ~1,608 assertions, all offline.
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
 demand-in-bracket (`etsy/analytics/bracket_demand.py`) · filter-trust registry with
@@ -261,7 +275,7 @@ verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
 (`etsy/analytics/card_saturation.py`) · **17 MCP tools** (`mcp_server/`) ·
 the read server (`etsy/server/app.py`) · the interactive app (`etsy/ui/app_page.py`) ·
 a Docker service for the read server (`docker-compose.yml`, `etsy-server`).
-**~1,602 assertions** across 63 suites.
+**~1,608 assertions** across 63 suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

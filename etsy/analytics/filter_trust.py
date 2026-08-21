@@ -285,6 +285,13 @@ def audit(public_api, queries, names=None, path=REGISTRY_PATH, pause=0.0, verbos
 
 def main():
     from etsy.api.public.api import EtsyPublicAPI
+
+    # The mirror this project reads is only refreshed by preflight (D-33), and a CLI
+    # run does not get the scheduler's copy of that. Sync-and-check first, or a stale
+    # pool takes this audit down mid-sweep and the registry keeps yesterday's answer.
+    from core.preflight import require
+    require("etsy")
+
     # Deliberately unlike each other: a broad personalized physical term, a
     # narrow long-tail one, and a digital-heavy one. A filter that partitions
     # only on easy queries is not trusted.

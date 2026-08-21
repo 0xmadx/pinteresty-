@@ -498,6 +498,15 @@ def main(argv=None):
     from etsy.analytics.calendar import build
     from pinterest.endpoints.api import PinterestTrendsAPI
 
+    # This project reads a MIRROR of the shared vault (D-33), and nothing refreshes
+    # it on its own. The scheduler gets the refresh for free because `run_job` calls
+    # preflight, but a CLI run does not — so without this the mirror can be hours
+    # stale, the fresh profile ages past the eviction threshold, and the run falls
+    # back to a heartbeat-less profile and dies on a 401 deep inside a pipeline.
+    # `require` syncs first and refuses with an actionable message instead.
+    from core.preflight import require
+    require("etsy_private", "pinterest")
+
     api = EtsyPrivateAPI()
     candidates = trending_candidates(api)
     with PinterestTrendsAPI() as pin:

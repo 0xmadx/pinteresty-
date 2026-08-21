@@ -476,5 +476,11 @@ class HybridArbitrageEngine:
         print(f"[+] Run health: python -m core.runlog")
 
 if __name__ == "__main__":
+    # Refresh the mirror this project reads (D-33) and refuse cleanly if the pool is
+    # empty. The scheduler gets this from `run_job`'s preflight; a CLI run does not,
+    # and a stale mirror surfaces as a 401 partway through a long sweep instead.
+    from core.preflight import require
+    require("etsy", "etsy_private")
+
     engine = HybridArbitrageEngine(seed_keyword="mom necklace", max_depth=1, max_nodes=5)
     engine.run()

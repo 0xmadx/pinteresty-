@@ -167,5 +167,43 @@ would = preflight.hygiene(fake, dry_run=True)
 check("dry run reports the removal", len(would) == 1, would)
 check("dry run deletes nothing", "cookie:etsy:hollow" in fake.hashes)
 
+# --- every live entry point must refresh the mirror before it runs -----------------
+# This project reads a MIRROR of the shared vault (D-33) and nothing refreshes it on
+# its own. `Scheduler.run_job` gets the refresh for free because it calls preflight,
+# but a CLI entry point does not — and a stale mirror does not fail cleanly. The
+# fresh profile ages past the eviction threshold, the pool falls back to the
+# heartbeat-less seller profile (never evicted by design, D-35), and that returns a
+# 401 partway through a pipeline. Measured 2026-08-21: db0 fresh at 125s while db1
+# held a copy 7,473s old, and every direct run 401'd while `vault_status` — which
+# syncs — reported the vault green minutes earlier.
+import pathlib  # noqa: E402
+import re  # noqa: E402
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+LIVE_CLIENTS = re.compile(r"EtsyPrivateAPI\(\)|EtsyPublicAPI\(\)|PinterestTrendsAPI\(")
+
+# Entry points the operator runs by hand (README, "the things you will actually
+# run"). DB-only modules are deliberately absent: they need no session at all.
+for module in ["etsy/analytics/discover.py",
+               "etsy/analytics/filter_trust.py",
+               "etsy/engines/master_arbitrage.py"]:
+    source = (ROOT / module).read_text(encoding="utf-8")
+    name = module.rsplit("/", 1)[-1]
+    check(f"{name} builds a live client (so it needs a session)",
+          bool(LIVE_CLIENTS.search(source)), name)
+    check(f"{name} preflights first, refreshing the mirror",
+          "from core.preflight import require" in source,
+          f"{name} instantiates a live API client without calling preflight — a "
+          f"stale mirror will surface as a 401 mid-run rather than a refusal")
+
+# And the guard that makes the above meaningful: require() must actually sync.
+src = (ROOT / "core" / "preflight.py").read_text(encoding="utf-8")
+check("preflight.require refreshes from the shared vault before judging",
+      "from core.vault_mirror import sync" in src and "sync()" in src)
+check("and treats a mirror failure as non-fatal, not as an empty pool",
+      "Continuing with the copy we already hold" in src)
+# A mirror that cannot be reached is not the same as having no session — we may
+# already hold a good copy, so the real check decides.
+
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)
