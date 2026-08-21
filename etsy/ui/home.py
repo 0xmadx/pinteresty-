@@ -197,6 +197,7 @@ footer{{margin-top:24px;padding-top:14px;border-top:1px solid var(--line);
   reads the database, rebuilt daily by the scheduler</p>
 
 <nav class="nav">
+  <a href="app.html">Interactive app<span>tables, filters, charts — everything</span></a>
   <a href="calendar.html">Calendar<span>what to list, and by when</span></a>
   <a href="discover.html">Discover<span>terms worth a look</span></a>
   <a href="market.html">Market<span>competitor shop window</span></a>
@@ -230,11 +231,17 @@ def write(out_dir=OUT_DIR, db_path="market_intelligence.db", lead_weeks=6,
     terms = load().terms()
     os.makedirs(out_dir, exist_ok=True)
 
-    # The competitor window, refreshed alongside the index.
+    # The competitor window and the full interactive app, refreshed alongside
+    # the index — one snapshot of a single age across every surface.
     try:
         market_page.write(out_dir=out_dir, db_path=db_path, now=now)
     except Exception as e:
         print(f"[!] market page not rendered: {e}")
+    try:
+        from etsy.ui import app_page
+        app_page.write(out_dir=out_dir, db_path=db_path, now=now)
+    except Exception as e:
+        print(f"[!] interactive app not rendered: {e}")
 
     if render_cockpits:
         for term in terms:
