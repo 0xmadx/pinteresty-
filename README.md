@@ -70,6 +70,13 @@ Runs whatever readings are due. Already registered as a daily Windows task
 (`EtsyScrapperDaily`, 07:00) via `run_scheduler.cmd`.
 
 ```bash
+.venv/Scripts/python.exe -m etsy.server.app
+```
+**Optional** read server — the interactive app live at `http://127.0.0.1:8100/`,
+plus `POST /api/analyze/{term}` to measure a keyword on demand. Not required; the
+static `etsy/data/ui/*.html` and the MCP tools work with no server.
+
+```bash
 .venv/Scripts/python.exe -m etsy.analytics.learn
 ```
 Did past predictions come true? Refuses to tune below 10 launches.
@@ -99,6 +106,7 @@ One of ~54 offline suites, **1,386 assertions**, no network required.
                           │
      core/         session vault (Redis) · cache · run log · guards
      mcp_server/   17 read-only tools for Claude / Antigravity
+     etsy/server/  optional FastAPI read API + live analysis (D-42)
 ```
 
 | Directory | Holds |

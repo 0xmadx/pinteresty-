@@ -834,3 +834,39 @@ what lets the daily scheduler treat it like every other generated page.
 are separate objects (never merged into one denominator), every number carries its
 basis, and absent stays null rather than becoming zero — the client styles a
 default CVR or a bound distinctly from a measurement.
+
+
+---
+
+## D-42 — The server is the read layer over HTTP; one live path, honestly gated
+
+**Date:** 2026-08-20
+
+**Context.** D-41 put every view behind `app_data` so a server could be added
+without a rewrite. The operator asked for the server too. This is it.
+
+**Chosen.** `etsy/server/app.py` (FastAPI) wraps each `app_data` function as an
+endpoint and serves the SAME `app_page` frontend fed a fresh snapshot per request.
+It adds exactly two capabilities a static file cannot have:
+
+  * live from the database on every request, reachable from another device;
+  * `POST /api/analyze/{term}` — the real pipeline for a keyword the operator did
+    not have watched, measured now and stored so it joins the daily data.
+
+Proven end-to-end: `custom dog portrait`, never seen before, judged in one call
+(5,076 searches / 235,935 listings = 0.022, a wall).
+
+**The one live path is gated, not trusted.** It syncs the db-1 mirror first (D-33)
+so a stale copy does not read as an empty vault, then refuses FAST with a fix
+message if the pool is genuinely empty rather than hanging (the old unbounded-wait
+failure). It is a deliberate POST, never triggered by a page load. Every other
+endpoint reads the database only.
+
+**Rejected: a React SPA.** The static app is already the frontend; the server
+reuses it. A separate SPA would be a second UI to keep in sync with no capability
+the reused renderer lacks.
+
+**Rejected: making the server the default.** It is a daemon, against the project's
+grain, and it exposes private market data with no auth. The batch scheduler and the
+static files remain the default and need no server; the server is opt-in
+(`run_server.cmd`), bound to 127.0.0.1 unless `HOST` deliberately opens the LAN.

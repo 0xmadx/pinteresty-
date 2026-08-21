@@ -164,6 +164,7 @@ account costs the business.
 | **`locationQuery` is not a filter** | It returns a *broader* result set than the search it filters. On `monogrammed waffle weave towel` (10,011 unfiltered) Germany returned 28,271 and seven countries summed to **1116%** of the market they claim to partition. Origin share is **not obtainable from the SERP** — use `sourcing.sample_origins()`, which reads each listing's declared origin and can see countries Etsy's list omits (it found a Turkish seller). `delivery_days` was checked the same way and **is** sound: monotonic, cumulative, never above total. |
 | **`organic_listing_ids` was ALWAYS empty** | Parser bug fixed 2026-08-20. The regex demanded `"result_count"` within 200 chars of the array; the real neighbours are `bucket_id`/`user_id`. It returned `[]` on every page for the project's life — silently, because an empty list is plausible for a page with no results. Now 39–51 ranked ids, which also unblocks rank tracking. |
 | **The UI is `etsy/data/ui/index.html`** | One entry point (`etsy.ui.home`) links the Calendar, Discover and per-term Cockpit screens, with a blockers-first digest. All generated files reading the database — no server, no read API. Refreshed daily by the calendar job. |
+| **The optional server is `etsy/server/app.py`** | FastAPI over the same read layer (`app_data`) plus `POST /api/analyze/{term}` for live analysis of a typed keyword. Opt-in (`run_server.cmd`), 127.0.0.1 by default (D-42). The scheduler + static files remain the no-daemon default. |
 | **The interactive app is `etsy/data/ui/app.html`** | One self-contained page over the daily snapshot: six tabs, sortable/filterable tables, search, sparklines, Etsy + Pinterest. Everything reads THROUGH `etsy/ui/app_data.py`, the one read layer a future FastAPI server would also consume (D-41). |
 | **Two screens exist** | `etsy.ui.calendar_page` (home, + `.ics`) and `etsy.ui.cockpit_page` (one candidate, with page-one saturation joined in). Generated files, not a server — no read API exists, so a SPA would have nothing to call. |
 | **Demand and competition are separate tables** | `keyword_observations` (private demand, market-wide) and `keyword_competition` (public page-one saturation, a ~9-listing sample with intervals). Joined only at read time in the Cockpit — never merged, or a saturation of 6 gets divided by 1.4M listings. |
@@ -238,7 +239,7 @@ verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
 (`core/vault_mirror.py`) · session-layer hardening · **the Calendar screen**
 (`etsy/ui/calendar_page.py`, + `.ics` export) · saturation recovered from listings
 (`etsy/analytics/card_saturation.py`) · **14 MCP tools** (`mcp_server/`).
-**~1,386 assertions** across ~54 offline suites.
+**~1,405 assertions** across ~55 suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

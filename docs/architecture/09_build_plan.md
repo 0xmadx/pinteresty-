@@ -48,7 +48,8 @@ time.
 | — | **The Discover screen** | ✅ | **done 2026-08-20** — `etsy/ui/discover_page.py` + weekly `discover_sweep`. Ranked candidate pool from expanding watched seeds; found `custom family name necklace` (winnable) from a wall seed |
 | — | **The home index** | ✅ | **done 2026-08-20** — `etsy/ui/home.py`. One entry point (`index.html`) linking every screen + a cockpit per term, with a blockers-first digest. Refreshed daily. |
 | — | **The Market screen** | ✅ | **done 2026-08-20** — `etsy/ui/market_page.py`. Competitor shop window: their listings matching watched terms, ranked by review velocity (a floor), sales-per-day as a bound, survivor bias on the page. |
-| — | **The interactive app** | ✅ | **done 2026-08-20** — `etsy/ui/app_data.py` (read layer) + `etsy/ui/app_page.py` (self-contained page). Six tabs, sortable/filterable tables, search, sparklines, Etsy + Pinterest. A FastAPI server can consume the same read layer (D-41) — not yet built. |
+| — | **The interactive app** | ✅ | **done 2026-08-20** — `etsy/ui/app_data.py` (read layer) + `etsy/ui/app_page.py` (self-contained page). Six tabs, sortable/filterable tables, search, sparklines, Etsy + Pinterest. |
+| — | **The read server** | ✅ | **done 2026-08-20** — `etsy/server/app.py` (FastAPI). The read layer over HTTP + live on-demand analysis of any typed keyword. Optional (`run_server.cmd`), 127.0.0.1 by default (D-42). |
 | 2 | **MEASURE** — volume, CVR, supply, competitors, saturation | ✅ | daily `keyword_sweep` running; pagination still missing |
 | 3 | **JUDGE** — profit gate, survivor bound, gaps, ranking | ✅ | gaps can now resolve POSITIVELY (D-34); only 3 filter dimensions are trustworthy (D-32) |
 | 4 | **TIME** — takeoff → "list by Sept 22" | ✅ | **done 2026-08-19** — `calendar_engine.py`. Moments were being computed and discarded; see §3b |
