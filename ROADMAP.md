@@ -18,14 +18,52 @@ became a listed MCP server or a multi-tenant SaaS. Read the second list as
 | **Colour dimension recovery** | `attr_1` (colour) is in `filter_trust.json` as `NOT_A_SUBSET` — Etsy's own colour buckets don't sum to 100%. Recovering it needs image analysis of listing photos, deliberately not built (out of scope for a text/API pipeline) | Would need a vision step — new capability, not a bug fix. Worth reconsidering only if colour becomes decision-relevant for a real candidate. |
 | **Offsite Ads $100/order fee cap** | Etsy charges Offsite Ads fees only up to $100 per order; not modeled in `etsy/analytics/profit.py`, which applies the flat percentage unconditionally | Low priority — only bites on orders near/above $100, uncommon for personalized/digital goods at this shop's price points. Flagged, not fixed. |
 | **History depth** | Trend/listing/shop observations only started accumulating 2026-08-19 (calendar fix) / earlier for keywords. Trend detection, momentum, and "did the verdict flip and why" all get better with more days behind them | Time only — cannot be backfilled. The scheduler (`EtsyScrapperDaily`, 07:00) is the whole mechanism. |
-| **Server auth** | `etsy/server/app.py` has none — fine on `127.0.0.1`, unsafe on a LAN or beyond | See §2 below; this is the first thing any wider deployment needs |
+| **Server auth** | `etsy/server/app.py` has none — fine on `127.0.0.1`, unsafe on a LAN or beyond | See §3 below; this is the first thing any wider deployment needs |
 
 None of these block daily use of the calendar/cockpit/discover screens today.
 They're the honest list of what's thin, not blockers to using what exists.
 
 ---
 
-## 2. Design notes: if this became a listed MCP server or a SaaS
+## 2. Designed and probed, never wired — the highest-leverage next builds
+
+Different from §1: these aren't gaps, they're **capabilities the project already
+verified exist on the wire** (via `docs/architecture/08_capability_map.md` and
+`docs/market_map/`), sometimes with the exact join spelled out, that simply
+never got built. Ranked by the project's own stated leverage, highest first —
+not chronological, not by ease.
+
+| # | Capability | Source | Why it matters |
+|---|---|---|---|
+| 1 | **JOIN 2 — winnable AND rising** (Pinterest momentum onto Etsy's winnable pockets) | `docs/market_map/analysis/combinations.md` §JOIN 2 — literally called "the single highest-value join, and not yet wired" | Discover already ranks by demand-per-listing (D-31); Pinterest already reports rising/fading momentum. Neither platform can see this alone — a winnable-but-fading term looks identical to a winnable-and-rising one from Etsy's data alone, and only one of them is worth the labor. |
+| 2 | **JOIN 3 — intent gate** (`OUTBOUND_CLICK` vs `SAVE` on Pinterest) | `combinations.md` §JOIN 3; `08_capability_map.md` §4.2 item 1 | Separates buyers from daydreamers. A niche high in `SAVE`, low in `OUTBOUND_CLICK`, looks like Pinterest momentum but will not convert on Etsy — the one filter that catches this before a Blueprint gets built on it. |
+| 3 | **JOIN 4 — demographics-shaped tags** (Pinterest age/gender → Blueprint copy) | `combinations.md` §JOIN 4; `08_capability_map.md` §4.1 `demographics` endpoint | Not "necklace" but the words a specific 25-34-female audience actually searches. Marked `⚠️ demographics endpoint unproven` — worth a live probe before building on it, same discipline as everything else here. |
+| 4 | **`include_trendline: true` on `get_chart_series`** | `08_capability_map.md` §2, row `get_chart_series` — "we decline a free seasonality curve" | Same call, already paid for, currently declined. A free 52-week curve per term, no new endpoint, no new session risk — the cheapest item on this whole list. |
+| 5 | **Shopping-family endpoints (`ApiResource`)** — 383-category DAG, category growth ranking, category demand curve **with a forecast**, category demographics, actual top-products-in-category | `08_capability_map.md` §4.2 — 7 of 8 endpoints `❌`, "almost entirely unused" | Replaces LLM keyword clustering with Pinterest's own taxonomy (item 14 in `09_build_plan.md` Phase 3) and gives a demand *forecast*, which nothing else in the system currently produces. |
+| 6 | **Community-relative momentum** | `09_build_plan.md` Phase 3, item 15 | "Rising faster than its own community" (real trend) vs "rising with it" (just the season) — sharper than the raw velocity number currently used, and cheap: same Pinterest data, different denominator. |
+| 7 | **`editorial/content`** | `08_capability_map.md` §4.2 | 6 trend stories with keywords, across US+GB+IE+CA, in **one free call** — currently never called. |
+| 8 | **Where-to-list (D-11)** | `docs/DECISION_LOG.md` D-11 / D-21 | Etsy vs Shopify/Pinterest, decided by searched-for vs discovered demand with CAC as a range (not fee percentage, which favors Shopify on a naive read). Deliberately deferred by scope (D-21: Etsy-only for now) — a real feature, not a bug, just parked. Revisit only if a second channel is seriously on the table. |
+| 9 | **Pagination on Etsy search** | `09_build_plan.md` stage 2 gap | The private/public search calls read one page; the free 20-card sample per call is real but shallow for high-supply terms. |
+| 10 | **Pinterest wide crawl** | `09_build_plan.md` stage 1 gap | Discover's front door (`trending-search-terms-v2`) covers 7 populated taxonomy ids; the broader Pinterest search/spotlight/shopping seed crawl described in the funnel (`combinations.md` stage 1) is still Etsy-seed-only in practice. |
+
+**If picking one to build next**, the project's own docs already answer this:
+JOIN 2 is explicitly called out as the single highest-value join in the entire
+system, and it needs no new endpoint — both halves (`discover`'s winnability
+ranking, Pinterest's momentum data) already exist and are already measured;
+only the join is missing.
+
+**One idea from project history, noted but not adopted.** An early handoff doc
+(`gemini/claude_handoff.md`, since reconciled into `docs/architecture/10_session_layer.md`)
+raised matching the Chrome browser's IP to the Python scraper's IP (residential
+proxy, or one shared VPS) to reduce DataDome ban risk — explicitly parked as an
+infrastructure-layer concern, not a Python code change. Still infrastructure,
+not code, and still adjacent to the access layer this project doesn't modify
+without explicit permission — flagged here so it isn't rediscovered from
+scratch, not recommended as a next build.
+
+---
+
+## 3. Design notes: if this became a listed MCP server or a SaaS
 
 **Not a build plan.** No code here. This is what to check against before
 starting that work, written down now so the shape doesn't have to be
