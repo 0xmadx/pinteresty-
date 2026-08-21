@@ -43,7 +43,13 @@ def data(volume=12867, cvr=0.000256, low=17.10, high=20.90, supply=351677, wow=1
 # --- market demand is the MARKET's -------------------------------------------------
 m = market_demand(data())
 check("market demand is computed", m["units_per_week"] == 0.76, m)
-check("labelled market-wide", m["basis"] == "measured_market_wide", m)
+check("labelled relative-only, NOT an order count", m["basis"] == "relative_only", m)
+check("and says so in a field a caller cannot miss",
+      m["not_an_order_count"] is True, m)
+# Probed 2026-08-20: volume x query_cvr implies 39.8 orders/month market-wide for
+# "personalized gift", whose #1 listing carries 14,733 reviews — ~30 years' worth.
+# The figure is off by orders of magnitude, so it may be compared between terms
+# (D-43's intent gate) but never thresholded as units.
 check("and declared an upper bound for one shop",
       m["is_upper_bound_for_one_shop"] is True, m)
 check("the detail names the split", "351677 listings" in m["detail"], m["detail"])

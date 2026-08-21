@@ -63,8 +63,8 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 
 ```bash
 # Full verification — run before every commit
-.venv/Scripts/python.exe -m core.test_graph_db          # + the other ~54 suites
-# ~55 offline suites, ~1,405 assertions, no network required
+.venv/Scripts/python.exe -m core.test_graph_db          # + the other 60 suites
+# 61 offline suites, ~1,505 assertions, no network required
 ```
 
 ---
@@ -132,6 +132,22 @@ recommendation still wrong:
 A term with 2M listings is a wall, not an opportunity. Show the **ratio**, not a score —
 "you cannot rank here" has to be checkable. See the `etsy-seo-and-opportunity` skill.
 
+### 7b. …but winnable is not the same as bought (D-43)
+
+That ratio divides searches by listings — **both supply-side**, so a term passes on
+traffic alone. The expansion endpoint returns no CVR at any price, so DISCOVER ranked
+`custom family name necklace` **first** while it converts at **0.15x** the median of
+the terms measured beside it. 5 of the top 6 were the same story.
+
+`confirm_intent` is the second gate: one `results-data` call per top candidate, and the
+headline verdict is the worse of the two. **It is deliberately RELATIVE.**
+
+⚠️ **`volume × query_cvr` is NOT an order count.** It implies 39.8 orders/month
+market-wide for `personalized gift`, whose #1 listing has 14,733 reviews (~30 years'
+worth). `query_cvr` is a rate against a denominator Etsy does not publish. Compare it
+between terms — never threshold it as units. `opportunity.market_demand()` claimed
+otherwise for the project's whole life; its `basis` is now `relative_only`.
+
 ### 8. Public unless seller access is mandatory (D-29)
 
 `etsy_private` authenticates as **the operator's own seller account** — the one
@@ -177,6 +193,7 @@ account costs the business.
 | **Etsy's shop counter is QUANTISED** | A shop displaying "25,100" steps by 100, so a zero delta means "moved less than the counter can show", not "sold nothing". `record_shop_observation` returns `below_resolution` + an upper bound rather than a 0.0 rate. |
 | **Printify has no production cost** | The catalog exposes shipping and handling time; there is NO price on a catalog variant, and the Premium discount cannot be read. `cost` exists only on a product object. COGS is operator-confirmed or it does not exist. |
 | **Printify handling is 10 days** | On every towel provider. Lead time 12-16 days, so Etsy's 7-day delivery bracket is structurally closed to POD. |
+| **`query_cvr` has no known units** | It is NOT searches→orders. `volume × query_cvr` for `personalized gift` = 39.8/mo market-wide, while its #1 listing holds 14,733 reviews. Usable only as a comparison BETWEEN terms (D-43), never as a quantity. |
 | **The DISCOVER front door works** | `trending-search-terms-v2` returns rising terms with real volumes and no quota cost. Only **7** taxonomy ids are populated (1, 66, 199, 323, 891, 1429, 1633) — several plausible ones (Jewelry, Clothing, Craft Supplies) return nothing. 28 candidates total. |
 
 ---
@@ -229,7 +246,7 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. ~55 test suites, ~1,405 assertions, all offline.
+request cache · run log · guards. 61 test suites, ~1,505 assertions, all offline.
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
 demand-in-bracket (`etsy/analytics/bracket_demand.py`) · filter-trust registry with
@@ -243,7 +260,7 @@ verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
 (`etsy/analytics/card_saturation.py`) · **17 MCP tools** (`mcp_server/`) ·
 the read server (`etsy/server/app.py`) · the interactive app (`etsy/ui/app_page.py`) ·
 a Docker service for the read server (`docker-compose.yml`, `etsy-server`).
-**~1,405 assertions** across ~55 suites.
+**~1,505 assertions** across 61 suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

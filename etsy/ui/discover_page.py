@@ -39,6 +39,11 @@ VERDICT_META = {
     "contested": ("Contested", "warn", "several listings per search — possible, "
                   "not easy"),
     "wall": ("Wall", "bad", "supply overwhelms demand"),
+    # Distinct from a wall on purpose (D-43). A wall has too many competitors; this
+    # has too few buyers. Ranking effort fixes neither, but the operator reads them
+    # differently — "someone else owns this" vs "nobody wants this".
+    "weak_intent": ("Weak intent", "bad", "converts far below the other terms "
+                    "measured beside it — searched more than it is bought"),
 }
 
 
@@ -71,7 +76,11 @@ def render_html(pool, now=None):
     now = now or datetime.now(timezone.utc)
 
     good = [r for r in pool if r.get("verdict") in ("winnable", "contested")]
-    walls = [r for r in pool if r.get("verdict") not in ("winnable", "contested")]
+    rejected = [r for r in pool if r.get("verdict") not in ("winnable", "contested")]
+    # Counted apart, because they are folded away for opposite reasons and the
+    # operator should be able to see WHICH wall they hit (D-43).
+    weak_intent = [r for r in rejected if r.get("verdict") == "weak_intent"]
+    walls = [r for r in rejected if r.get("verdict") != "weak_intent"]
     seasonal = [r for r in good if r.get("moment")]
 
     if pool:
@@ -88,10 +97,16 @@ def render_html(pool, now=None):
           discovered term is a wall. That is a real answer about these seeds: their
           neighbourhoods are saturated. Add a different watched term to expand
           somewhere new.</p>'''
-        fold = (f'<p class="fold">{len(walls):,} more term(s) were discovered and '
-                f'are walls — folded away, not filtered. Ranked by demand per '
-                f'listing, none clears the bar to rank against.</p>'
-                if walls else "")
+        folds = []
+        if walls:
+            folds.append(f'{len(walls):,} more term(s) are walls — too many listings '
+                         f'to rank against')
+        if weak_intent:
+            folds.append(f'{len(weak_intent):,} have traffic but weak purchase intent '
+                         f'— they convert far below the other terms measured beside '
+                         f'them, however few competitors they have')
+        fold = (f'<p class="fold">{" · ".join(folds)}. All folded away, not '
+                f'filtered.</p>' if folds else "")
         summary = (f"{len(good)} winnable or contested of {len(pool):,} discovered"
                    + (f", {len(seasonal)} seasonal" if seasonal else ""))
     else:

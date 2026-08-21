@@ -34,6 +34,12 @@ from datetime import datetime, timedelta, timezone
 
 STATE_PATH = pathlib.Path("config/scheduler_state.json")
 
+# How many top-ranked candidates PER SEED get the intent check (D-43). Each costs one
+# results-data call on the private tier, which authenticates as the operator's own
+# seller account (D-29) — so this is a spend decision, not a tuning knob. 25 covers
+# everything a reader looks at on the Discover screen; the tail is walls anyway.
+INTENT_CHECK_TOP_N = 25
+
 
 def _now():
     return datetime.now(timezone.utc)
@@ -285,6 +291,13 @@ def job_discover():
     walls" is a real and useful answer — it is 130 dead-ends the operator does not
     have to type — so nothing is filtered out; the verdict column carries the
     winnable/contested/wall label and the reader decides.
+
+    **Then the second gate (D-43).** The edges carry volume and supply but no CVR, so
+    winnability alone cannot tell a rankable term from a merely-searched one. The top
+    candidates per seed get one results-data call each, and each term's CVR is
+    compared against the median of the terms measured beside it; one converting far
+    below its peers is recorded `weak_intent` rather than leading the list. Bounded
+    by `INTENT_CHECK_TOP_N` because that call spends the private tier (D-29).
     """
     from core.database import MarketDatabase
     from core.settings_store import load
@@ -301,9 +314,15 @@ def job_discover():
     # The calendar rows, so a discovered term can be tagged with its moment.
     moments = cal.build(latest_moments(), terms=[], lead_weeks=6)
 
+    from etsy.api.private.api import parse_results_data
+
+    def fetch(term):
+        raw = api.get_results_data(term)
+        return parse_results_data(raw) if raw else None
+
     from datetime import datetime, timezone
     run_at = datetime.now(timezone.utc).isoformat()
-    stored, failed = 0, []
+    stored, weak, failed = 0, 0, []
     for seed in seeds:
         try:
             cands = discover.expand_seed(api, seed)
@@ -313,12 +332,24 @@ def job_discover():
         ranked = discover.rank_expanded([c for c in cands if c.get("volume")])
         # Attach the seasonal moment where the term names one.
         ranked = discover.attach_moments(ranked, moments)
+        # The intent gate: does anyone BUY these, or are they merely searched? Costs
+        # one private call per checked candidate, so it is bounded to the top of the
+        # ranking — the only place the answer can still change a decision.
+        ranked = discover.apply_intent(ranked, fetch, top_n=INTENT_CHECK_TOP_N)
         for c in ranked:
             w = c.get("winnability") or {}
+            intent = c.get("intent") or {}
+            if intent.get("verdict") == "weak":
+                weak += 1
             db.record_discovered(
                 c["term"], seed=seed, volume=c.get("volume"), supply=c.get("supply"),
-                demand_per_listing=w.get("demand_per_listing"), cvr=w.get("cvr"),
-                verdict=w.get("verdict"), moment=c.get("moment"),
+                demand_per_listing=w.get("demand_per_listing"),
+                # The MEASURED cvr where the intent gate fetched one; the edge never
+                # carried it, so this column was NULL for every expanded term before.
+                cvr=intent.get("cvr") if intent.get("cvr") is not None else w.get("cvr"),
+                # The combined verdict, not the ratio's — a term that cannot convert
+                # must not reach the operator labelled winnable.
+                verdict=c.get("verdict") or w.get("verdict"), moment=c.get("moment"),
                 list_by=c.get("list_by"), timing=c.get("timing"),
                 collected_at=run_at)
             stored += 1
@@ -327,7 +358,10 @@ def job_discover():
     from etsy.ui import discover_page
     page = discover_page.write()
     return {"seeds": len(seeds), "candidates_stored": stored,
-            "winnable_or_contested": winnable, "failed": failed, "page": page}
+            "winnable_or_contested": winnable,
+            # Terms the ratio gate would have promoted and the intent gate caught.
+            "rejected_weak_intent": weak,
+            "failed": failed, "page": page}
 
 
 def job_competition_sweep():

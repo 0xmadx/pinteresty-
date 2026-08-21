@@ -201,5 +201,141 @@ check("an empty expansion is not fatal", expand_seed(FakeSeedAPI(None), "x") == 
 check("a seed that returns nothing yields nothing",
       expand_seed(FakeSeedAPI([]), "x") == [])
 
+# --- the intent gate: rankable is not the same as bought (D-43) ---------------------
+from etsy.analytics.discover import (MIN_POOL_FOR_INTENT, apply_intent,  # noqa: E402
+                                     combined_verdict, confirm_intent)
+
+# The reported failure, in numbers measured live 2026-08-20. Every one of these is a
+# real term from the operator's own discovered pool, with its real query_cvr.
+POOL_CVRS = {
+    "custom family name necklace": 5.786e-05,   # the term the system ranked FIRST
+    "nana necklace": 1.172e-04,
+    "personalized gift": 1.897e-04,
+    "self watering planter": 4.633e-04,
+    "christmas eve box": 5.889e-04,
+    "macrame plant hanger": 9.695e-04,
+    "backpack name tag": 2.79e-03,
+    "felt garland": 3.1e-04,
+}
+median_cvr = sorted(POOL_CVRS.values())[len(POOL_CVRS) // 2 - 1:][0]
+
+# The headline case: a high ratio and a CVR a fifth of its peers'.
+aspirational = {"volume": 11642, "supply": 6675, "cvr": 5.786e-05}
+win = winnability(aspirational)
+check("the ratio gate alone calls the aspirational term winnable",
+      win["verdict"] == "winnable", win)
+intent = confirm_intent(aspirational, median_cvr)
+check("the intent gate sees it converting far below its peers",
+      intent["cvr_vs_pool"] < 0.5, intent)
+check("and calls it weak", intent["verdict"] == "weak", intent)
+verdict, reason = combined_verdict(win, intent)
+check("so the headline verdict is weak_intent, not winnable",
+      verdict == "weak_intent", verdict)
+
+# The claim is relative and says so — it must never read as an order count.
+check("the reading is labelled a comparison, not a rate",
+      "not a conversion rate" in intent["note"], intent)
+check("and its basis names the comparison",
+      intent["basis"] == "measured_relative", intent)
+# volume x query_cvr was tried as an absolute order count first and thrown away:
+# it implies 39.8 orders/month market-wide for "personalized gift", whose #1
+# listing carries 14,733 reviews. See confirm_intent's docstring.
+
+# weak_intent is a DISTINCT verdict from wall — they fail for opposite reasons.
+crowded = {"volume": 310467, "supply": 2160627, "cvr": 0.00005}
+wv, _ = combined_verdict(winnability(crowded), confirm_intent(crowded, median_cvr))
+check("a crowded term is still a wall, not weak_intent", wv == "wall", wv)
+# A wall has too many competitors; a weak-intent term has searchers who do not buy.
+
+# A term that converts well keeps its verdict.
+real = {"volume": 69874, "supply": 25031, "cvr": 2.79e-03}
+ri = confirm_intent(real, median_cvr)
+check("a well-converting term is measured strong", ri["verdict"] == "strong", ri)
+check("and keeps its ratio verdict",
+      combined_verdict(winnability(real), ri)[0] == "winnable")
+
+# --- the gate REFUSES rather than judging against noise (D-15's discipline) --------
+tiny = confirm_intent(aspirational, None)
+check("with no pool median the gate refuses to judge",
+      tiny["verdict"] == "unmeasured", tiny)
+check("and names the pool as the reason", tiny["basis"] == "pool_too_small", tiny)
+check("so the term keeps its ratio verdict rather than being rejected",
+      combined_verdict(win, tiny)[0] == "winnable")
+
+# --- absent is not zero, in the direction that matters (N-02) ----------------------
+unsized = confirm_intent({"volume": 50000, "supply": 5000, "cvr": None}, median_cvr)
+check("a term with no CVR is unmeasured, NOT weak",
+      unsized["verdict"] == "unmeasured", unsized)
+check("and claims no comparison", unsized["cvr_vs_pool"] is None, unsized)
+uv, _ = combined_verdict(winnability({"volume": 50000, "supply": 5000, "cvr": None}),
+                         unsized)
+check("so it keeps its ratio verdict rather than being rejected", uv == "winnable", uv)
+# Branding an unmeasured term weak would reject real niches on a missing field —
+# the same error as calling an aspirational one winnable, in the other direction.
+
+# --- apply_intent spends calls only where they can change the answer ---------------
+calls = []
+DATA = {t: {"volume": 10000, "supply": 5000, "cvr": c} for t, c in POOL_CVRS.items()}
+
+
+def counting_fetch(term):
+    calls.append(term)
+    return DATA.get(term)
+
+
+pool = [{"term": t, "volume": 10000,
+         "winnability": winnability({"volume": 10000, "supply": 5000, "cvr": None})}
+        for t in POOL_CVRS]
+pool.append({"term": "a wall", "volume": 310467, "winnability": winnability(
+    {"volume": 310467, "supply": 2160627, "cvr": None})})
+
+checked = apply_intent(pool, counting_fetch, top_n=25)
+check("no private call is spent on a term already rejected on supply",
+      "a wall" not in calls, calls)
+check("but every rankable candidate is checked",
+      set(calls) == set(POOL_CVRS), calls)
+
+by_term = {c["term"]: c for c in checked}
+check("the weakest converter is re-labelled weak_intent",
+      by_term["custom family name necklace"]["verdict"] == "weak_intent",
+      by_term["custom family name necklace"])
+check("the wall keeps its own verdict", by_term["a wall"]["verdict"] == "wall")
+check("and the unchecked wall is marked not_checked, not 'checked and empty'",
+      by_term["a wall"]["intent"]["basis"] == "not_checked", by_term["a wall"])
+
+order = [c["term"] for c in checked]
+weak = [c["term"] for c in checked if c["intent"].get("verdict") == "weak"]
+check("a weak-intent term loses the seat its ratio won",
+      "custom family name necklace" in weak, weak)
+check("and every weak term sorts below every strong one",
+      max(order.index(t) for t in ["backpack name tag", "macrame plant hanger"])
+      < min(order.index(t) for t in weak), order)
+# Every term here has an identical 2.0 ratio, so winnability alone cannot separate
+# them at all — the CVR comparison is doing all the work, which is the point.
+
+# The pool median is carried, so a reader can check the comparison themselves.
+check("the reference used is exposed on every row",
+      by_term["personalized gift"]["pool_median_cvr"] is not None, by_term)
+
+# --- a pool too small to have a reference refuses, rather than guessing ------------
+calls.clear()
+small = apply_intent(pool[:3], counting_fetch, top_n=25)
+check("below the minimum pool, no term is judged on intent",
+      all((c["intent"]["verdict"] in (None, "unmeasured")) for c in small), small)
+check("and the reason is the pool, named",
+      any(c["intent"].get("basis") == "pool_too_small" for c in small), small)
+check(f"the minimum is stated, not implicit", MIN_POOL_FOR_INTENT >= 8)
+
+# top_n bounds the spend on the private tier (D-29).
+calls.clear()
+apply_intent(pool, counting_fetch, top_n=2)
+check("top_n bounds how many private calls the gate spends", len(calls) == 2, calls)
+
+# A failed fetch is unmeasured, never weak.
+no_data = apply_intent([pool[0]], lambda t: None, top_n=25)[0]
+check("a failed fetch leaves intent unmeasured, not weak",
+      no_data["intent"]["verdict"] == "unmeasured", no_data["intent"])
+check("and the term keeps its ratio verdict", no_data["verdict"] == "winnable", no_data)
+
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)

@@ -29,11 +29,29 @@ WEEKS_PER_MONTH = 4.345          # 52/12 — Etsy volume is monthly, capacity is
 
 
 def market_demand(data):
-    """Weekly units the MARKET buys for this term — not the operator's share of them.
+    """volume × CVR for this term. ⚠️ NOT an order count — see the warning below.
 
-    volume × CVR is Etsy's own arithmetic: searches that convert. It is spread across
-    every listing competing for the term, so it is an upper bound on any single shop's
-    demand and is labelled that way.
+    ⚠️ **This figure's units are UNKNOWN, and it must not be read as orders.**
+    Probed 2026-08-20 against observable evidence:
+
+        "personalized gift"  209,917 searches/mo × query_cvr 0.00018970
+                             => 39.8 by this arithmetic
+        ...while the #1 listing for that term carries 14,733 lifetime reviews.
+
+    If 39.8 were the whole market's monthly orders, that single listing would have
+    needed ~30 years to accumulate its reviews — against 705,767 competitors, and
+    reviews are only a fraction of orders. So `volume × query_cvr` is off by at
+    least two orders of magnitude, in a direction and by a factor this system has
+    not established. Etsy's `query_cvr` is a rate against some denominator it does
+    not publish; it is *not* the fraction of searches that become orders.
+
+    The value is kept because it is **consistently defined across terms** — the
+    comparison between two terms is meaningful even though the absolute number is
+    not. `discover.confirm_intent` uses exactly that property and refuses to convert
+    it into units. Nothing should threshold this figure absolutely (D-43).
+
+    `basis` says `relative_only` for this reason: it is not a measurement of
+    anything the operator can act on directly.
     """
     volume, cvr = data.get("volume"), data.get("cvr")
     if volume is None or cvr is None:
@@ -43,11 +61,13 @@ def market_demand(data):
                 "detail": "volume or CVR missing"}
     return {
         "units_per_week": round(volume * cvr / WEEKS_PER_MONTH, 2),
-        "basis": "measured_market_wide",
+        "basis": "relative_only",
         "is_upper_bound_for_one_shop": True,
+        "not_an_order_count": True,
         "supply": data.get("supply"),
-        "detail": (f"{volume:,} searches/mo × CVR {cvr:.6f}, shared across "
-                   f"{data.get('supply') or 'unknown'} listings"),
+        "detail": (f"{volume:,} searches/mo × CVR {cvr:.6f} — a RELATIVE index only, "
+                   f"not orders (D-43); {data.get('supply') or 'unknown'} listings "
+                   f"compete"),
     }
 
 

@@ -64,6 +64,23 @@ def main():
     check("the summary counts winnable/contested against the whole pool",
           "3 winnable or contested of 403" in h, "summary wrong")
 
+    # --- a no-intent term is folded APART from the walls (D-43) ----------------------
+    # A term with traffic and no buyers fails for the opposite reason to a wall, and
+    # the operator reads them differently: "someone else owns this" vs "nobody wants
+    # this". Collapsing them into one count hides which wall was hit.
+    print()
+    mixed = pool[:3] + [cand("aspirational trend", 10.0, "weak_intent",
+                             volume=50000, supply=5000)]
+    hm = page.render_html(mixed, now=NOW)
+    mbody = hm[hm.index("<tbody>"):hm.index("</tbody>")]
+    check("a no-intent term does not reach the table, despite a 10.0 ratio",
+          "aspirational trend" not in mbody)
+    # This is the whole point: ranked on demand-per-listing alone it would LEAD.
+    check("it is counted separately from the walls",
+          "weak purchase intent" in hm, hm[hm.index('class="fold"'):][:300])
+    check("and the wall count does not absorb it",
+          "1 more term(s) are walls" not in hm)
+
     # --- the seasonal join -------------------------------------------------------------
     print()
     check("a seasonal term shows its moment and deadline",

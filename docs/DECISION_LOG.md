@@ -870,3 +870,74 @@ the reused renderer lacks.
 grain, and it exposes private market data with no auth. The batch scheduler and the
 static files remain the default and need no server; the server is opt-in
 (`run_server.cmd`), bound to 127.0.0.1 unless `HOST` deliberately opens the LAN.
+
+## D-43 — Rankable is not the same as bought: a second, relative gate on intent
+
+**Date:** 2026-08-20
+
+**Context.** Reported by the operator: *"sometimes I take a trend from Pinterest,
+I go to the keyword, and I find it's dead — not winnable."* Traced, and the
+mechanism is structural rather than a bug.
+
+DISCOVER expands a seed through `get_similar_keywords`, whose ~120 edges carry
+`search_volume` and `avg_total_listings` inline — which is what makes the crawl
+affordable. But that endpoint returns **no CVR at any price**. So `winnability()`
+was dividing searches by listings, two supply-side facts, and calling the result a
+verdict. A term with real traffic and few competitors scored `winnable` on traffic
+alone, however few of those searchers ever checked out. That is the standard shape
+of a Pinterest-sourced trend: the interest is genuine, aspirational, and never
+reaches a basket.
+
+Worse, a CVR tiebreak *was* coded into the sort and was dead code on that path —
+the field it read is never populated for an expanded edge, so it silently
+contributed 0 for every candidate for the life of the feature.
+
+**Measured, on the operator's own pool.** Of the top 6 terms the Discover screen
+was showing, 5 converted below half the pool median. `custom family name necklace`
+— ranked **first**, and the term the Blueprint screen was built around — sits at
+**0.15x** the median of the terms measured beside it.
+
+**Chosen.** Two gates, in cost order. `winnability` (free, wide, supply-side) runs
+first; `confirm_intent` runs only on the top `INTENT_CHECK_TOP_N` survivors, costs
+one `results-data` call each, and compares the term's `query_cvr` against the
+**median of the terms measured in the same run**. The headline verdict is the worse
+of the two, and `weak_intent` is a verdict distinct from `wall` — they fail for
+opposite reasons and the operator reads them differently ("someone else owns this"
+vs "nobody buys this"). Both readings are kept whole; neither is averaged (B-05).
+
+**Rejected: an absolute units-per-week threshold — and this is the important half.**
+The obvious design is `volume × query_cvr` = orders, reject below N orders/week. It
+was built first, and thrown away when it was checked against observable evidence:
+
+| | |
+|---|---|
+| `personalized gift` | 209,917 searches/mo × `query_cvr` 0.00018970 |
+| implies | **39.8 orders/month for the entire market** |
+| but its #1 listing carries | **14,733 lifetime reviews** |
+
+One listing would need ~30 years to accumulate that, against 705,767 competitors,
+and reviews are only a fraction of orders. So `volume × query_cvr` is wrong by at
+least two orders of magnitude. Etsy's `query_cvr` is a rate against a denominator
+it does not publish — **it is not the fraction of searches that become orders.**
+
+**Consequence, and a pre-existing defect corrected.** `opportunity.market_demand()`
+has always made exactly that claim ("Weekly units the MARKET buys", basis
+`measured_market_wide`). It is wrong, and it now says so: `basis` is
+`relative_only`, with `not_an_order_count: True`. The blast radius was small
+because good design contained it — the figure is *displayed* beside the verdict and
+only reaches `profit.verdict` when an explicit `capture_share` is supplied, so it
+never silently set a go/no-go. It was a wrong number on screen, not a wrong
+decision.
+
+What survives is the **comparison**. `query_cvr` is one field from one endpoint,
+defined identically for every term, so a ratio between two terms carries
+information even when the constant relating it to orders does not exist. The gate
+uses only that property.
+
+**Refuses rather than guessing.** Below `MIN_POOL_FOR_INTENT` (8) measured terms
+there is no median worth comparing against, and the gate returns `unmeasured` with
+basis `pool_too_small` rather than judging against noise — the discipline
+`score_pool`'s `PoolTooSmall` already applies (D-15). A term whose CVR never came
+back is `unmeasured`, never `weak`: branding an unmeasured term dead would reject
+real niches on a missing field, which is the same error as calling an aspirational
+one winnable, in the other direction (N-02).

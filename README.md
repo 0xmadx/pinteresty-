@@ -91,7 +91,7 @@ Re-audits which Etsy SERP filters can be believed. **9 of 12 currently cannot.**
 ```bash
 .venv/Scripts/python.exe -m core.test_graph_db
 ```
-One of ~54 offline suites, **1,386 assertions**, no network required.
+One of 61 offline suites, **~1,505 assertions**, no network required.
 
 ---
 
@@ -156,9 +156,10 @@ barely been switched on, and **value here compounds only with time** — a daily
 delta needs two readings a day apart, and LEARN needs 10 launches. None of it
 can be backfilled.
 
-**Blocking the numbers being real:** `config/settings.json` has `"confirmed": []`,
-so every profit verdict is *provisional* — computed from default fees and costs
-rather than the operator's own.
+**Settings confirmed 2026-08-20:** fees verified against Etsy's published schedule,
+operator rate $25/hr, capacity 10 hrs/week — `basis()` reports `operator`, so profit
+verdicts are no longer blanket-provisional. The margin **floors** are still defaults;
+check before trusting a verdict that sits close to one.
 
 ```bash
 .venv/Scripts/python.exe -m core.settings_store show
