@@ -941,3 +941,66 @@ basis `pool_too_small` rather than judging against noise — the discipline
 back is `unmeasured`, never `weak`: branding an unmeasured term dead would reject
 real niches on a missing field, which is the same error as calling an aspirational
 one winnable, in the other direction (N-02).
+
+## D-44 — JOIN 2: momentum is a third axis, not a fourth gate
+
+**Date:** 2026-08-20
+
+**Context.** D-43 gave the pool a second axis (do these searchers buy?). Neither it
+nor winnability can see whether interest in a term is **growing or dying** — Etsy's
+own `wow_data` covers one week and nothing longer. Pinterest measures exactly that,
+free, with no seller account at risk. `docs/market_map/analysis/combinations.md`
+calls this the highest-value join in the system.
+
+**Rejected first: the stored-topic join.** The obvious implementation joins the
+momentum already in `trend_observations`. Probed before building, and it returns
+nothing, ever:
+
+| Check | Result |
+|---|---|
+| 84 stored Pinterest featured topics vs 1,333 discovered Etsy terms | |
+| Exact content-word matches (what D-17 requires) | **0** |
+| Containment matches, either direction | **0** |
+| Topics sharing *any* content word | 64 of 84 |
+
+Pinterest writes editorial phrases ("Apple-Themed Preschool Activities"); Etsy
+candidates are product keywords. Identical to the vocabulary mismatch that silently
+emptied the calendar for the project's whole life — a known shape, caught this time
+by probing first.
+
+**Chosen.** Ask Pinterest about **our** terms directly. `/metrics/` accepts ~50 terms
+per call and the pool surviving both Etsy gates is far smaller, so the whole join
+costs **one Pinterest request per run**, no matching logic, nothing to get wrong.
+
+**Two properties of the instrument, both measured.**
+
+*Pinterest DROPS terms it does not track — it does not return zeros.* Asked for 7
+real candidates, it returned 3. A term missing from the response is `unmeasured`,
+never "no momentum" (N-02). Coverage is genuinely partial and that is a fact about
+the instrument.
+
+*`100.01` is a display sentinel, not a measurement.* Pinterest caps its own UI at
+"10,000%+", so any raw value at or above `100.01` is that cap. Reading it as a real
+10,001% rise would make every censored term the best in the pool. `clamp_change`
+already encoded this; the join reuses it rather than reimplementing it.
+
+**Momentum does not change any verdict, and that is deliberate.** It attaches beside
+the Etsy verdicts and reports disagreement (B-05, D-38). Two measured reasons:
+Pinterest covers under half the pool, so gating on it would reject terms for absence
+from an instrument rather than for evidence; and a fading term still has today's
+demand, which makes it the operator's call rather than the system's. Precedent
+exists — D-40 promoted `wow_change` to a banner, not a gate.
+
+**Thresholds are ±10% month-over-month**, coarse and named like every other threshold
+here. MoM leads because week-over-week on a single term is mostly noise: a seasonal
+term can swing 30% in the week it enters its ramp. Verified against live readings —
+`christmas eve box` at **+70% MoM in August** is the Christmas ramp starting, and
+`macrame plant hanger` at **−7%** correctly reads *flat*, not fading, because one
+month can drift that far on noise alone. The threshold was not tuned to make any
+term come out a particular way.
+
+**Degrades rather than fails.** Pinterest is the one source with no seller account at
+stake, so a session failure there skips momentum and keeps every Etsy judgement.
+Observed on the first full run: the Pinterest heartbeats expired mid-sweep, and the
+run completed with all four surviving candidates judged and
+`momentum_note` naming the cause.

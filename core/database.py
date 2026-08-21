@@ -305,6 +305,21 @@ class MarketDatabase:
                     cursor.execute(
                         f"ALTER TABLE trend_observations ADD COLUMN {column} {decl}")
 
+            disc_cols = {row[1] for row in
+                         cursor.execute("PRAGMA table_info(discovered_candidates)")}
+            for column, decl in [
+                # JOIN 2's third axis. Etsy can say whether a term is rankable and
+                # whether its searchers buy; only Pinterest can say whether interest
+                # is growing or dying. Stored beside the verdict rather than folded
+                # into it — Pinterest tracks under half these terms, so an absent
+                # reading must stay visibly absent (N-02).
+                ("momentum", "TEXT"),
+                ("momentum_mom", "REAL"),
+            ]:
+                if column not in disc_cols:
+                    cursor.execute(
+                        f"ALTER TABLE discovered_candidates ADD COLUMN {column} {decl}")
+
             comp_cols = {row[1] for row in
                          cursor.execute("PRAGMA table_info(keyword_competition)")}
             if "delivery_json" not in comp_cols:
@@ -766,17 +781,23 @@ class MarketDatabase:
 
     def record_discovered(self, term, seed=None, volume=None, supply=None,
                           demand_per_listing=None, cvr=None, verdict=None,
-                          moment=None, list_by=None, timing=None, collected_at=None):
-        """Append one discovered candidate. Never overwrites (append-only pool)."""
+                          moment=None, list_by=None, timing=None, collected_at=None,
+                          momentum=None, momentum_mom=None):
+        """Append one discovered candidate. Never overwrites (append-only pool).
+
+        `momentum` / `momentum_mom` are Pinterest's third axis (JOIN 2) and are
+        NULL for any term Pinterest does not track — which is most of them. Null
+        here means unmeasured, never "no growth".
+        """
         now = collected_at or datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             conn.execute('''
                 INSERT OR REPLACE INTO discovered_candidates (
                     term, collected_at, seed, volume, supply, demand_per_listing,
-                    cvr, verdict, moment, list_by, timing
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    cvr, verdict, moment, list_by, timing, momentum, momentum_mom
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (term, now, seed, volume, supply, demand_per_listing, cvr,
-                  verdict, moment, list_by, timing))
+                  verdict, moment, list_by, timing, momentum, momentum_mom))
             conn.commit()
         return {"term": term, "collected_at": now}
 

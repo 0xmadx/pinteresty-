@@ -151,6 +151,13 @@ def build_discovered(db_path=DB_PATH, limit=2000):
         "volume": r.get("volume"), "supply": r.get("supply"),
         "demand_per_listing": r.get("demand_per_listing"),
         "verdict": r.get("verdict"),
+        # The measured CVR behind a weak_intent verdict, so the reader can check it
+        # rather than take the label on trust (D-43).
+        "cvr": r.get("cvr"),
+        # Pinterest's axis. NULL for any term Pinterest does not track, which is most
+        # of them — the client must render that as unknown, never as flat (N-02).
+        "momentum": r.get("momentum"),
+        "momentum_mom": r.get("momentum_mom"),
         "moment": r.get("moment"), "list_by": r.get("list_by"),
         "timing": r.get("timing"),
     } for r in pool]

@@ -81,6 +81,28 @@ def main():
     check("and the wall count does not absorb it",
           "1 more term(s) are walls" not in hm)
 
+    # --- Pinterest's axis is shown, and absence is not flat (JOIN 2) -----------------
+    print()
+    trend_pool = [
+        dict(cand("rising term", 1.2, "winnable"), momentum="rising", momentum_mom=0.7),
+        dict(cand("dying term", 1.1, "winnable"), momentum="fading", momentum_mom=-0.34),
+        cand("untracked term", 1.0, "winnable"),          # Pinterest has no series
+    ]
+    ht = page.render_html(trend_pool, now=NOW)
+    check("a Pinterest column exists", "<th>Pinterest</th>" in ht)
+    check("a rising term shows its month-over-month figure", "+70%" in ht, ht[:0])
+    check("a fading term shows the decline signed", "-34%" in ht)
+    check("and is styled as bad, so it reads as a warning",
+          'class="trend bad"' in ht)
+    check("an untracked term renders a dash, not a zero",
+          'class="trend none"' in ht and "0%" not in ht.split('trend none')[1][:40])
+    check("and its title says unknown, explicitly NOT flat",
+          "unknown, not flat" in ht, "an absent reading must not read as flat (N-02)")
+    # Pinterest returned 3 of 7 real candidates. A dash means it does not track the
+    # term — treating that as flat would invent a measurement.
+    check("momentum does not change the verdict — all three are still winnable",
+          ht.count('class="ratio good"') == 3, ht.count('class="ratio good"'))
+
     # --- the seasonal join -------------------------------------------------------------
     print()
     check("a seasonal term shows its moment and deadline",

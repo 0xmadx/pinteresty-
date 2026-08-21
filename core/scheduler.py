@@ -40,6 +40,10 @@ STATE_PATH = pathlib.Path("config/scheduler_state.json")
 # everything a reader looks at on the Discover screen; the tail is walls anyway.
 INTENT_CHECK_TOP_N = 25
 
+# Pinterest /metrics/ accepts roughly 50 terms per call. The surviving pool is far
+# smaller than that in practice, so this is a ceiling rather than a batching loop.
+PINTEREST_METRICS_BATCH = 50
+
 
 def _now():
     return datetime.now(timezone.utc)
@@ -350,12 +354,41 @@ def job_discover():
     reference = discover.reference_median(measured.values(),
                                           extra_cvrs=db.measured_cvrs().values())
 
-    for seed, ranked in per_seed:
-        for c in discover.judge_intent(ranked, measured, reference):
+    judged = [(seed, discover.judge_intent(ranked, measured, reference))
+              for seed, ranked in per_seed]
+
+    # --- the third axis: is it RISING? (JOIN 2) -----------------------------------
+    # Pinterest /metrics/ takes ~50 terms per call, and only the terms that survived
+    # both Etsy gates are worth asking about — so this is ONE request for the whole
+    # run, on a platform where no seller account is at risk.
+    survivors = sorted({c["term"] for _, rows in judged for c in rows
+                        if c.get("verdict") in ("winnable", "contested")})
+    from etsy.analytics import momentum as mom
+    momentum_index, momentum_note = {}, None
+    if survivors:
+        try:
+            from pinterest.endpoints.api import PinterestTrendsAPI
+            with PinterestTrendsAPI() as pin:
+                momentum_index = mom.series_index(
+                    pin.metrics(survivors[:PINTEREST_METRICS_BATCH], days=365))
+        except Exception as e:
+            # Pinterest is the one source with no seller account at stake, so a
+            # failure here degrades the run rather than ending it: every Etsy
+            # judgement above is already made and worth storing.
+            momentum_note = f"momentum unavailable: {type(e).__name__}: {e}"
+
+    rising = fading = 0
+    for seed, rows in judged:
+        for c in mom.attach(rows, momentum_index):
             w = c.get("winnability") or {}
             intent = c.get("intent") or {}
+            m = c.get("momentum") or {}
             if intent.get("verdict") == "weak":
                 weak += 1
+            if m.get("verdict") == "rising":
+                rising += 1
+            elif m.get("verdict") == "fading":
+                fading += 1
             db.record_discovered(
                 c["term"], seed=seed, volume=c.get("volume"), supply=c.get("supply"),
                 demand_per_listing=w.get("demand_per_listing"),
@@ -363,9 +396,13 @@ def job_discover():
                 # carried it, so this column was NULL for every expanded term before.
                 cvr=intent.get("cvr") if intent.get("cvr") is not None else w.get("cvr"),
                 # The combined verdict, not the ratio's — a term that cannot convert
-                # must not reach the operator labelled winnable.
+                # must not reach the operator labelled winnable. Momentum is stored
+                # BESIDE it and never folded in: Pinterest tracks under half these
+                # terms, so gating on it would reject terms for absence (N-02).
                 verdict=c.get("verdict") or w.get("verdict"), moment=c.get("moment"),
                 list_by=c.get("list_by"), timing=c.get("timing"),
+                momentum=m.get("verdict") if m.get("basis") == "measured" else None,
+                momentum_mom=m.get("mom"),
                 collected_at=run_at)
             stored += 1
 
@@ -379,6 +416,11 @@ def job_discover():
             "rejected_weak_intent": weak,
             # None means the gate REFUSED — too few measured CVRs to compare against.
             "intent_reference_cvr": reference,
+            # Of the survivors Pinterest actually tracks. The rest are unmeasured,
+            # which is not the same as flat.
+            "momentum_checked": len(survivors),
+            "momentum_known": len(momentum_index),
+            "rising": rising, "fading": fading, "momentum_note": momentum_note,
             "failed": failed, "page": page}
 
 

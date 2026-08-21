@@ -63,8 +63,8 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 
 ```bash
 # Full verification — run before every commit
-.venv/Scripts/python.exe -m core.test_graph_db          # + the other 60 suites
-# 61 offline suites, ~1,515 assertions, no network required
+.venv/Scripts/python.exe -m core.test_graph_db          # + the other 61 suites
+# 62 offline suites, ~1,560 assertions, no network required
 ```
 
 ---
@@ -246,7 +246,7 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. 61 test suites, ~1,515 assertions, all offline.
+request cache · run log · guards. 62 test suites, ~1,560 assertions, all offline.
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
 demand-in-bracket (`etsy/analytics/bracket_demand.py`) · filter-trust registry with
@@ -260,7 +260,7 @@ verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
 (`etsy/analytics/card_saturation.py`) · **17 MCP tools** (`mcp_server/`) ·
 the read server (`etsy/server/app.py`) · the interactive app (`etsy/ui/app_page.py`) ·
 a Docker service for the read server (`docker-compose.yml`, `etsy-server`).
-**~1,515 assertions** across 61 suites.
+**~1,560 assertions** across 62 suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

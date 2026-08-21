@@ -62,12 +62,28 @@ def _row(r):
 
     vol = f"{r['volume']:,}" if r.get("volume") else "—"
     sup = f"{r['supply']:,}" if r.get("supply") else "—"
+
+    # Pinterest's axis, reported beside Etsy's rather than folded into the verdict.
+    # An untracked term shows "—" with a title saying so: Pinterest covers under half
+    # this pool, and a dash must never be read as "flat" (N-02).
+    mom_v, mom_pct = r.get("momentum"), r.get("momentum_mom")
+    if mom_v:
+        icon = {"rising": "&#128200;", "fading": "&#128201;", "flat": "&#8594;"}
+        pct = f" {mom_pct * 100:+.0f}%" if mom_pct is not None else ""
+        m_cls = {"rising": "good", "fading": "bad"}.get(mom_v, "")
+        trend = (f'<span class="trend {m_cls}" title="Pinterest, month-over-month">'
+                 f'{icon.get(mom_v, "")}{pct}</span>')
+    else:
+        trend = ('<span class="trend none" title="Pinterest does not track this '
+                 'term — unknown, not flat">&mdash;</span>')
+
     return f'''
       <tr class="{cls}">
         <td class="term">{term}{moment}</td>
         <td class="ratio {cls}">{ratio_txt}</td>
         <td class="num">{vol}</td>
         <td class="num">{sup}</td>
+        <td class="num">{trend}</td>
         <td class="seed">{seed}</td>
       </tr>'''
 
@@ -89,7 +105,7 @@ def render_html(pool, now=None):
         <table>
           <thead><tr>
             <th>Term</th><th>Demand / listing</th><th>Searches</th>
-            <th>Listings</th><th>From seed</th>
+            <th>Listings</th><th>Pinterest</th><th>From seed</th>
           </tr></thead>
           <tbody>{rows}</tbody>
         </table>''' if good else '''
@@ -158,6 +174,12 @@ tr.good td{{background:var(--good-bg)}}
 .ratio.bad{{color:var(--bad)}}
 .num{{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}}
 .seed{{font-size:12.5px;color:var(--ink-3)}}
+/* Pinterest's axis. `.none` is deliberately muted and dashed — an untracked term is
+   unknown, and must not read with the same weight as a measured flat. */
+.trend{{font-size:12.5px;font-variant-numeric:tabular-nums}}
+.trend.good{{color:var(--good)}}
+.trend.bad{{color:var(--bad)}}
+.trend.none{{color:var(--ink-3);opacity:.55}}
 .fold{{margin:16px 0 0;font-size:13px;color:var(--ink-3);background:var(--surface-2);
   border-radius:6px;padding:11px 13px}}
 .empty{{color:var(--ink-2);font-size:14px;max-width:64ch}}
