@@ -49,6 +49,36 @@ services:
     networks:
       - scraper_network
 
+  # The optional read server (etsy/server/app.py, D-42). NOT part of the access
+  # layer — it only reads the database and, on POST /api/analyze, makes an
+  # OUTBOUND call to Etsy/Printify using sessions the vault already holds. It
+  # does not touch cookie_server_go or the Chrome extension's write path.
+  #
+  # HOST=0.0.0.0 below is the container's OWN interface, not the host's — a
+  # process inside Docker must bind 0.0.0.0 to be reachable through the port
+  # mapping at all. The safety knob is the port mapping itself: it is pinned to
+  # 127.0.0.1 on the HOST, so this container is exactly as exposed as running
+  # `run_server.cmd` directly (D-42's "no auth" warning still applies — only
+  # widen this to "8100:8100" if you deliberately want it on the LAN).
+  etsy-server:
+    build:
+      context: .
+    container_name: etsy-server
+    command: python -m etsy.server.app
+    ports:
+      - "127.0.0.1:8100:8100"
+    environment:
+      - REDIS_URL=redis://redis:6379/1
+      - VAULT_SOURCE_URL=redis://redis:6379/0
+      - HOST=0.0.0.0
+      - PORT=8100
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+    networks:
+      - scraper_network
+
 volumes:
   redis_data:
 

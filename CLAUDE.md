@@ -63,8 +63,8 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 
 ```bash
 # Full verification — run before every commit
-.venv/Scripts/python.exe -m core.test_graph_db          # + the other 19 suites
-# 20 offline suites, ~441 assertions, no network required
+.venv/Scripts/python.exe -m core.test_graph_db          # + the other ~54 suites
+# ~55 offline suites, ~1,405 assertions, no network required
 ```
 
 ---
@@ -186,7 +186,9 @@ account costs the business.
 | File | Answers |
 |---|---|
 | `docs/ONBOARDING.md` | **start here for a fresh session** — what is true, what is a trap |
-| `docs/MCP.md` | the MCP surface, and where DeepSeek is allowed to touch the system |
+| `docs/MCP.md` | **tutorial**: wiring the MCP server (17 tools) into Claude Code/Desktop/Antigravity, the tool table, troubleshooting, and where DeepSeek is allowed to touch the system |
+| `docs/UI_GUIDE.md` | **tutorial**: the three UI tiers (static screens, interactive app, live server) — what each is for, how to launch it, when to reach for which |
+| `ROADMAP.md` | what's still missing (single-operator scope) + design-only notes for a future listed-MCP/SaaS version — read before assuming multi-tenancy is a small change |
 | `docs/architecture/09_build_plan.md` | **what we are building and in what order** |
 | `docs/HOW_WE_WORK.md` | **the operating model** — the three seats, the loop, which lens fires when. Read first. |
 | `docs/market_map/` | **the shared knowledge base** — `reference/` (params, payloads, verified per platform) + `analysis/` (what each is worth, and the combinations). Read before planning data work. |
@@ -227,7 +229,7 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. 20 test suites, ~441 assertions, all offline.
+request cache · run log · guards. ~55 test suites, ~1,405 assertions, all offline.
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
 demand-in-bracket (`etsy/analytics/bracket_demand.py`) · filter-trust registry with
@@ -238,7 +240,9 @@ inverses (`etsy/analytics/pod_costing.py`) · Printify client
 verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
 (`core/vault_mirror.py`) · session-layer hardening · **the Calendar screen**
 (`etsy/ui/calendar_page.py`, + `.ics` export) · saturation recovered from listings
-(`etsy/analytics/card_saturation.py`) · **14 MCP tools** (`mcp_server/`).
+(`etsy/analytics/card_saturation.py`) · **17 MCP tools** (`mcp_server/`) ·
+the read server (`etsy/server/app.py`) · the interactive app (`etsy/ui/app_page.py`) ·
+a Docker service for the read server (`docker-compose.yml`, `etsy-server`).
 **~1,405 assertions** across ~55 suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task

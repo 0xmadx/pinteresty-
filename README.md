@@ -148,7 +148,7 @@ One of ~54 offline suites, **1,386 assertions**, no network required.
 inverses · survivor bound · gap analysis with a filter-trust gate and working
 demand-in-bracket · sourcing and lead time · POD costing · scoring with a
 discrimination check · scheduler running daily · verdict change log · LEARN
-scaffold · 14 MCP tools.
+scaffold · 17 MCP tools · the interactive app · the optional read server.
 
 **Thin:** the data. Trend, listing and shop observations accumulate daily;
 keyword history covers 8 watched terms; **0 launches**. The machine is built and has
@@ -171,7 +171,9 @@ rather than the operator's own.
 | File | Answers |
 |---|---|
 | `docs/ONBOARDING.md` | **start here** — what is true, what is a trap, what to read |
-| `docs/MCP.md` | wiring the MCP server into Claude / Antigravity, and where DeepSeek belongs |
+| `docs/MCP.md` | tutorial: wiring the MCP server into Claude / Antigravity, and where DeepSeek belongs |
+| `docs/UI_GUIDE.md` | tutorial: the three UI tiers — static screens, interactive app, live server |
+| `ROADMAP.md` | what's missing today, and design notes for a future listed-MCP/SaaS version |
 | `docs/VAULT_SEPARATION.md` | why this project reads Redis db 1, and what that guarantees |
 | `docs/SESSION_LAYER_FIX.md` | the four session-layer gaps and how they were closed |
 | `docs/HOW_WE_WORK.md` | the three seats and the loop |

@@ -106,7 +106,8 @@ Printify) · profit gate with per-type margin floors and a weekly capacity ceili
 gap analysis gated on filter trust · sourcing, origin sampling and lead time ·
 POD costing · scoring with a discrimination check · request cache · run log ·
 scheduler running daily · verdict change log · vault separation · LEARN
-scaffold · 14 MCP tools.
+scaffold · 17 MCP tools (`docs/MCP.md`) · the interactive app and optional read
+server (`docs/UI_GUIDE.md`).
 
 **Empty or thin — and this is the real constraint:**
 
@@ -122,16 +123,21 @@ scaffold · 14 MCP tools.
 readings. LEARN needs 10 launches, with controls. None of this can be
 backfilled — a day the scheduler did not run is gone permanently.
 
-**Every profit verdict is provisional.** `config/settings.json` has
-`"confirmed": []`, so the fee schedule, COGS and hourly rate are defaults rather
-than the operator's real numbers:
+**Fees and the operator's own numbers are confirmed (2026-08-20)** — the fee
+schedule was verified against Etsy's published rates, and `hourly_rate` /
+`labor_hours_per_week` are the operator's real values. `basis()` reports
+`"operator"`, so profit verdicts are no longer blanket-provisional. The margin
+**floors** (digital/physical/personalized) are still defaults, unverified —
+check `core.settings_store show` before trusting a verdict close to a floor:
 
 ```bash
-.venv/Scripts/python.exe -m core.settings_store set global.operator.hourly_rate 25
+.venv/Scripts/python.exe -m core.settings_store show
 ```
 
-Setting a value marks it confirmed. Until then `basis()` reports the weakest link
-and every verdict says `provisional: true`.
+Confirming a new value (e.g. a floor, or a new product profile's COGS) is what
+flips its `basis` from `default` to `operator` — read the actual mechanism via
+`.basis()`, never a bare `.confirmed` attribute (there isn't one; that getattr
+bug used to report everything provisional forever, fixed 2026-08-20).
 
 ---
 
@@ -162,8 +168,11 @@ never estimates COGS, volume, price or CVR. See `docs/MCP.md`.
 1. `README.md` — what it is, how to run it
 2. this file — what is true and what is a trap
 3. `docs/HOW_WE_WORK.md` — the three seats and the loop
-4. `docs/architecture/09_build_plan.md` — what is being built next
-5. `docs/market_map/` — per-platform endpoints and what each signal is worth
+4. `docs/UI_GUIDE.md` — the three UI tiers, and which one to actually open
+5. `docs/MCP.md` — wiring an agent (Claude Code/Antigravity) to the system
+6. `docs/architecture/09_build_plan.md` — what is being built next
+7. `docs/market_map/` — per-platform endpoints and what each signal is worth
+8. `ROADMAP.md` — what's still missing, and what a future SaaS version would require
 6. `docs/DECISION_LOG.md` — why anything is the way it is
 
 Skills in `.claude/skills/` are enforced, not advisory. Two matter most and are
