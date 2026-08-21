@@ -36,7 +36,7 @@ not chronological, not by ease.
 | # | Capability | Source | Why it matters |
 |---|---|---|---|
 | ~~0~~ | ~~**The intent gate** — do the searchers actually buy?~~ | ✅ **done 2026-08-20 (D-43)** | Was the top item and is now built. `winnability` divides searches by listings, both supply-side, so a term passed on traffic alone; 5 of the top 6 candidates converted below half the pool median, including the one ranked first. Also uncovered that `volume × query_cvr` is **not** an order count — see the warning in `CLAUDE.md`. |
-| 1 | **JOIN 2 — winnable AND rising** (Pinterest momentum onto Etsy's winnable pockets) | `docs/market_map/analysis/combinations.md` §JOIN 2 — literally called "the single highest-value join, and not yet wired" | Discover already ranks by demand-per-listing (D-31); Pinterest already reports rising/fading momentum. Neither platform can see this alone — a winnable-but-fading term looks identical to a winnable-and-rising one from Etsy's data alone, and only one of them is worth the labor. **Now the natural next step**: D-43 added the "do they buy" axis, and this adds the "is it growing" axis to the same pool. |
+| 1 | **JOIN 2 — winnable AND rising** (Pinterest momentum onto Etsy's winnable pockets) | `docs/market_map/analysis/combinations.md` §JOIN 2 — literally called "the single highest-value join, and not yet wired" | Discover already ranks by demand-per-listing (D-31); Pinterest already reports rising/fading momentum. Neither platform can see this alone — a winnable-but-fading term looks identical to a winnable-and-rising one from Etsy's data alone, and only one of them is worth the labor. **Now the natural next step**: D-43 added the "do they buy" axis, and this adds the "is it growing" axis to the same pool. ⚠️ **But not via the stored topics — see below.** |
 | 2 | **JOIN 3 — intent gate** (`OUTBOUND_CLICK` vs `SAVE` on Pinterest) | `combinations.md` §JOIN 3; `08_capability_map.md` §4.2 item 1 | Separates buyers from daydreamers. A niche high in `SAVE`, low in `OUTBOUND_CLICK`, looks like Pinterest momentum but will not convert on Etsy — the one filter that catches this before a Blueprint gets built on it. |
 | 3 | **JOIN 4 — demographics-shaped tags** (Pinterest age/gender → Blueprint copy) | `combinations.md` §JOIN 4; `08_capability_map.md` §4.1 `demographics` endpoint | Not "necklace" but the words a specific 25-34-female audience actually searches. Marked `⚠️ demographics endpoint unproven` — worth a live probe before building on it, same discipline as everything else here. |
 | 4 | **`include_trendline: true` on `get_chart_series`** | `08_capability_map.md` §2, row `get_chart_series` — "we decline a free seasonality curve" | Same call, already paid for, currently declined. A free 52-week curve per term, no new endpoint, no new session risk — the cheapest item on this whole list. |
@@ -47,11 +47,34 @@ not chronological, not by ease.
 | 9 | **Pagination on Etsy search** | `09_build_plan.md` stage 2 gap | The private/public search calls read one page; the free 20-card sample per call is real but shallow for high-supply terms. |
 | 10 | **Pinterest wide crawl** | `09_build_plan.md` stage 1 gap | Discover's front door (`trending-search-terms-v2`) covers 7 populated taxonomy ids; the broader Pinterest search/spotlight/shopping seed crawl described in the funnel (`combinations.md` stage 1) is still Etsy-seed-only in practice. |
 
-**If picking one to build next**, the project's own docs already answer this:
-JOIN 2 is explicitly called out as the single highest-value join in the entire
-system, and it needs no new endpoint — both halves (`discover`'s winnability
-ranking, Pinterest's momentum data) already exist and are already measured;
-only the join is missing.
+**If picking one to build next**, the project's own docs point at JOIN 2 as the
+single highest-value join in the system.
+
+⚠️ **One thing to know before starting it, probed 2026-08-20.** The obvious
+cheap path — join the momentum already stored in `trend_observations` onto the
+discovered pool — **does not work, and the data says so unambiguously**:
+
+| Check | Result |
+|---|---|
+| 84 stored Pinterest featured topics vs 1,333 discovered Etsy terms | |
+| Exact content-word matches (what D-17 requires) | **0** |
+| Containment matches, either direction (looser) | **0** |
+| Topics sharing *any* content word with any candidate | 64 of 84 |
+
+Pinterest's featured topics are editorial phrases — "Skirt and Leggings
+Combinations", "Apple-Themed Preschool Activities" — and Etsy candidates are
+product keywords. They describe the same world in different vocabularies. This
+is the identical failure that silently broke the calendar (86 topics vs 13
+moments, zero overlap, every `takeoff_timestamp` NULL), so it is a known shape,
+not a surprise.
+
+**The viable path is live, not stored.** Pinterest's `metrics` and
+`related_terms` endpoints accept an *arbitrary* term and return momentum for
+that term, so the join is `for each winnable Etsy candidate → ask Pinterest
+about THAT term`, not `match against topics Pinterest chose to feature`. That
+costs one Pinterest call per candidate (cheap — no seller account, no quota),
+and it is the design that should be built. Do not spend time on the stored-topic
+path; it has been measured and it is empty.
 
 **One idea from project history, noted but not adopted.** An early handoff doc
 (`gemini/claude_handoff.md`, since reconciled into `docs/architecture/10_session_layer.md`)

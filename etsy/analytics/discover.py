@@ -261,21 +261,50 @@ def apply_intent(candidates, fetch, top_n=25):
     Two passes, because the gate is relative: every eligible term is measured first,
     then the median of what came back becomes the reference each is judged against.
     A single term cannot be judged alone, and this is why.
+
+    This is the convenience form, where the reference comes from THIS list alone. A
+    caller measuring several seeds should use `measure_intent` / `reference_median` /
+    `judge_intent` directly, so one reference spans the whole run — a single seed
+    rarely yields enough rankable terms to have a median at all.
     """
-    # Pass 1 — measure. One private call per eligible candidate, and no judgement yet.
+    measured = measure_intent(candidates, fetch, top_n)
+    return judge_intent(candidates, measured,
+                        reference_median(measured.values()))
+
+
+def measure_intent(candidates, fetch, top_n=25):
+    """Pass 1 — spend the calls, judge nothing. `{term: parsed_data_or_None}`.
+
+    Separate from the judging so that a caller sweeping many seeds can pool every
+    measurement into ONE reference before classifying any of them.
+    """
     measured = {}
     for i, candidate in enumerate(candidates):
         win = candidate.get("winnability") or {}
         if i < top_n and win.get("verdict") in ("winnable", "contested"):
             measured[candidate["term"]] = fetch(candidate["term"])
+    return measured
 
-    # The reference: the median CVR of the terms measured in THIS run. Refuses below
-    # MIN_POOL_FOR_INTENT, where a median is noise rather than a reference point.
-    cvrs = [d["cvr"] for d in measured.values()
-            if d and d.get("cvr") is not None]
-    pool_median = _median(cvrs) if len(cvrs) >= MIN_POOL_FOR_INTENT else None
 
-    # Pass 2 — judge each against the pool.
+def reference_median(datas, extra_cvrs=()):
+    """The CVR every candidate is judged against, or None if there is not enough.
+
+    `extra_cvrs` lets the caller widen the reference with CVRs the system measured
+    *earlier* — `keyword_observations` accumulates one per watched term per sweep, and
+    they are as valid a comparison point as anything measured in this run, at no
+    additional call. The reference therefore grows and steadies over time rather than
+    depending on how many rankable terms one seed happened to produce.
+
+    Returns None below `MIN_POOL_FOR_INTENT`, so the gate refuses rather than ranking
+    against noise (D-15's discipline).
+    """
+    cvrs = [d["cvr"] for d in datas if d and d.get("cvr") is not None]
+    cvrs += [c for c in extra_cvrs if c]
+    return _median(cvrs) if len(cvrs) >= MIN_POOL_FOR_INTENT else None
+
+
+def judge_intent(candidates, measured, pool_median):
+    """Pass 2 — classify each candidate against the reference, and re-sort."""
     out = []
     for candidate in candidates:
         win = candidate.get("winnability") or {}

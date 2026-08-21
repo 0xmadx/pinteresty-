@@ -323,6 +323,13 @@ def job_discover():
     from datetime import datetime, timezone
     run_at = datetime.now(timezone.utc).isoformat()
     stored, weak, failed = 0, 0, []
+
+    # --- rank every seed, and MEASURE the survivors, before judging any of them ----
+    # The intent gate is relative, so the reference must be pooled across the whole
+    # run. Judging per seed was tried and is wrong: a single seed rarely yields
+    # MIN_POOL_FOR_INTENT rankable terms, so the gate refused on every one of them
+    # and silently graded nothing (observed: 9 seeds, 1,359 candidates, 0 judged).
+    per_seed, measured = [], {}
     for seed in seeds:
         try:
             cands = discover.expand_seed(api, seed)
@@ -332,11 +339,19 @@ def job_discover():
         ranked = discover.rank_expanded([c for c in cands if c.get("volume")])
         # Attach the seasonal moment where the term names one.
         ranked = discover.attach_moments(ranked, moments)
-        # The intent gate: does anyone BUY these, or are they merely searched? Costs
-        # one private call per checked candidate, so it is bounded to the top of the
-        # ranking — the only place the answer can still change a decision.
-        ranked = discover.apply_intent(ranked, fetch, top_n=INTENT_CHECK_TOP_N)
-        for c in ranked:
+        # One private call per rankable candidate, bounded to the top of the ranking
+        # — the only place the answer can still change a decision (D-29).
+        measured.update(discover.measure_intent(ranked, fetch, INTENT_CHECK_TOP_N))
+        per_seed.append((seed, ranked))
+
+    # The reference: everything measured in this run PLUS every CVR the system has
+    # measured before. The prior readings are free and already stored, and they make
+    # the comparison steadier than one run's handful of survivors could.
+    reference = discover.reference_median(measured.values(),
+                                          extra_cvrs=db.measured_cvrs().values())
+
+    for seed, ranked in per_seed:
+        for c in discover.judge_intent(ranked, measured, reference):
             w = c.get("winnability") or {}
             intent = c.get("intent") or {}
             if intent.get("verdict") == "weak":
@@ -353,6 +368,7 @@ def job_discover():
                 list_by=c.get("list_by"), timing=c.get("timing"),
                 collected_at=run_at)
             stored += 1
+
     winnable = sum(1 for r in db.latest_discovered(2000)
                    if r.get("verdict") in ("winnable", "contested"))
     from etsy.ui import discover_page
@@ -361,6 +377,8 @@ def job_discover():
             "winnable_or_contested": winnable,
             # Terms the ratio gate would have promoted and the intent gate caught.
             "rejected_weak_intent": weak,
+            # None means the gate REFUSED — too few measured CVRs to compare against.
+            "intent_reference_cvr": reference,
             "failed": failed, "page": page}
 
 

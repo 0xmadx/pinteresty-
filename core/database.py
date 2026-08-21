@@ -398,6 +398,29 @@ class MarketDatabase:
                 'SELECT * FROM keyword_observations WHERE keyword = ? '
                 'ORDER BY collected_at ASC', (keyword,))]
 
+    def measured_cvrs(self):
+        """The latest MEASURED CVR per term — the reference pool for D-43's gate.
+
+        One per term, newest reading, and only where the CVR was actually measured:
+        a `default` CVR is the 0.02 assumption, and letting assumptions into the
+        reference would drag the median toward a number nobody observed.
+
+        Ordinary keyword sweeps fill this as a side effect, so the comparison the
+        intent gate makes gets broader and steadier over time at no extra call.
+        """
+        with self.get_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute('''
+                SELECT keyword, query_cvr FROM keyword_observations o
+                WHERE query_cvr IS NOT NULL AND query_cvr > 0
+                  AND cvr_source = 'measured'
+                  AND collected_at = (SELECT MAX(collected_at)
+                                      FROM keyword_observations i
+                                      WHERE i.keyword = o.keyword
+                                        AND i.query_cvr IS NOT NULL)
+            ''').fetchall()
+        return {r["keyword"]: r["query_cvr"] for r in rows}
+
     # --- LISTINGS API ---
     def record_listing(self, listing_id, collected_at=None, shop_name=None, price=None,
                        sales_lifetime_est=None, sales_30d_est=None, sales_basis="unspecified",

@@ -326,6 +326,36 @@ check("and the reason is the pool, named",
       any(c["intent"].get("basis") == "pool_too_small" for c in small), small)
 check(f"the minimum is stated, not implicit", MIN_POOL_FOR_INTENT >= 8)
 
+# --- the reference can be POOLED across seeds and across time ----------------------
+from etsy.analytics.discover import (judge_intent, measure_intent,  # noqa: E402
+                                     reference_median)
+
+# Measured live 2026-08-20: a real sweep produced 9 seeds, 1,359 candidates and only
+# SEVEN rankable terms in the whole pool. Judging per seed therefore refused on every
+# one and graded nothing — the reference has to span the run, not one seed.
+tiny_seed = pool[:3]
+m1 = measure_intent(tiny_seed, counting_fetch, top_n=25)
+check("one small seed cannot reach a reference alone",
+      reference_median(m1.values()) is None, m1)
+
+# Prior measured CVRs are already in the database and cost nothing to reuse.
+prior = [9.119e-05, 2.561e-04, 2.703e-04, 4.212e-04, 8.439e-04, 1.089e-03]
+ref = reference_median(m1.values(), extra_cvrs=prior)
+check("but pooled with CVRs measured earlier, it does",
+      ref is not None, ref)
+check("and the pooled reference is a real median of everything given",
+      0 < ref < 1e-2, ref)
+
+judged = judge_intent(tiny_seed, m1, ref)
+check("so terms in a small seed CAN now be judged",
+      any(c["intent"].get("basis") == "measured_relative" for c in judged), judged)
+
+# Only MEASURED CVRs belong in the reference — a default would drag the median
+# toward a number nobody observed. (Enforced in MarketDatabase.measured_cvrs.)
+check("a None or zero prior is ignored rather than counted as a data point",
+      reference_median([], extra_cvrs=[None, 0] + prior) == reference_median(
+          [], extra_cvrs=prior), "falsy CVRs must not enter the median")
+
 # top_n bounds the spend on the private tier (D-29).
 calls.clear()
 apply_intent(pool, counting_fetch, top_n=2)

@@ -61,6 +61,27 @@ def main():
           latest(db, "mom necklace")["cvr_source"]
           != latest(db, "rare term")["cvr_source"])
 
+    # --- and that distinction is load-bearing for D-43's reference pool -------------
+    # The intent gate compares a term's CVR against the median of what the system has
+    # MEASURED. Letting the 0.02 default in would drag that median toward a number
+    # nobody observed, and 0.02 is ~100x the real values, so it would swamp them.
+    ref = db.measured_cvrs()
+    check("measured_cvrs returns the measured term", "mom necklace" in ref, ref)
+    check("and EXCLUDES the defaulted one", "rare term" not in ref, ref)
+    check("with the CVR itself, ready to median", ref["mom necklace"] > 0, ref)
+
+    # One row per term, newest — not one per reading, or a term swept daily would
+    # count many times over and dominate the median by nothing but its frequency.
+    db.record_keyword(keyword="mom necklace", source="etsy_private", volume=13000,
+                      competition=352000, cvr=0.00031, cvr_source="measured",
+                      price_low=17.0, price_high=21.0, price_basis="measured",
+                      collected_at="2030-01-01T00:00:00+00:00")
+    ref2 = db.measured_cvrs()
+    check("a re-swept term still appears exactly once",
+          list(ref2).count("mom necklace") == 1, ref2)
+    check("and it is the NEWEST reading that is carried",
+          ref2["mom necklace"] == 0.00031, ref2)
+
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
 
