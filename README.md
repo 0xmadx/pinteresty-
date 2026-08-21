@@ -84,7 +84,7 @@ Re-audits which Etsy SERP filters can be believed. **9 of 12 currently cannot.**
 ```bash
 .venv/Scripts/python.exe -m core.test_graph_db
 ```
-One of ~53 offline suites, **1,354 assertions**, no network required.
+One of ~54 offline suites, **1,386 assertions**, no network required.
 
 ---
 

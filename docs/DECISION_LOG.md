@@ -795,3 +795,42 @@ winners tag in phrases too long to reuse — and a full set copied blind would h
 lost exactly those tags silently. The warnings block is rendered prominently
 because it is the useful part when a candidate is weak; a strong blueprint shows
 none.
+
+
+---
+
+## D-41 — One read layer; the app and a future server are two thin consumers of it
+
+**Date:** 2026-08-20
+
+**Context.** The operator asked for a real app — dashboard, filterable tables,
+tracking, Etsy + Pinterest intelligence combined, product-type and search filters
+— and, asked to choose between a no-server snapshot app and a full FastAPI + React
+build, answered "all". The two must not become two codebases.
+
+**Chosen.** Put every view's data behind ONE read layer, `etsy/ui/app_data.py`,
+returning plain JSON from the database only. Presentation reads through it and
+never past it. Then:
+
+  * the snapshot app (`app_page.py`) bakes `build_snapshot()` into one
+    self-contained HTML file — no server, no CDN, opens offline, refreshed daily;
+  * a FastAPI server, when built, wraps the same `build_*` functions as endpoints
+    and a React SPA consumes them.
+
+Adding the server changes the read layer's callers, not the read layer — so "all"
+is reachable incrementally, and neither consumer blocks the other.
+
+**Rejected: building the FastAPI + SPA first.** It is weeks of work against the
+project's no-daemon grain, and it would have delayed every interactive view behind
+a server the operator does not need to run. The snapshot app delivers the dashboard,
+filters, charts and combined views now; the server adds only what a snapshot cannot
+— live queries and phone-from-anywhere — later.
+
+**Rejected: a framework or a CDN.** A file opened from disk must render without a
+network. Vanilla JS and inline SVG keep it one self-contained file, which is also
+what lets the daily scheduler treat it like every other generated page.
+
+**The discipline holds because the read layer holds it.** Demand and competition
+are separate objects (never merged into one denominator), every number carries its
+basis, and absent stays null rather than becoming zero — the client styles a
+default CVR or a bound distinctly from a measurement.
