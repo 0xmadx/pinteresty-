@@ -1,3 +1,25 @@
+# Four services, two of which are the access layer and are not to be edited casually.
+#
+#   SERVICE          CONTAINER           ROLE                                  EDIT?
+#   redis            scraper-redis       THE VAULT. db 0 shared (extension +   no
+#                                        pinterest-apify), db 1 our mirror.
+#   go-api           cookie-server-go    Receives cookies from the Chrome      ACCESS LAYER
+#                                        extension, writes them to db 0.       — do not edit
+#   python-scraper   python-scraper      Idle exec container for running       yes
+#                                        pipelines inside Docker.
+#   etsy-server      etsy-server         Optional FastAPI read server (D-42).  yes
+#
+# The names look inconsistent and are deliberately left alone: `go-api` is quoted
+# in core/preflight.py and core/vault_status.py error text ("docker compose up -d
+# redis go-api") and in three docs, and renaming a service forces Docker to
+# recreate the container. The vault itself would survive — the volume is
+# `etsyscrapper_redis_data`, keyed on the compose PROJECT name and the `redis_data`
+# key below, not on any service name — but a rename buys nothing except tidier
+# YAML and costs a restart of a working session pool. Not worth it.
+#
+# ⚠️ Renaming the FOLDER would change the compose project name, and the volume with
+# it — that is how you would actually lose the vault. Don't.
+
 version: '3.8'
 
 services:

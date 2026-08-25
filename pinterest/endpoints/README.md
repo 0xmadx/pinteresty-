@@ -123,7 +123,7 @@ this documentation doesn't mention:
 
 ## The raw captures
 
-`Search trends/`, `shooping trending/`, `trends in the spothlight/` hold the original DevTools
+`search-trends/`, `shopping-trends/`, `trends-spotlight/` hold the original DevTools
 exports `overviews.md` was extracted from — treat them as source material, not documentation;
-`overviews.md` and this file are the documentation. `request look like .bash` is a handful of
+`overviews.md` and this file are the documentation. `request-example.sh` is a handful of
 example curl-shaped requests kept for quick reference.

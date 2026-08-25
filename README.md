@@ -118,9 +118,18 @@ go quiet when the vault is empty. The offline 58 are the gate.
 | `etsy/api/{public,private,printify}/` | the three clients. `parse_*` functions own the wire format. |
 | `etsy/analytics/` | every judgement: profit, gaps, sourcing, scoring, LEARN |
 | `etsy/engines/` | the pipelines that string them together |
+| `etsy/ui/` | the screens + `app_data.py`, the one read layer (D-41) |
+| `etsy/server/` | optional FastAPI read API (D-42) — `run_server.cmd` |
 | `core/` | sessions, database, cache, scheduler, guards, settings |
-| `mcp_server/` | the agent-facing surface |
+| `pinterest/` | the Pinterest tier: `endpoints/` (client + wire reference), `pipelines/` |
+| `mcp_server/` | the agent-facing surface — 17 tools, wired by `.mcp.json` |
+| `cookie_server_go/`, `chrome_extension/` | **the access layer.** Read, never extend. |
+| `config/` | `settings.json`, `filter_trust.json`, scheduler state |
 | `docs/` | see `docs/ONBOARDING.md` first |
+| `tests/legacy/` | ⚠️ **not** the test gate — old access-layer probes; see its README |
+
+**Where the real tests are:** beside the code, as `core/test_*.py`,
+`etsy/analytics/test_*.py`, etc. `tests/` holds only pre-refactor probes.
 
 ---
 

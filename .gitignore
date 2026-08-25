@@ -49,3 +49,13 @@ dump.rdb
 
 # Generated home screen — rebuilt daily by the scheduler from the database.
 etsy/data/ui/
+
+# --- captured HTTP artefacts (2026-08-25) -------------------------------------
+# A DevTools "copy as cURL" and a scraped logged-in dashboard both reached this
+# repo carrying real credentials: a live `_pinterest_sess`, a csrftoken, an email
+# and a fulfillment address. They read as documentation and are not. Anything
+# captured from a logged-in browser is a credential until proven otherwise.
+data/dashboard.html
+*.har
+**/copy-as-curl*
+**/*dashboard*.html

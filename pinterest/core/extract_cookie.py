@@ -2,7 +2,7 @@ import re
 import json
 from pathlib import Path
 
-bash_path = Path("pinterest/endpoints/request look like .bash")
+bash_path = Path("pinterest/endpoints/request-example.sh")
 with open(bash_path, "r", encoding="utf-8") as f:
     content = f.read()
 
