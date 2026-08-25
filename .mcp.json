@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "etsy-market-intel": {
+      "command": "C:\\Users\\0xdevy\\Desktop\\etsy scrapper\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "mcp_server.server"],
+      "cwd": "C:\\Users\\0xdevy\\Desktop\\etsy scrapper"
+    }
+  }
+}

@@ -44,6 +44,35 @@ OUTBOUND_CLICK is money moving.
 
 **Use it for:** the buyer-intent gate on a discovered niche.
 
+### Reading the Shopping trends page as a marketer, not a scraper
+The wire is fully mapped (`reference/pinterest.md`, `pinterest/endpoints/`) — this is what
+it's worth once you're looking at it.
+
+- **The sort toggle IS the D-31 trap, built into the page.** `order_by` is either
+  `RELATIVE_VOLUME` (biggest category right now) or `PCT_CHANGE_MOM` (fastest-growing).
+  Defaulting to volume reproduces the exact mistake `discover` made ranking `home decor`
+  #1 — a category can be huge and saturated. **Default this page to growth, never volume**,
+  same discipline as everywhere else in the system.
+- **`related_search_trends` (25 terms per category, free in the same call) is a discovery
+  engine, not a footnote.** A seller does not care that "Sweatshirts" is +23% MoM in the
+  abstract — they care that the 25 seeds attached to it are `zip hoodie`, `patchwork
+  hoodie ideas`, `graphic hoodie`, etc. The category ranking is the filter; the seed list
+  is the payload. Feed these straight into the Etsy seed crawl (JOIN 2) rather than typing
+  keywords by hand.
+- **The three summaries in one row (`saves`/`outbound_clicks`/`engagement`) are the intent
+  gate for free.** `local_math.intent_ratio()` already derives clicks-growth ÷ saves-growth
+  from a single `event=OUTBOUND_CLICK` call — no need to also fetch `event=SAVE`. A
+  category high in outbound-click growth but flat on saves is people buying without
+  browsing first; the reverse is a mood board. This is JOIN 3, and it costs nothing extra.
+- **Age/Gender here slice REAL demand, not a display filter.** Unlike some Pinterest
+  demographic surfaces, `category_metrics()` genuinely recomputes the curve per age/gender
+  bucket — so "Coats & jackets, female, 25-34" is a real different number, not the same
+  chart with a label. Worth combining with the Search-trends `/demographics/` per-keyword
+  breakdown (JOIN 4) once a category has been narrowed to specific seed terms.
+- **What a seller does NOT get here**: price, margin, or how many Etsy competitors already
+  own this category. This page answers "is this category worth looking at," never "can I
+  win it" — that's still public-tier Etsy work, after this page narrows the field.
+
 ---
 
 ## The three signals Etsy cannot give at any price

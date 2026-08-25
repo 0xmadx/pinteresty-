@@ -1,14 +1,14 @@
 {
   "shop_sweep": {
-    "last_attempt": "2026-08-19T22:23:55.904971+00:00",
+    "last_attempt": "2026-08-25T10:40:03.111372+00:00",
     "last_status": "ok",
-    "last_success": "2026-08-19T22:23:55.904971+00:00",
-    "last_result": "{\"shops\": 2, \"detail\": [{\"shop\": \"shopflowerlane\", \"seen\": 39, \"recorded\": 39, \"review_counts_fetched\": 20, \"review_counts_refused\": 8, \"new_listings\": [\"4463660456\"], \"is_baseline\": false}, {\"shop\": \"ARTOFJOYStudio\", \"seen\": 37, \"recorded\": 37, \"review_counts_fetched\": 20, \"review_counts_refused\": 2, \"new_listings\": [], \"is_baseline\": false}]}"
+    "last_success": "2026-08-25T10:40:03.111372+00:00",
+    "last_result": "{\"shops\": 2, \"detail\": [{\"shop\": \"shopflowerlane\", \"seen\": 39, \"recorded\": 39, \"review_counts_fetched\": 20, \"review_counts_refused\": 8, \"new_listings\": [], \"is_baseline\": false}, {\"shop\": \"ARTOFJOYStudio\", \"seen\": 36, \"recorded\": 36, \"review_counts_fetched\": 20, \"review_counts_refused\": 2, \"new_listings\": [\"1081781338\", \"1877346581\"], \"is_baseline\": false}]}"
   },
   "rank_check": {
-    "last_attempt": "2026-08-19T22:24:44.532627+00:00",
+    "last_attempt": "2026-08-25T10:43:01.015125+00:00",
     "last_status": "ok",
-    "last_success": "2026-08-19T22:24:44.532627+00:00",
+    "last_success": "2026-08-25T10:43:01.015125+00:00",
     "last_result": "[]"
   },
   "pinterest_bridge": {
@@ -16,5 +16,29 @@
     "last_status": "ok",
     "last_success": "2026-08-19T22:24:44.655307+00:00",
     "last_result": "86"
+  },
+  "keyword_sweep": {
+    "last_attempt": "2026-08-25T10:40:51.269987+00:00",
+    "last_status": "ok",
+    "last_success": "2026-08-25T10:40:51.269987+00:00",
+    "last_result": "{\"recorded\": 9, \"terms\": [\"felt garland\", \"birthday crown\", \"felt flower\", \"mom necklace\", \"linen apron\", \"ceramic planter pot\", \"christmas ornament\", \"personalized christmas stocking\", \"custom family name necklace\"], \"failed\": [], \"retried\": [], \"seasonality\": {\"felt garland\": \"seasonal (peak Nov 2025)\", \"birthday crown\": \"seasonal (peak Jan 2026)\", \"felt flower\": \"evergreen (peak Mar 2026)\"}, \"n\u2026"
+  },
+  "calendar": {
+    "last_attempt": "2026-08-25T10:43:00.617912+00:00",
+    "last_status": "ok",
+    "last_success": "2026-08-25T10:43:00.617912+00:00",
+    "last_result": "{\"moments\": 5, \"list_now\": [\"halloween\", \"thanksgiving\"], \"actionable\": [], \"page\": \"etsy\\\\data\\\\ui\\\\calendar.html\", \"ics\": \"etsy\\\\data\\\\ui\\\\calendar.ics\", \"home\": \"etsy\\\\data\\\\ui\\\\index.html\", \"cockpits_refreshed\": 9}"
+  },
+  "competition_sweep": {
+    "last_attempt": "2026-08-25T10:40:55.054592+00:00",
+    "last_status": "ok",
+    "last_success": "2026-08-25T10:40:55.054592+00:00",
+    "last_result": "{\"recorded\": 9, \"terms\": [\"felt garland\", \"birthday crown\", \"felt flower\", \"mom necklace\", \"linen apron\", \"ceramic planter pot\", \"christmas ornament\", \"personalized christmas stocking\", \"custom family name necklace\"], \"failed\": []}"
+  },
+  "discover": {
+    "last_attempt": "2026-08-20T08:56:31.855696+00:00",
+    "last_status": "ok",
+    "last_success": "2026-08-20T08:56:31.855696+00:00",
+    "last_result": "{\"seeds\": 8, \"candidates_stored\": 1179, \"winnable_or_contested\": 7, \"failed\": []}"
   }
 }
