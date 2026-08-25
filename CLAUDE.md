@@ -66,6 +66,15 @@ green, and a run minutes later dies on 401.
 `cockpit` and `learn` are DB-only and need nothing. `core/test_preflight.py` pins
 this — it greps for a live client and demands a matching preflight.
 
+⚠️ **`git checkout <old-branch>` can DESTROY `.env`** (happened 2026-08-25). `.env`
+is gitignored *now*, but it was **tracked** in old `main` (`f27d36e`) and `git rm`'d
+later (`98e2d32`). Git silently overwrites **ignored** files on checkout — it only
+refuses for *untracked* ones — so checking out an old commit restores the tracked
+copy over the live one, and merging forward then applies the deletion. The file is
+simply gone, with no warning at any step. Back it up before any branch switch that
+crosses those commits. Same hazard applies to any file that was once tracked and is
+now ignored.
+
 ⚠️ **Two Redis servers share port 6379** on this machine (D-30). `localhost` reaches a
 stale native one; the real vault is the Docker container at the address in `.env`. If
 the vault suddenly reads empty, that is the first suspect — `vault_status` detects it
@@ -77,8 +86,8 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 
 ```bash
 # Full verification — run before every commit
-.venv/Scripts/python.exe -m core.test_graph_db          # + the other 62 suites
-# 58 OFFLINE suites, 1,543 assertions, no network required.
+.venv/Scripts/python.exe -m core.test_graph_db          # + the other 58 suites
+# 59 OFFLINE suites, 1,573 assertions, no network required.
 # ⚠️ pinterest/tests/ holds 5 more that are LIVE — their own docstrings say
 # "Live verification". They hit real Pinterest, their assertion counts VARY
 # with session state, and they print no summary when the vault is down. Never
