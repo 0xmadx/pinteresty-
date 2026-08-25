@@ -78,7 +78,11 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 ```bash
 # Full verification — run before every commit
 .venv/Scripts/python.exe -m core.test_graph_db          # + the other 62 suites
-# 63 offline suites, ~1,608 assertions, no network required
+# 58 OFFLINE suites, 1,543 assertions, no network required.
+# ⚠️ pinterest/tests/ holds 5 more that are LIVE — their own docstrings say
+# "Live verification". They hit real Pinterest, their assertion counts VARY
+# with session state, and they print no summary when the vault is down. Never
+# fold them into the offline number; a green offline run is the release gate.
 ```
 
 ---
@@ -261,7 +265,8 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. 63 test suites, ~1,608 assertions, all offline.
+request cache · run log · guards. 58 offline suites, 1,543 assertions (+5 live
+pinterest suites that need a session).
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
 demand-in-bracket (`etsy/analytics/bracket_demand.py`) · filter-trust registry with
@@ -275,7 +280,7 @@ verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
 (`etsy/analytics/card_saturation.py`) · **17 MCP tools** (`mcp_server/`) ·
 the read server (`etsy/server/app.py`) · the interactive app (`etsy/ui/app_page.py`) ·
 a Docker service for the read server (`docker-compose.yml`, `etsy-server`).
-**~1,608 assertions** across 63 suites.
+**1,543 assertions** across 58 offline suites, plus 5 live pinterest suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend
