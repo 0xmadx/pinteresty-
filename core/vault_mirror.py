@@ -55,6 +55,7 @@ a stale profile stays evicted.
 """
 import json
 import os
+import time
 
 import redis
 
@@ -79,6 +80,41 @@ def _beat(data):
         return float(data.get("last_updated") or 0)
     except (ValueError, TypeError):
         return 0.0
+
+
+MAX_MIRROR_AGE = 120.0
+_last_sync = 0.0
+
+
+def sync_if_stale(max_age=MAX_MIRROR_AGE):
+    """Refresh the mirror at most once per `max_age` seconds. Safe to call anywhere.
+
+    **Why this exists at all.** Nothing refreshes db 1 on its own, and the lag is
+    not harmless: measured 2026-08-25, db 0 held a profile last beaten 189s ago
+    while our copy of the same profile read 320s — past the 300s eviction line. The
+    pool then looks EMPTY while the Chrome extension is beaming perfectly good
+    cookies, and an agent relays "0 usable sessions, profiles are stale" to the
+    operator. The mirror is the thing that is stale, not the sessions.
+
+    Rather than remembering to sync at each of ~26 runnable entry points (a list
+    that was already wrong twice — the CLI tools, then the MCP server), the API
+    clients call this in their constructors. One call site per client, and every
+    current and future entry point inherits it.
+
+    Throttled because a client may be built in a loop, and unconditional: a
+    failure is swallowed. An unreachable mirror is not an empty pool — we may hold
+    a perfectly good copy — so the caller's own vault check decides.
+    """
+    global _last_sync
+    now = time.time()
+    if now - _last_sync < max_age:
+        return False
+    _last_sync = now
+    try:
+        sync()
+        return True
+    except Exception:
+        return False
 
 
 def sync(source_url=None, dest_url=None, platforms=MIRRORED, verbose=False):

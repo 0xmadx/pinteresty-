@@ -90,6 +90,27 @@ def _guarded(fn):
     return wrapper
 
 
+def _sync_mirror():
+    """Pull the shared vault into this project's copy before judging it (D-33).
+
+    This project reads db 1, a MIRROR of the db 0 that the Chrome extension fills.
+    Nothing refreshes it on its own, and the mirror lags — measured 2026-08-25 at
+    up to 131s behind. Sessions expire at 300s, so there is a window where db 0
+    holds a profile at 189s (fine) while our copy of it has already aged to 320s
+    and been evicted. The agent is then told "0 usable sessions, profiles are stale"
+    while the extension is beaming perfectly good cookies.
+
+    Best-effort on purpose: an unreachable mirror is not the same as an empty pool
+    — we may already hold a good copy — so a failure here is swallowed and the real
+    check below decides.
+    """
+    try:
+        from core.vault_mirror import sync
+        sync()
+    except Exception:
+        pass
+
+
 def _preflight(platforms=("etsy",)):
     """Refuse fast when the session pool is empty. It HANGS otherwise, not fails.
 
@@ -98,6 +119,7 @@ def _preflight(platforms=("etsy",)):
     extension, which from an agent's side is a tool that simply never returns.
     """
     from core import vault_status as vs
+    _sync_mirror()
     try:
         report = vs.scan(tuple(platforms))
     except Exception as e:
@@ -128,6 +150,9 @@ def vault_status() -> dict:
     mysterious refusal into a clear one.
     """
     from core import vault_status as vs
+    # Refresh the mirror BEFORE reading it, or this reports a stale copy as an
+    # empty pool — the exact false "0 usable" an agent then relays to the operator.
+    _sync_mirror()
     try:
         report = vs.scan()
     except Exception as e:
