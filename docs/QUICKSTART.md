@@ -9,6 +9,11 @@ session cookies — think of it as "where the system keeps you logged in" so it
 doesn't ask you to sign in every time. **The extension** is what fills it, by
 watching you browse normally in Chrome.
 
+**Setting this up inside WSL (Linux on Windows) instead?** This page assumes
+Windows + Docker Desktop directly. For a full WSL walkthrough — including how
+Chrome (which stays on Windows) reaches services running inside WSL — see
+[`docs/WSL_TUTORIAL.md`](WSL_TUTORIAL.md) instead.
+
 ## 1. Clone and install
 
 ```bash
