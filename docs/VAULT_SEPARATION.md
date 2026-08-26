@@ -114,3 +114,40 @@ Set `REDIS_URL` back to `redis://localhost:6379/0` in `.env`. `vault_status` wil
 print `[MERGED]` on every run so the state is never a surprise. Nothing else needs
 changing — the mirror simply reports that source and destination are the same and
 copies nothing.
+
+## Correction, 2026-08-25 — they are a CO-WRITER, not a reader
+
+This document described `pinterest-apify` as a project that *reads* db 0. It does
+more than that, and the understatement mattered:
+
+* `adspower/sync_cookies.py` **writes** cookie jars into db 0 as `ads_<user_id>`
+* `browsers/identities.py` calls **`sadd` and `srem`** on `valid_profiles:pinterest`
+  — it adds and removes members of the shared pool
+
+**Measured 2026-08-25: 7 of the 9 pinterest profiles in our pool were theirs.** This
+project was doing its Pinterest work on identities it never captured — different
+browsers, different proxies, different exit IPs. A ban earned by their traffic would
+have landed in our pool, and vice versa.
+
+### The two projects capture sessions differently, on purpose
+
+| | this project | pinterest-apify |
+|---|---|---|
+| capture | Chrome extension only | AdsPower / remote browsers, per-profile proxies |
+| profile id | `profile_<random>` | `ads_<user_id>` |
+| browser automation | **banned** (rule 6) | central to its design |
+
+Neither approach is wrong; they are different projects solving different problems.
+**Do not import one's approach into the other.**
+
+### What now enforces it
+
+`vault_mirror.FOREIGN_PROFILE_PREFIXES` — anything matching is skipped on the way
+in and purged from db 1 on every sync (a rule enforced only on entry would leave
+pre-rule copies in the pool for ever, since sync never deletes from the
+destination). Ownership beats freshness: a foreign jar is excluded even when its
+heartbeat is newer than ours.
+
+**db 0 is still never written by this project.** Their jars remain exactly where
+they are and their tooling is unaffected — verified after the change: 7 `ads_*`
+jars still present in db 0, still in their valid pool.

@@ -173,6 +173,56 @@ def main():
     check("is_valid is NOT blindly copied — our verdict is ours",
           "is_valid" not in COPIED_FIELDS)
 
+    # --- another project's identities never enter this pool -----------------------
+    # `Desktop\pinterest-apify` writes AdsPower jars as `ads_<user_id>` into the same
+    # db 0. Measured 2026-08-25: 7 of our 9 pinterest profiles were its, not ours.
+    # Different browsers, different proxies, different IPs — a ban earned by their
+    # traffic would land in our pool. Separate projects, separate sessions.
+    print()
+    from core.vault_mirror import is_foreign, purge_foreign  # noqa: E402
+
+    check("an AdsPower jar is recognised as foreign", is_foreign("ads_k1fx40wf"))
+    check("an extension jar is ours", not is_foreign("profile_p5ewxsodn"))
+    check("the manually-seeded seller jar is ours", not is_foreign("private_seller_1"))
+    check("a missing id does not crash the check", not is_foreign(None))
+
+    src = FakeRedis(
+        hashes={"cookie:pinterest:profile_mine": {"cookies_json": "{}", "last_updated": "100"},
+                "cookie:pinterest:ads_k1fx40wf": {"cookies_json": "{}", "last_updated": "999"}},
+        sets={"valid_profiles:pinterest": ["profile_mine", "ads_k1fx40wf"]}, name="src")
+    dst = FakeRedis(name="dst")
+    result = run(src, dst, platforms=("pinterest",))
+
+    check("our own profile is mirrored",
+          "cookie:pinterest:profile_mine" in dst.hashes, list(dst.hashes))
+    check("the foreign profile is NOT mirrored, despite a fresher heartbeat",
+          "cookie:pinterest:ads_k1fx40wf" not in dst.hashes, list(dst.hashes))
+    check("and it never reaches our valid pool",
+          "ads_k1fx40wf" not in dst.sets.get("valid_profiles:pinterest", []),
+          dst.sets)
+    check("the skip is reported, not silent",
+          any("ads_k1fx40wf" in f for f in result.get("foreign_skipped", [])), result)
+    # Freshness must not override ownership: theirs is newer (999 vs 100) and still
+    # excluded, because the question is whose it is, not how recent.
+
+    # --- and ones copied in BEFORE the rule existed get cleaned out ---------------
+    print()
+    stale = FakeRedis(
+        hashes={"cookie:pinterest:ads_old": {"cookies_json": "{}"},
+                "cookie:pinterest:profile_mine": {"cookies_json": "{}"}},
+        sets={"valid_profiles:pinterest": ["ads_old", "profile_mine"]}, name="dst")
+    removed = purge_foreign(stale, platforms=("pinterest",))
+    check("a foreign jar already in our vault is purged",
+          "cookie:pinterest:ads_old" not in stale.hashes, list(stale.hashes))
+    check("and removed from the pool",
+          "ads_old" not in stale.sets.get("valid_profiles:pinterest", []), stale.sets)
+    check("our own profile survives the purge",
+          "cookie:pinterest:profile_mine" in stale.hashes, list(stale.hashes))
+    check("the purge reports what it removed",
+          any("ads_old" in r for r in removed), removed)
+    # Enforcing only on the way in would leave pre-rule copies in the pool for ever,
+    # since sync never deletes from the destination.
+
     print(f"\n{passed} passed, {failed} failed")
     return failed
 

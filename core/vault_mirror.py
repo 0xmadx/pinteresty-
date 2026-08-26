@@ -74,6 +74,29 @@ MIRRORED = ("etsy", "etsy_private", "pinterest")
 COPIED_FIELDS = ("cookies_json", "user_agent", "last_updated", "csrf_token",
                  "shop_id", "proxy")
 
+# Profiles that are NOT ours, identified by the prefix their owner writes.
+#
+# `Desktop\pinterest-apify` is a separate project with a separate approach: it runs
+# AdsPower / remote browsers behind per-profile proxies and writes the jars it
+# captures into the SAME db 0, as `ads_<user_id>` (adspower/sync_cookies.py:361).
+# This project captures sessions one way only — the Chrome extension, which writes
+# `profile_<random>` (chrome_extension/background.js:52).
+#
+# Measured 2026-08-25: 7 of the 9 pinterest profiles in our pool were theirs. That
+# is not a shared resource, it is one project silently running on another's
+# identities — different browsers, different proxies, different IPs, and a ban
+# earned by their traffic would land in our pool. The two are separate projects and
+# stay separate.
+#
+# We only SKIP them on the way in. db 0 is never written to by this project, so
+# their profiles are untouched and their own tooling is unaffected.
+FOREIGN_PROFILE_PREFIXES = ("ads_",)
+
+
+def is_foreign(profile_id):
+    """Does this profile belong to another project? Extension jars never do."""
+    return str(profile_id or "").startswith(FOREIGN_PROFILE_PREFIXES)
+
 
 def _beat(data):
     try:
@@ -143,12 +166,20 @@ def sync(source_url=None, dest_url=None, platforms=MIRRORED, verbose=False):
     dst.ping()
 
     copied, readmitted, held_back, skipped = 0, [], [], []
+    foreign = []
 
     for platform in platforms:
         upstream_pool = set(src.smembers(f"valid_profiles:{platform}") or [])
 
         for key in src.scan_iter(f"cookie:{platform}:*"):
             profile_id = key.split(":", 2)[2]
+
+            # Another project's identity. Skipped before anything is read from it,
+            # so this project can never run on a session it did not capture.
+            if is_foreign(profile_id):
+                foreign.append(f"{platform}/{profile_id}")
+                continue
+
             data = src.hgetall(key)
             if not data:
                 continue
@@ -184,9 +215,15 @@ def sync(source_url=None, dest_url=None, platforms=MIRRORED, verbose=False):
                     dst.hset(dest_key, "is_valid", "1")
                 dst.sadd(f"valid_profiles:{platform}", profile_id)
 
+    # Foreign jars already copied in by an earlier sync would otherwise linger for
+    # ever, because sync never deletes from the destination. Removing them here is
+    # safe and local: it touches db 1 only, so the owning project is unaffected.
+    evicted_foreign = purge_foreign(dst, platforms)
+
     summary = {"source": source_url, "dest": dest_url, "platforms": list(platforms),
                "copied": copied, "readmitted": readmitted,
-               "held_back_locally_evicted": held_back, "skipped": skipped}
+               "held_back_locally_evicted": held_back, "skipped": skipped,
+               "foreign_skipped": foreign, "foreign_purged": evicted_foreign}
     if verbose:
         print(f"[mirror] {copied} profile(s) copied from {source_url} -> {dest_url}")
         for r in readmitted:
@@ -195,7 +232,38 @@ def sync(source_url=None, dest_url=None, platforms=MIRRORED, verbose=False):
         for h in held_back:
             print(f"[mirror] held back {h} — evicted locally and nothing newer "
                   f"upstream")
+        if foreign:
+            print(f"[mirror] skipped {len(foreign)} profile(s) belonging to another "
+                  f"project: {', '.join(foreign)}")
+        for f in evicted_foreign:
+            print(f"[mirror] purged {f} from our vault — not ours to use")
     return summary
+
+
+def purge_foreign(dst, platforms=MIRRORED):
+    """Drop another project's profiles out of OUR vault. Never touches the source.
+
+    Returns the ids removed. This is deliberately part of every sync rather than a
+    one-off cleanup: if the boundary is only enforced on the way in, a single sync
+    predating the rule leaves foreign identities in the pool indefinitely, and
+    nothing would ever notice.
+    """
+    removed = []
+    for platform in platforms:
+        for pid in list(dst.smembers(f"valid_profiles:{platform}") or []):
+            if is_foreign(pid):
+                dst.srem(f"valid_profiles:{platform}", pid)
+                dst.delete(f"cookie:{platform}:{pid}")
+                removed.append(f"{platform}/{pid}")
+        # A jar can exist without being in the pool; clear those too.
+        for key in list(dst.scan_iter(f"cookie:{platform}:*")):
+            pid = key.split(":", 2)[2]
+            if is_foreign(pid):
+                dst.delete(key)
+                entry = f"{platform}/{pid}"
+                if entry not in removed:
+                    removed.append(entry)
+    return removed
 
 
 def is_separated(dest_url=None, source_url=None):
