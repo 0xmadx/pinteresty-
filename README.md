@@ -27,6 +27,10 @@ reaching the operator. Recent examples, all found by probing rather than reasoni
 
 ## Running it
 
+**Setting this up for the first time on a fresh clone?** Skip straight to
+[`docs/QUICKSTART.md`](docs/QUICKSTART.md) — everything below assumes the vault
+and `.env` already exist.
+
 ```bash
 .venv/Scripts/python.exe -m core.vault_status
 ```

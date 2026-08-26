@@ -1,5 +1,10 @@
 # Onboarding — read this before touching anything
 
+⚠️ **Setting this project up for the first time on a fresh clone?** This is a
+traps-and-pitfalls briefing for someone already running the system, not a setup
+checklist — go to [`docs/QUICKSTART.md`](QUICKSTART.md) first, then come back
+here.
+
 For a fresh session (human or agent) picking this repo up cold. `CLAUDE.md` is
 the operational cheat sheet; this is the *why*, and the list of things that have
 already gone wrong so they do not go wrong again.

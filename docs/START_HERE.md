@@ -1,5 +1,9 @@
 # START HERE — the complete project index
 
+⚠️ **Setting this project up for the first time?** This is an index of the
+*architecture* documentation, not a setup guide — go to
+[`docs/QUICKSTART.md`](QUICKSTART.md) instead.
+
 Everything produced for the Niche Decision Machine, in reading order, with what
 each file answers and who it's for.
 
