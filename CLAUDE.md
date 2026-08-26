@@ -87,7 +87,7 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 ```bash
 # Full verification — run before every commit
 .venv/Scripts/python.exe -m core.test_graph_db          # + the other 58 suites
-# 59 OFFLINE suites, 1,582 assertions, no network required.
+# 59 OFFLINE suites, 1,594 assertions, no network required.
 # ⚠️ pinterest/tests/ holds 5 more that are LIVE — their own docstrings say
 # "Live verification". They hit real Pinterest, their assertion counts VARY
 # with session state, and they print no summary when the vault is down. Never
@@ -223,6 +223,9 @@ account costs the business.
 | **`query_cvr` has no known units** | It is NOT searches→orders. `volume × query_cvr` for `personalized gift` = 39.8/mo market-wide, while its #1 listing holds 14,733 reviews. Usable only as a comparison BETWEEN terms (D-43), never as a quantity. |
 | **Etsy ships its own seasonal curve, free** | `chart-series-data`'s `series` block holds a 12-month volume curve per term. Every caller read `term_summaries` and discarded it for the project's whole life (D-45). `christmas ornament` peaks Nov at **93x** its trough; `mom necklace` peaks **December**, not May. ⚠️ The last bucket is PARTIAL — judging on it manufactures a collapse. `include_trendline` is inert: True and False return identical structures. |
 | **The DISCOVER front door works** | `trending-search-terms-v2` returns rising terms with real volumes and no quota cost. Only **7** taxonomy ids are populated (1, 66, 199, 323, 891, 1429, 1633) — several plausible ones (Jewelry, Clothing, Craft Supplies) return nothing. 28 candidates total. |
+| **Pinterest momentum joins on the TERM, never on the stored featured topics** (D-44) | The obvious cheap join — matching Discover's pool against `trend_observations`' 84 Pinterest topics — scores **0 exact and 0 containment matches** against 1,333 Etsy terms. Editorial phrases ("Apple-Themed Preschool Activities") vs product keywords, the identical mismatch that broke the calendar. `/metrics/` asks Pinterest about the pool's OWN terms directly, one batched call. Pinterest DROPS terms it does not track (asked 7, got 3) — absent, not fading. `100.01` is Pinterest's own "10,000%+" display cap, not a real value. |
+| **POD's ceiling comes from page one, not the API's price band** (D-46) | `results-data`'s median band ($11.70–$14.30 on `personalized baby blanket`) is market-wide; the 20 listings that actually rank charge a median of **$25.19** — free in the same response. Pricing the margin floor off the band computes a $5.21 ceiling (POD near-impossible); off page one, $12.69 (plausible). Never returns "profitable" — Printify's catalog has no variant price, so the output is a ceiling plus a handoff. |
+| **This vault does not mirror `pinterest-apify`'s sessions** (D-47) | Measured: 7 of 9 pinterest profiles in this pool were their AdsPower jars (`ads_<user_id>`), not this project's extension captures (`profile_<random>`). Their own `identities.py::export()` pulls every profile in the shared pool with no ownership check and writes raw cookies to disk — the shared db 0 was never passive. `FOREIGN_PROFILE_PREFIXES` skips and purges anything not ours; db 0 itself is still never written by this project. Full physical separation (a second Redis, a second Go server) is the next step — see ROADMAP.md. |
 
 ---
 
@@ -274,7 +277,7 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. 58 offline suites, 1,543 assertions (+5 live
+request cache · run log · guards. 59 offline suites, 1,594 assertions (+5 live
 pinterest suites that need a session).
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
@@ -288,8 +291,15 @@ verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
 (`etsy/ui/calendar_page.py`, + `.ics` export) · saturation recovered from listings
 (`etsy/analytics/card_saturation.py`) · **17 MCP tools** (`mcp_server/`) ·
 the read server (`etsy/server/app.py`) · the interactive app (`etsy/ui/app_page.py`) ·
-a Docker service for the read server (`docker-compose.yml`, `etsy-server`).
-**1,543 assertions** across 58 offline suites, plus 5 live pinterest suites.
+a Docker service for the read server (`docker-compose.yml`, `etsy-server`) ·
+the intent gate (`etsy/analytics/discover.py::confirm_intent`, D-43) ·
+Pinterest momentum as a third axis (`etsy/analytics/momentum.py`, D-44) ·
+Etsy's own seasonal curve, recovered from a response every caller discarded
+(`etsy/analytics/seasonality.py`, D-45) · POD price-reality and viability
+(`etsy/analytics/pod_check.py`, `/pod`, D-46) · this vault no longer mirrors
+`pinterest-apify`'s sessions, even from the shared database (`core/vault_mirror.py`
+`FOREIGN_PROFILE_PREFIXES`, D-47).
+**1,594 assertions** across 59 offline suites, plus 5 live pinterest suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

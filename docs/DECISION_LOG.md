@@ -1065,3 +1065,83 @@ deliberately not `False` — one source cannot confirm itself, and that is diffe
 from two sources conflicting.
 
 **Cost:** one batched call per sweep for the entire watch list.
+
+## D-46 — POD viability is priced off page one, never the market-wide band
+
+**Date:** 2026-08-25
+
+**Context.** Checking print-on-demand viability by hand, twice, with throwaway
+scripts — the sign a workflow belongs in the codebase.
+
+**The finding.** `results-data`'s `search_term_median_price` is not what the
+listings that actually rank charge. On `personalized baby blanket`:
+
+| | |
+|---|---|
+| API median band | $11.70 – $14.30 |
+| page one, actually | $11.65 min, **$25.19 median**, $70.21 max (n=20) |
+
+Both numbers are right and measure different populations: the band is market-wide
+across all 104,368 listings, page one is the ~20 that rank. Winners charge
+roughly double the market median. Since the margin floor is applied to a price,
+anchoring to the band alone computes a COGS ceiling of $5.21 — near-impossible for
+POD — where the real, page-one-anchored ceiling is $12.69, plausible.
+
+**Chosen.** `etsy/analytics/pod_check.py` (`/pod <term>`) reports both
+populations side by side, never merged, with the ratio between them. The
+competitor cards needed for the real figure ride along free in the same
+`results-data` response, so this costs no extra call.
+
+**Never returns "profitable".** Printify's catalog exposes no price on a variant,
+so the output is a ceiling plus a handoff to the operator to price it in the
+Printify UI. A test asserts the string "profitable" appears nowhere in the
+result.
+
+**Lead time is reported as the frequently-decisive number**, not a footnote: a
+10-day Printify handling floor closes Etsy's 7-day bracket outright, so the
+operator competes on everything except speed. Unknown handling reads
+`unmeasured`, never "cannot ship fast" — `can_ship_fast` returns `None` for
+unknown data, and `None` must not collapse to `False`.
+
+## D-47 — This vault does not mirror another project's sessions, even from the shared database
+
+**Date:** 2026-08-25
+
+**Context.** `Desktop\pinterest-apify` shares Redis db 0 with this project — its
+own choice, made for convenience, not because either project needs the other's
+data. It runs AdsPower / remote browsers behind per-profile proxies and writes
+what it captures into the same keyspace this project's Chrome extension writes
+to. Measured: **7 of the 9 pinterest profiles in this project's pool belonged to
+it**, meaning this system had been doing Pinterest work on sessions it never
+captured — different browsers, different proxies, different exit IPs. A ban
+earned by their traffic would land in our pool, and D-33's one-way mirror did
+nothing to prevent it, because it only stops THEIR evictions shrinking OUR pool —
+it never asked whose profile a given entry actually was.
+
+**Worse, confirmed the same day:** `pinterest-apify` has its own export path
+(`browsers/identities.py::export()`) that pulls **every** profile in
+`valid_profiles:pinterest` — no ownership filter — and writes the raw cookies to
+a local JSON file on its own disk. This project's `profile_ldu6ypke8` and
+`profile_p5ewxsodn` were found sitting exported there. The database being shared
+was never a passive fact; something on the other side actively reads and
+persists whatever lands in it, ours included.
+
+**Chosen.** `core/vault_mirror.py` adds `FOREIGN_PROFILE_PREFIXES` —
+`("ads_",)`, the AdsPower naming pinterest-apify uses, distinct from this
+project's `profile_<random>` (`chrome_extension/background.js:52`). A foreign
+profile is skipped on the way IN, and any already copied by an earlier sync are
+purged on every run — enforcing only on entry would leave pre-rule copies in the
+pool forever, since `sync()` never deletes from the destination on its own.
+Ownership beats freshness: a foreign jar is excluded even when its heartbeat is
+newer than anything we hold, because the question is whose it is, not how recent.
+
+**db 0 is still never written by this project** — the purge and the skip both
+touch db 1 only. Verified after the change: their 7 `ads_*` jars remain present
+in db 0 and in their own valid pool; their tooling is unaffected.
+
+**Not chosen (yet): full physical separation** — a second Redis and a second Go
+server that pinterest-apify never touches at all, ending the shared database
+rather than filtering it. The identities.json finding is the argument for it: a
+data-layer filter on our side cannot stop the other project from reading and
+persisting our live cookies, only a genuinely separate database can. Planned as
+the next step, tracked in ROADMAP.md.

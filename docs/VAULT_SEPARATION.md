@@ -151,3 +151,26 @@ heartbeat is newer than ours.
 **db 0 is still never written by this project.** Their jars remain exactly where
 they are and their tooling is unaffected — verified after the change: 7 `ads_*`
 jars still present in db 0, still in their valid pool.
+
+### What this filter does NOT fix, and the reason full separation is next
+
+The database itself is still one shared Redis. `FOREIGN_PROFILE_PREFIXES` stops
+their sessions entering ours, but it cannot stop the reverse: the moment this
+project's Chrome extension posts a cookie, it lands in db 0, and anything with
+read access to db 0 can read it.
+
+Confirmed the same day this filter shipped: `pinterest-apify` has its own export
+path (`browsers/identities.py::export()`) that pulls **every** profile in
+`valid_profiles:pinterest`, no ownership check, and writes the raw cookies to a
+local JSON file on its own disk. This project's `profile_ldu6ypke8` and
+`profile_p5ewxsodn` were found sitting exported there, dated 2026-08-20. The
+shared database was never a passive fact — something on the other side actively
+reads and persists whatever lands in it.
+
+**A data-layer filter cannot close that.** Only a database the other project has
+no credentials to can. Planned next step, operator-approved 2026-08-25: a second
+Redis container and a second Go cookie server, dedicated to this project alone,
+with the Chrome extension re-pointed at the new one. `pinterest-apify` keeps its
+current db 0 setup untouched — it does not depend on receiving anything from this
+project's extension, since it captures its own sessions via AdsPower. See
+`ROADMAP.md` for the plan and status.
