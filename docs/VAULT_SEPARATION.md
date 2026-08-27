@@ -95,20 +95,24 @@ managed:
 
 None of that was a bug in either project. It was two owners of one mutable store.
 
-### Stage 1 — what changed, and what deliberately did not
+### Stage 1 — what changed, and what deliberately did not (2026-08-19 to 2026-08-26 — NOT current, see D-49 above)
 
-**The write path is untouched.** One browser, one extension, one Go server, writing
-to db 0 — because that is the operator's constraint, and because changing it would
-mean editing the extension and the Go server that *both* projects depend on.
+**The write path was untouched.** One browser, one extension, one Go server, writing
+to db 0 — because that was the operator's constraint, and because changing it would
+have meant editing the extension and the Go server that *both* projects depended on.
 
-What changed is that this project stopped **reading** db 0.
+What changed, at the time, is that this project stopped **reading** db 0 directly.
 
 ```
- Chrome ─► extension ─► Go server ─► db 0  ◄── pinterest-apify reads this, unchanged
+ THIS DIAGRAM STOPPED BEING TRUE 2026-08-26 (D-49) — kept for history only.
+ Today: Chrome ─► extension ─► Go server ─► db 0  ◄── everything in this repo reads THIS directly, live.
+
+ As it worked 2026-08-19 – 2026-08-26:
+ Chrome ─► extension ─► Go server ─► db 0  ◄── pinterest-apify read this, at the time
                                        │
                                   (mirror, one-way, read-only source)
                                        ▼
-                                     db 1  ◄── everything in this repo reads this
+                                     db 1  ◄── everything in this repo read THIS, back then
 ```
 
 Same Redis server, separate logical database. **Nothing on their side changes at
@@ -118,16 +122,16 @@ all** — no config, no code, no restart.
 
 | Guarantee | Enforced by |
 |---|---|
-| We never write to the shared vault | `vault_mirror.sync()` — source client is read-only; a test asserts `src.writes == []` |
-| Our evictions cannot reach their sessions | our evictions happen in db 1; their data is in db 0 |
-| Their retirement cannot shrink our pool | the mirror never `srem`s from our pool; asserted by test |
-| Our eviction survives a sync | a locally-evicted profile is only readmitted when the source heartbeat is **strictly newer** — i.e. a real re-login |
+| We never wrote to the shared vault | `vault_mirror.sync()` — source client was read-only; a test asserted `src.writes == []` |
+| Our evictions could not reach their sessions | our evictions happened in db 1; their data was in db 0 |
+| Their retirement could not shrink our pool | the mirror never `srem`'d from our pool; asserted by test |
+| Our eviction survived a sync | a locally-evicted profile was only readmitted when the source heartbeat was **strictly newer** — i.e. a real re-login |
 | A merged config cannot go unnoticed | `vault_status` printed `[separated]` / `[MERGED]` on every run; `sync()` refused and said so |
 | A missing `.env` cannot silently re-merge | `ScraperConfig.REDIS_URL` **defaulted to db 1**, not db 0 |
 
 ### The trap the mirror created, and how it was closed
 
-A copy goes stale. `HEARTBEAT_MAX_AGE` is 300s, so within five minutes of the last
+A copy went stale. `HEARTBEAT_MAX_AGE` is 300s, so within five minutes of the last
 sync every profile in db 1 read as stale and the vault looked **empty** — while the
 extension was beaming perfectly good cookies into db 0.
 

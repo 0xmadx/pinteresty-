@@ -1245,6 +1245,28 @@ passed cleanly against the same database with zero mirror code in the path. All
 57 offline suites (unchanged count — `core/test_vault_mirror.py` deleted,
 `core/test_preflight.py` rewritten in place) pass.
 
-**Not touched:** `docs/VAULT_SEPARATION.md`, `CLAUDE.md` and `README.md` still
-describe the db-1 mirror as current fact as of this entry — updating them is the
-next step, tracked immediately below in this same work.
+**Docs updated the same day:** `docs/VAULT_SEPARATION.md`, `CLAUDE.md`,
+`README.md`, `docs/ONBOARDING.md`, `docs/UI_GUIDE.md`, `docs/MCP.md` and
+`ROADMAP.md` no longer describe the mirror as current. One round-trip was
+needed: `docs/VAULT_SEPARATION.md`'s historical diagram and guarantees table
+used present-tense labels ("pinterest-apify reads this, unchanged") even
+though the surrounding section was already marked historical — read in
+isolation (quoted without the section header) it looked like a claim about
+today. Reworded to lead with current state and date the historical flow
+explicitly, after the operator quoted exactly that block back as "is still
+like this."
+
+**db 1 itself was flushed the same day, not just stopped-reading.** Retiring
+the code path left db 1's last-synced contents sitting inert in Redis —
+verified directly: `db0` held 10 keys, `db1` held 11, the extra one being a
+stale `cookie:pinterest:profile_ldu6ypke8` that no longer existed in db 0
+(evicted from there by ordinary hygiene, a duplicate/stale session) but that
+nothing had ever removed from the unread db 1 copy — the mirror only wrote
+forward, it never pruned on its own. This is the concrete version of the
+"mirror spreads sessions rather than containing them" risk: one live-looking
+Pinterest session jar existed in a place nothing was watching. Backed up to
+`data/vault_backup_<timestamp>-db1-retirement.json` (gitignored, same
+convention as `vault_status --prune`'s backups) and `FLUSHDB`'d. Verified
+after: `vault_status` and `core.preflight` report the identical usable
+sessions as before the flush — proof db 1 was contributing nothing live,
+exactly as expected once no code reads it.
