@@ -1,5 +1,13 @@
 # 08 — Capability Map: every endpoint, every parameter, and how they link
 
+⚠️ **Last fully verified 2026-08-12 — 15 days stale as of the 2026-08-27 refresh
+below.** `docs/market_map/` is the current source; several "❌ never wired" claims
+below were true then and are false now (D-43/D-44/D-45 all shipped since). Corrected
+inline where found rather than silently, because the corrections are themselves
+evidence of how fast this drifts. Printify (`etsy/api/printify/`, added 2026-08-19)
+is not covered here at all — see `docs/market_map/reference/printify.md`, the only
+reference doc it has.
+
 The complete surface across all three sources, what each parameter *asks*, and which are
 actually used. Written because the system was built endpoint-by-endpoint and uses a
 fraction of what it can reach — every gap below was found by accident during other work,
@@ -164,15 +172,16 @@ Opportunity = (Demand × Momentum × Intent) / (Supply × SERP Strength)
 | Variable | Best source | Cost | In the code? |
 |---|---|---|---|
 | Demand (absolute) | Etsy `results-data.searchVolume` | free | ✅ |
-| **Momentum** | **Pinterest `mom_change` / `yoy_change`** | free | ❌ |
-| **Intent** | **Pinterest `OUTBOUND_CLICK` vs `SAVE`** | free | ❌ |
-| **Audience fit** | **Pinterest `/demographics/`** | free | ❌ |
+| **Momentum** | **Pinterest `mom_change` / `yoy_change`** | free | ✅ **built 2026-08-20 — `etsy/analytics/momentum.py`, D-44** |
+| **Intent** | Etsy `query_cvr`, relative comparison | free | ✅ **built 2026-08-20 — `confirm_intent()`, D-43** (the Pinterest `OUTBOUND_CLICK` vs `SAVE` version specifically is still ❌, unbuilt) |
+| **Audience fit** | **Pinterest `/demographics/`** | free | ❌ still unbuilt — endpoint itself remains unproven (returns empty on unpopulated terms) |
 | Supply | Etsy public `organic_listings_count` | free | ✅ |
 | SERP strength | Etsy SERP cards | free | ✅ |
 
-**This is the fix for N-01.** The scorer collapses to 0.500 because it has only demand
-and supply, which are rank-correlated. Momentum, intent and audience fit are three
-independent dimensions, all free, all documented, none wired.
+**This was the fix for N-01, and it shipped.** As of 2026-08-12 the scorer collapsed
+to 0.500 because it had only demand and supply, which are rank-correlated. Momentum
+and (a CVR-based) intent are both wired in now; audience fit is the one dimension
+still genuinely open.
 
 ---
 
@@ -181,30 +190,29 @@ independent dimensions, all free, all documented, none wired.
 | # | Entry | Path | Status |
 |---|---|---|---|
 | 1 | a keyword | Etsy private → public verify → Pinterest check | ⚠️ partial, fixed order |
-| 2 | **nothing** | `get_trending_terms` → pick a niche | ❌ built, unwired |
-| 3 | **the calendar** | Pinterest `moments` → Etsy `holiday` filter → launch date | ❌ **both halves exist** |
-| 4 | a Pinterest trend | momentum → does Etsy demand exist? | ❌ the leading indicator |
+| 2 | **nothing** | `get_trending_terms` → pick a niche | ✅ **wired — this is the DISCOVER front door now** (was "built, unwired" as of 2026-08-16) |
+| 3 | **the calendar** | Pinterest `moments` ∩ Etsy `chart-series` → launch date | ✅ **built and running — `etsy.engines.calendar_engine`, 2026-08-19.** The join that was missing turned out to be Etsy's own seasonal cycle, not the `holiday` filter this row originally named — see D-45 |
+| 4 | a Pinterest trend | momentum → does Etsy demand exist? | ✅ **built — D-44**, though wired as a third axis alongside winnability rather than a strict funnel step |
 | 5 | a competitor link | listing → tags, reviews, price | ✅ |
 | 6 | a shop name | daily sales delta | ✅ |
-| 7 | keyword + `date_desc` | what sellers just bet on | ❌ |
-| 8 | a community | L1 interest / category → members → Etsy | ❌ |
+| 7 | keyword + `date_desc` | what sellers just bet on | ❌ still open |
+| 8 | a community | L1 interest / category → members → Etsy | ❌ still open |
 
 ---
 
-## 8. Build order
+## 8. Build order — re-audited 2026-08-27, most of this shipped
 
-Ranked by value ÷ effort. Everything here is free of quota.
-
-| # | Build | Why |
-|---|---|---|
-| 1 | **Pinterest → Etsy join** | closes N-01 with 3 free dimensions; `overviews.md` §7 names it as the one missing pipeline |
-| 2 | **Etsy public pagination** | biggest data gain in the system; strengthens survivorship, competitors, rank tracking |
-| 3 | **Holiday calendar loop** (route 3) | the only route that says *when*, not just *what* |
-| 4 | **`OUTBOUND_CLICK` vs `SAVE`** | free purchase-intent signal, no Etsy equivalent |
-| 5 | **`get_trending_terms`** (route 2) | the playbook's Phase 1, already written |
-| 6 | **`include_trendline: true`** | free seasonality curve currently declined |
-| 7 | **Demographics into tags** | audience language in listings; no Etsy equivalent |
-| 8 | **Community-relative momentum** | separates a real trend from a seasonal tide |
+| # | Build | Why | Status |
+|---|---|---|---|
+| 1 | Pinterest → Etsy join | closes N-01 with free dimensions | ✅ built, D-44 (momentum) + D-43 (a CVR-based intent, not literally Pinterest's) |
+| 2 | **Etsy public pagination** | biggest data gain in the system; strengthens survivorship, competitors, rank tracking | ❌ **still open, confirmed 2026-08-27** — see `market_map/reference/etsy_public.md` |
+| 3 | Holiday calendar loop (route 3) | the only route that says *when*, not just *what* | ✅ built, 2026-08-19 — the real join was Etsy's own `chart-series`, not the `holiday` filter this row assumed |
+| 4 | `OUTBOUND_CLICK` vs `SAVE` | free purchase-intent signal, no Etsy equivalent | ❌ **still open** — `top_categories` verified real 2026-08-16, never joined to the gate |
+| 5 | `get_trending_terms` (route 2) | the playbook's Phase 1, already written | ✅ built — the DISCOVER front door |
+| 6 | `include_trendline: true` | free seasonality curve currently declined | ❌ **abandoned, correctly** — probed 2026-08-20, the flag is inert (`True`/`False` return byte-identical responses). The real free seasonality curve was `series`, not this flag — see D-45 |
+| 7 | Demographics into tags | audience language in listings; no Etsy equivalent | ❌ still open |
+| 8 | Community-relative momentum | separates a real trend from a seasonal tide | ❌ still open |
+| 9 | 🆕 `daily_stats` → sharper takeoff-date detection | found 2026-08-27, free, riding on an existing call | ❓ not yet built — see `market_map/reference/etsy_private.md` |
 
 ---
 

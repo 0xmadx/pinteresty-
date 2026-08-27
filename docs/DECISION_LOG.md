@@ -1330,3 +1330,76 @@ constructing the engine (checked directly, same source-inspection pattern
 suites still pass. Not verified live — a real run costs real requests and
 several minutes, and the point of this session's ask was the wiring, not a
 fresh keyword analysis.
+
+## D-51 — `daily_stats`: a free daily volume series sitting unread in `results-data`, plus an endpoint-doc audit that found three false "not built" claims
+
+**Date:** 2026-08-27
+
+**Context.** The operator had just been shown `pinterest-apify`'s `docs/wire/` —
+a reverse-engineered, dated, endpoint-by-endpoint reference with a coverage audit
+and a traps list — and asked directly: is this project's own endpoint
+documentation missing that much too? It was, but not in the way "go document more"
+implies. `docs/market_map/reference/pinterest.md` had already been rewritten to
+exactly that standard **two days earlier** (2026-08-25). `etsy_private.md`,
+`etsy_public.md`, both `analysis/` files, and both `docs/architecture/` summary
+docs were still frozen at 2026-08-16 or 2026-08-12 — 11 to 15 days behind a
+project that shipped D-43 through D-50 in that window.
+
+**Three claims these docs made were not just old, they were actively false**,
+each disproved by work already landed this session:
+- `11_endpoint_reference.md`: *"the points series is not parsed yet"* — false
+  since D-45 built `parse_chart_series` to read exactly that.
+- `08_capability_map.md`: *"Momentum ❌ / Intent ❌ ... none wired"* — false since
+  D-44 (momentum) and D-43 (intent, though a CVR-based gate, not literally the
+  Pinterest `OUTBOUND_CLICK`/`SAVE` split this claim meant).
+- `08_capability_map.md` route table: *"the calendar — both halves exist [not
+  connected]"* and *"`get_trending_terms` — built, unwired"* — both connected
+  since 2026-08-19.
+- `etsy_public.md` / `11_endpoint_reference.md`: *"`organic_listing_ids` is
+  always empty"* — false since the 2026-08-20 parser fix; now 39–51 ranked ids.
+- `combinations.md`'s summary table was the worst offender: 3 of its 4 "❌ not
+  yet built" rows were built within days of the date it was written.
+
+**A genuinely new finding, not just a staleness fix.** Live-probing
+`get_results_data` for this refresh (per the `etsy-pipeline-work` skill's Rule 1 —
+diff the response keys against what the code reads) surfaced a top-level
+`daily_stats` field: a day-by-day search-volume series with a rolling 7-day
+average, riding on the SAME call `get_results_data` already makes on every
+measured keyword — free, no extra request. Nothing in this codebase parses it.
+This is the same shape as D-45's discovery (`chart-series`'s `series` block,
+paid for and discarded) and D-14's (the quota that was never consumed) — a
+signal already being paid for and thrown away. Different from `chart-series`:
+`daily_stats` is daily resolution over roughly the trailing three weeks, not
+monthly over a year, which is a materially sharper instrument for a
+calendar-first product whose whole premise is "list by day N." **Found, not
+built** — flagged in `market_map/reference/etsy_private.md` and left for the
+operator to decide whether it's worth wiring in, matching how `get_trending_terms`
+was flagged before D-43 rather than built unasked.
+
+**Chosen.** Rewrote `market_map/reference/etsy_private.md` and `etsy_public.md`
+to the same standard as the Pinterest doc (dated, live-reverified, exact payload
+shapes) rather than patching individual lines. Added `market_map/reference/printify.md`
+— a full third API client (`etsy/api/printify/`, added 2026-08-19, central to D-46)
+had never had a reference doc at all. Corrected `analysis/etsy.md` and
+`analysis/combinations.md`'s summary table and funnel diagram in place, keeping
+the correction visible (struck framing, not silent edits) rather than rewriting
+history — same convention as every prior correction in this log. Added staleness
+banners to both `docs/architecture/` summary docs pointing at `market_map/` as
+current, and fixed their worst individual false claims inline rather than leaving
+a banner to do all the work.
+
+**`etsy_public.md` also now cites `config/filter_trust.json` as the live source of
+truth for the 12 known SERP filters** instead of restating a 2026-08-16 snapshot
+— the registry is already re-auditable (`python -m etsy.analytics.filter_trust`)
+and a static table next to it would just be one more thing to go stale.
+
+**Confirmed still genuinely open, not newly found:** Etsy public pagination
+(page 2+ is never requested — still the single biggest structural gap per both
+the old and new capability map), Pinterest `OUTBOUND_CLICK` vs `SAVE` joined into
+the intent gate, and demographics-into-tags (JOIN 4). Listed as open in both
+places now, not silently dropped.
+
+**Verified:** `get_results_data`'s live response re-probed 2026-08-27 (not just
+re-dated) — `similar_search_terms`/`market_gap_recommendations` confirmed still
+empty/null, `daily_stats` confirmed present with real data. All 57 offline suites
+pass (docs-only change, no code touched).

@@ -19,7 +19,11 @@ measures.
   see combinations). The denominator every winnability call needs.
 - **The seasonal cycle** (`chart-series`) = *when* a term peaks, from Etsy alone. "mom
   necklace" peaks Nov–Dec and April. This is the calendar's engine and it needs no
-  Pinterest.
+  Pinterest — and it now actually runs the calendar (`etsy.engines.calendar_engine`,
+  built 2026-08-19); this was theoretical as of the last version of this doc.
+- **`daily_stats`**, riding free on every `results-data` call — a day-by-day search
+  volume series with a rolling average, sharper timing than the monthly cycle above.
+  Found 2026-08-27, not yet wired into anything. See `reference/etsy_private.md`.
 - **The keyword tree** (`get_similar_keywords`) = one seed → 165 long-tail terms, each
   sized. This is the discovery engine — Etsy's own algorithm mapping the neighbourhood.
 - **20 competitor cards free** in every demand call — a head start on the SERP.

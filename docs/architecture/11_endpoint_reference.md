@@ -1,5 +1,12 @@
 # 11 — Endpoint Reference (ground truth, by platform)
 
+⚠️ **This page is a one-page SUMMARY, last fully verified 2026-08-16 — 11 days stale
+as of the 2026-08-27 refresh below.** `docs/market_map/reference/` is the current,
+re-verified full version; when the two disagree, believe market_map. Kept here
+because a handful of its own claims were caught stale during that refresh and are
+corrected inline rather than silently — the corrections themselves are worth reading
+as a record of what drifted.
+
 **The one place that says what every endpoint IS, what it returns, and whether that was
 verified on the wire or assumed.** Built 2026-08-16 to end the "discovering endpoints by
 accident" problem. When code and this doc disagree, probe the wire and fix this doc.
@@ -60,8 +67,12 @@ diagram" from the seller UI, and multi-keyword comparison in one call.
 - Verified: "mom necklace" peaks Nov–Dec (Christmas) + April (pre-Mother's Day),
   troughs Feb/June. **This is the calendar's engine, from Etsy alone — no Pinterest
   needed for seasonality.**
-- `parse_term_summaries` reads the summaries; the **points series is not parsed yet**
-  (the peak→list-by feature would read it).
+- `parse_term_summaries` reads the summaries; **`parse_chart_series` now reads the
+  points series too (D-45, built 2026-08-20)** — this doc said "not parsed yet" as
+  recently as 2026-08-16; it now is, and it runs the calendar.
+- 🆕 **`get_results_data` also carries `daily_stats` — a daily-resolution volume
+  series with a rolling average, riding free on the SAME call. Found 2026-08-27,
+  not yet parsed by anything.** See `docs/market_map/reference/etsy_private.md`.
 
 ### 1.3 `get_similar_keywords(keyword)` — the RECURSIVE keyword tree ✅ 2026-08-16
 The LLM expansion. One keyword → ~120–165 related terms, each with its own
@@ -98,7 +109,10 @@ where all competitor/listing/SERP work MUST happen (D-29).
 | per card | title, price, review_count, shop, is_ad, star_seller | ✅ |
 
 ⚠️ **PS-1**: `results_per_page` says 48 but ~12 render — do not divide by "the page".
-⚠️ **PS-2**: `organic_listing_ids` is always empty — no authoritative rank order.
+⚠️ **PS-2, corrected**: `organic_listing_ids` was **always empty due to a parser bug**
+(a proximity-based regex whose assumption never held) — **fixed 2026-08-20**, now
+returns 39–51 ranked ids per page. This doc called it "always empty" as recently as
+2026-08-16; that was the bug, not the API.
 ⚠️ `filters` param exists; the real Etsy filter names (`page`, `min`/`max`, attributes)
 are unverified — **O-6**, read them off Etsy's filter UI before trusting.
 

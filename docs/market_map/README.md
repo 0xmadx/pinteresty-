@@ -22,12 +22,17 @@ reference/
   pinterest.md       every Pinterest page/tab, endpoint, ALL params, payload, verified
   etsy_private.md    the seller tool — demand truth (volume, CVR, cycle, keyword tree)
   etsy_public.md     competitor truth (SERP, listings, tags, product type)
+  printify.md        cost truth — catalog, shipping/handling, what it does NOT give
 
 analysis/
   pinterest.md       what Pinterest's data is worth, page by page
   etsy.md            what Etsy's two tiers are worth
   combinations.md    THE POINT — how the three sources join into an edge no one source has
 ```
+
+Printify sits outside the three-truths model below (it answers *cost*, not demand,
+competition or audience) so it has no `analysis/` counterpart — its worth is
+explained inline in `reference/printify.md`.
 
 ## The one mental model (everything traces to this)
 
