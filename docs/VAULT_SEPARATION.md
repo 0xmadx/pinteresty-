@@ -168,9 +168,22 @@ shared database was never a passive fact — something on the other side activel
 reads and persists whatever lands in it.
 
 **A data-layer filter cannot close that.** Only a database the other project has
-no credentials to can. Planned next step, operator-approved 2026-08-25: a second
-Redis container and a second Go cookie server, dedicated to this project alone,
-with the Chrome extension re-pointed at the new one. `pinterest-apify` keeps its
-current db 0 setup untouched — it does not depend on receiving anything from this
-project's extension, since it captures its own sessions via AdsPower. See
-`ROADMAP.md` for the plan and status.
+no credentials to can.
+
+**Done, 2026-08-25 — but the other direction from what was planned.** The original
+plan here was to move THIS project onto a new Redis + Go server and re-point the
+Chrome extension. Instead, `pinterest-apify` moved itself: it now runs its own
+`pinterest-redis` container on port 6380, and its own `.env` points `REDIS_URL`
+there. This project's `go-api`, Chrome extension and db 0/db 1 setup are
+**completely unchanged** — no access-layer edit was needed at all, since the
+extension only ever wrote cookies; it never depended on anything from
+`pinterest-apify`'s side.
+
+db 0 (port 6379) is now this project's alone in practice. It is not renamed or
+reconfigured — still `redis://…:6379/0`, still mirrored into db 1 — because
+retiring that mirror is a separate decision (see ROADMAP.md's design notes) and
+the mirror costs nothing to keep as a safety net if sharing ever resumes.
+
+Verified after their migration: their 7 `ads_*` jars, last written **before** the
+cutover, were confirmed abandoned (heartbeats had stopped advancing) and purged
+from db 0. Nothing currently writes `ads_*` entries into db 0 any more.

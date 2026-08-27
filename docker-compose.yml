@@ -1,8 +1,13 @@
 # Four services, two of which are the access layer and are not to be edited casually.
 #
 #   SERVICE          CONTAINER           ROLE                                  EDIT?
-#   redis            scraper-redis       THE VAULT. db 0 shared (extension +   no
-#                                        pinterest-apify), db 1 our mirror.
+#   redis            scraper-redis       THE VAULT. Was shared with            no
+#                                        pinterest-apify; that project moved
+#                                        to its own Redis (port 6380) on
+#                                        2026-08-25, so db 0 here is now this
+#                                        project's alone. db 1 stays as our
+#                                        mirror regardless — cheap, and a
+#                                        safety net if sharing ever resumes.
 #   go-api           cookie-server-go    Receives cookies from the Chrome      ACCESS LAYER
 #                                        extension, writes them to db 0.       — do not edit
 #   python-scraper   python-scraper      Idle exec container for running       yes
@@ -42,10 +47,11 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # db 0 — the SHARED vault, and it must stay that way. One Chrome extension
-      # feeds this server, and the pinterest-apify project reads db 0 directly.
-      # Pointing the writer at db 1 would starve that project while looking fine
-      # from here. This project reads its own copy via core/vault_mirror.py.
+      # db 0 — was the shared vault; pinterest-apify moved to its own Redis
+      # (port 6380) on 2026-08-25, so this is now this project's alone. Still
+      # kept separate from db 1 (below) rather than collapsed into one — the
+      # mirror is cheap and stays as a safety net if sharing ever resumes.
+      # This project reads its own copy via core/vault_mirror.py.
       - REDIS_URL=redis://redis:6379/0
       - API_KEY=super_secret_key_123
     depends_on:
@@ -58,9 +64,10 @@ services:
       context: .
     container_name: python-scraper
     environment:
-      # db 1 — this project's PRIVATE vault. core/vault_mirror.py copies the
-      # shared sessions in one-way, so our evictions and prunes cannot reach the
-      # other project's data.
+      # db 1 — this project's PRIVATE vault. core/vault_mirror.py copies db 0
+      # in one-way. db 0 is no longer actually shared (pinterest-apify moved
+      # to its own Redis, port 6380, on 2026-08-25) but the mirror stays —
+      # cheap, and a safety net if sharing ever resumes.
       - REDIS_URL=redis://redis:6379/1
       - VAULT_SOURCE_URL=redis://redis:6379/0
       # Include any other env vars like CAPSOLVER_API_KEY
