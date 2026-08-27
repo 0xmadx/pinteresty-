@@ -90,7 +90,32 @@ async def run():
     return FAIL
 
 
+def check_one_read_layer():
+    """discover() must route through app_data, not query the database itself.
+
+    A behavioural test cannot tell these apart — app_data.build_discovered() is a
+    thin field-projection over the exact same MarketDatabase.latest_discovered(),
+    so the outputs are near-identical either way. The property that actually
+    matters (D-41: ONE read layer, presentation reads through it and never past
+    it) is a fact about which CODE PATH is taken, so that is what gets asserted.
+
+    This is the regression that prompted the fix: discover() used to query
+    MarketDatabase directly, its own second implementation of "what counts as
+    discovered" that could silently drift from what the web UI shows for the
+    identical pool.
+    """
+    src = open(os.path.join(REPO, "mcp_server", "server.py"), encoding="utf-8").read()
+    start = src.index("\ndef discover(")
+    end = src.index("\n@mcp.tool()", start)
+    body = src[start:end]
+    check("discover() routes through etsy.ui.app_data (D-41)",
+          "from etsy.ui.app_data import build_discovered" in body, body[:200])
+    check("discover() does not query MarketDatabase directly any more",
+          "MarketDatabase()" not in body, body[:200])
+
+
 def main():
+    check_one_read_layer()
     return asyncio.run(run())
 
 

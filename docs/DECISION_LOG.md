@@ -1145,3 +1145,43 @@ rather than filtering it. The identities.json finding is the argument for it: a
 data-layer filter on our side cannot stop the other project from reading and
 persisting our live cookies, only a genuinely separate database can. Planned as
 the next step, tracked in ROADMAP.md.
+
+## D-48 — MCP's `discover` tool now goes through `app_data`, closing a D-41 violation
+
+**Date:** 2026-08-26
+
+**Context.** An API-design audit (prompted by the operator asking whether the read
+server's endpoints were actually used) traced every consumer of
+`etsy/server/app.py`'s HTTP routes and found none — nothing in this codebase calls
+them; not the static app (`app_page.py` is fully server-rendered, zero `fetch`
+calls), not MCP. That finding on its own wasn't a defect: the server's job was
+always "available for live/remote access," not "primary interface," and building
+versioning/auth/RFC-7807 scaffolding for an API with zero real callers would have
+been the same category of premature complexity already rejected once this session
+(the parallel "React SPA + job queue + desktop shell" proposal).
+
+**What the audit found that WAS a real defect.** Tracing MCP's own tools turned up
+`discover()` querying `MarketDatabase().latest_discovered()` directly — a second,
+independent implementation of "what counts as discovered," bypassing
+`etsy/ui/app_data.py` entirely. D-41's whole premise is ONE read layer that "the
+app and a future server" are two thin consumers of; MCP had quietly become an
+unaccounted third consumer with its own copy of the query logic. `cockpit` was
+safe (both HTTP and MCP call the same `etsy.engines.cockpit.build()`), but
+`discover` could silently drift from what the web UI shows for the identical pool
+— exactly the two-implementations-disagree failure this system is built to
+prevent, just moved into its own tooling instead of the data.
+
+**Chosen.** `discover()` now calls `app_data.build_discovered()`. Verified
+before merging: `MarketDatabase(db_path="market_intelligence.db")`'s default
+matches `app_data.DB_PATH` exactly, and `build_discovered()` is a strict,
+field-whitelisted projection over the identical `latest_discovered()` call — no
+behavioural difference, only an unused `collected_at` column dropped and
+`momentum`/`cvr` now reaching the tool the same way the web UI already got them.
+
+**Tested at the level that actually matters.** A behavioural test cannot
+distinguish "went through app_data" from "queried the database directly" here —
+the outputs are nearly identical either way, since `app_data.build_discovered` is
+a thin wrapper. The property that matters is which CODE PATH runs, so
+`mcp_server/test_server.py` asserts on the source directly (same pattern as
+`core/test_preflight.py`'s D-33 sync check): `discover()`'s body must import
+`app_data.build_discovered` and must not construct `MarketDatabase()` itself.

@@ -621,8 +621,12 @@ def discover(limit: int = 40) -> dict:
 
     Reads the stored discover_sweep, so it is fast and empty until that job runs.
     """
-    from core.database import MarketDatabase
-    pool = MarketDatabase().latest_discovered(2000)
+    # Through app_data — the one read layer every view is supposed to share
+    # (D-41). This used to query MarketDatabase directly, its own second
+    # implementation of "what counts as discovered" that could silently drift
+    # from what the web UI shows for the exact same pool.
+    from etsy.ui.app_data import build_discovered
+    pool = build_discovered(limit=2000)
     good = [r for r in pool if r.get("verdict") in ("winnable", "contested")]
     return _ok({
         "worth_a_look": good[:limit],
