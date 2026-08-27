@@ -1,17 +1,50 @@
 # Vault separation — this project vs pinterest-apify
 
-Two projects, one browser. This is how they stopped sharing a mutable store.
+**The plan, confirmed by the operator: each project owns its full stack —
+its own containers, its own Redis, its own database. No sharing.** That is now
+the actual state, realized 2026-08-25. This document also keeps the earlier
+staged approach (below), because the defenses built along the way still hold
+as belt-and-suspenders even though the primary risk they guarded against
+(one shared Redis) is gone.
 
----
+## Current state — full separation
 
-## The situation
+| | This project | `pinterest-apify` |
+|---|---|---|
+| Redis | `scraper-redis`, port 6379 | `pinterest-redis`, port 6380 — its own container |
+| Cookie writer | `cookie-server-go` (this repo's Go server) | its own AdsPower sync (`adspower/sync_cookies.py`) |
+| Session capture | Chrome extension only (rule 6 — no browser automation, ever) | AdsPower / remote browsers, per-profile proxies |
+
+Neither project's access layer needed to change to get here — `pinterest-apify`
+moved itself onto its own Redis and repointed its own `.env`; this project's
+extension, Go server and `docker-compose.yml` are untouched, because the
+extension never depended on anything from the other side to begin with.
+
+Verified after their cutover: their 7 `ads_*` session jars, left behind in this
+project's db 0, had genuinely stopped being written (checked the same heartbeat
+twice — it aged by exactly the wall-clock gap between checks) and were purged.
+db 0 is now this project's alone.
+
+## Historical context — the staged approach that got here
+
+Before full separation, sharing was reduced in two steps, each documented
+because the reasoning and the defenses they built still matter: a data-layer
+mirror first (this project stopped *reading* the shared store directly), then a
+filter against profiles that didn't belong to either side's own capture method
+(D-47). Both are described below, and both remain active — the mirror and the
+foreign-profile filter cost nothing to keep, and are the safety net if sharing
+of any kind ever resumes.
+
+### The situation, when it was still shared
 
 The Chrome extension, the Go cookie server, the Redis container and
-`docker-compose.yml` all belong to **this** repo. The `pinterest-apify` project is
-a guest on that infrastructure: it points at the same `redis://localhost:6379/0`
-and reads `cookie:pinterest:*`, written by the same extension.
+`docker-compose.yml` all belong to **this** repo. The `pinterest-apify` project
+was a guest on that infrastructure: it pointed at the same
+`redis://localhost:6379/0` and read `cookie:pinterest:*`, written by the same
+extension.
 
-That is fine for reading. It is not fine for *managing*, and both projects manage:
+That was fine for reading. It was not fine for *managing*, and both projects
+managed:
 
 | | did this to the shared store |
 |---|---|
@@ -19,9 +52,9 @@ That is fine for reading. It is not fine for *managing*, and both projects manag
 | `cookie_vault` | evicts profiles it judges signed-out or stale — on every platform, including theirs |
 | pinterest-apify's `mark_blocked` | removes a profile from the pool, silently shrinking ours |
 
-None of that is a bug in either project. It is two owners of one mutable store.
+None of that was a bug in either project. It was two owners of one mutable store.
 
-## What changed, and what deliberately did not
+## Stage 1 — what changed, and what deliberately did not
 
 **The write path is untouched.** One browser, one extension, one Go server, writing
 to db 0 — because that is the operator's constraint, and because changing it would
@@ -152,12 +185,12 @@ heartbeat is newer than ours.
 they are and their tooling is unaffected — verified after the change: 7 `ads_*`
 jars still present in db 0, still in their valid pool.
 
-### What this filter does NOT fix, and the reason full separation is next
+### What this filter alone could NOT fix — why full separation was still needed
 
-The database itself is still one shared Redis. `FOREIGN_PROFILE_PREFIXES` stops
-their sessions entering ours, but it cannot stop the reverse: the moment this
-project's Chrome extension posts a cookie, it lands in db 0, and anything with
-read access to db 0 can read it.
+The database itself was still one shared Redis. `FOREIGN_PROFILE_PREFIXES` stops
+their sessions entering ours, but it could not stop the reverse: the moment this
+project's Chrome extension posted a cookie, it landed in db 0, and anything with
+read access to db 0 could read it.
 
 Confirmed the same day this filter shipped: `pinterest-apify` has its own export
 path (`browsers/identities.py::export()`) that pulls **every** profile in
@@ -165,25 +198,8 @@ path (`browsers/identities.py::export()`) that pulls **every** profile in
 local JSON file on its own disk. This project's `profile_ldu6ypke8` and
 `profile_p5ewxsodn` were found sitting exported there, dated 2026-08-20. The
 shared database was never a passive fact — something on the other side actively
-reads and persists whatever lands in it.
+read and persisted whatever landed in it.
 
-**A data-layer filter cannot close that.** Only a database the other project has
-no credentials to can.
-
-**Done, 2026-08-25 — but the other direction from what was planned.** The original
-plan here was to move THIS project onto a new Redis + Go server and re-point the
-Chrome extension. Instead, `pinterest-apify` moved itself: it now runs its own
-`pinterest-redis` container on port 6380, and its own `.env` points `REDIS_URL`
-there. This project's `go-api`, Chrome extension and db 0/db 1 setup are
-**completely unchanged** — no access-layer edit was needed at all, since the
-extension only ever wrote cookies; it never depended on anything from
-`pinterest-apify`'s side.
-
-db 0 (port 6379) is now this project's alone in practice. It is not renamed or
-reconfigured — still `redis://…:6379/0`, still mirrored into db 1 — because
-retiring that mirror is a separate decision (see ROADMAP.md's design notes) and
-the mirror costs nothing to keep as a safety net if sharing ever resumes.
-
-Verified after their migration: their 7 `ads_*` jars, last written **before** the
-cutover, were confirmed abandoned (heartbeats had stopped advancing) and purged
-from db 0. Nothing currently writes `ads_*` entries into db 0 any more.
+**A data-layer filter alone could not close that. Only a database the other
+project has no credentials to can — the full-separation state already described
+at the top of this document.**
