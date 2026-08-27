@@ -39,9 +39,11 @@ and `.env` already exist.
 **Everything is a module**, run from the repo root; never `python path/to/file.py`.
 
 **Check the vault before any live run.** Sessions come from a Redis vault filled
-by a Chrome extension, not from `.env`. This project reads its own database
-(db 1); `core/vault_mirror.py` copies from the shared one, so a second project
-sharing the browser cannot disturb these sessions and vice versa (D-33).
+by a Chrome extension, not from `.env`. This project reads db 0 directly — the
+only database it uses (D-49). It used to mirror a shared db 0 into a private
+db 1 to keep `pinterest-apify` from disturbing its sessions (D-33); that
+project has since moved to its own separate Redis, so the mirror had nothing
+left to defend against and was retired.
 
 ### The things you will actually run
 
@@ -95,7 +97,7 @@ Re-audits which Etsy SERP filters can be believed. **9 of 12 currently cannot.**
 ```bash
 .venv/Scripts/python.exe -m core.test_graph_db
 ```
-One of **59 offline suites** — 1,596 assertions, no network required.
+One of **57 offline suites** — 1,528 assertions, no network required.
 
 `pinterest/tests/` holds 5 further suites that are **live** (their docstrings say so):
 they call the real Pinterest API, so their counts move with session state and they
@@ -192,7 +194,7 @@ check before trusting a verdict that sits close to one.
 | `docs/MCP.md` | tutorial: wiring the MCP server into Claude / Antigravity, and where DeepSeek belongs |
 | `docs/UI_GUIDE.md` | tutorial: the three UI tiers — static screens, interactive app, live server |
 | `ROADMAP.md` | what's missing today, and design notes for a future listed-MCP/SaaS version |
-| `docs/VAULT_SEPARATION.md` | why this project reads Redis db 1, and what that guarantees |
+| `docs/VAULT_SEPARATION.md` | why this project and `pinterest-apify` no longer share a Redis, and the retired mirror that bridged the gap along the way |
 | `docs/SESSION_LAYER_FIX.md` | the four session-layer gaps and how they were closed |
 | `docs/HOW_WE_WORK.md` | the three seats and the loop |
 | `docs/market_map/` | per-platform endpoint reference and what each signal is worth |

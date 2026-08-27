@@ -123,13 +123,6 @@ def analyze(term: str, product_type: str = "personalized"):
     and returns the fresh cockpit.
     """
     from core import vault_status as vs
-    # A stale db-1 mirror reads as an empty vault (D-33); sync before judging, or a
-    # live analyze would refuse while Chrome is beaming fine cookies into db 0.
-    try:
-        from core.vault_mirror import sync
-        sync()
-    except Exception:
-        pass
     try:
         report = vs.scan(("etsy", "etsy_private"))
     except Exception as e:
@@ -182,11 +175,6 @@ def analyze(term: str, product_type: str = "personalized"):
 def health():
     """Is the server up, and can it reach live sessions if asked?"""
     from core import vault_status as vs
-    try:
-        from core.vault_mirror import sync
-        sync()
-    except Exception:
-        pass
     try:
         report = vs.scan()
         vault = {p: len(r["usable"]) for p, r in report.items()}

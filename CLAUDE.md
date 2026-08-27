@@ -45,26 +45,21 @@ fail (S-2):
 .venv/Scripts/python.exe -m core.vault_status
 ```
 
-🔒 **This project reads Redis db 1, not db 0** (separated 2026-08-19). db 0 is the
-**shared** vault the extension + Go server write to, and which the `pinterest-apify`
-project also reads. `core/vault_mirror.py` copies it one-way into db 1 so our
-evictions, prunes and leases can never touch their sessions. **Anything that judges
-db 1 must sync first** — `preflight` and `vault_status` both do; a copy older than
-300s reads as an empty vault. Full detail: `docs/VAULT_SEPARATION.md`.
+🔒 **This project reads Redis db 0 — the only database it uses** (collapsed
+2026-08-26, D-49). It used to read a private db 1, mirrored one-way from the
+shared db 0 (D-33, separated 2026-08-19) so its evictions, prunes and leases
+could never touch `pinterest-apify`'s sessions. That project has since moved
+to its own fully separate Redis (`pinterest-redis`, port 6380) and no longer
+touches db 0 at all, so the mirror had nothing left to defend against —
+`core/vault_mirror.py` is deleted, and every client reads db 0 directly, live,
+with no copy in between. Full detail: `docs/VAULT_SEPARATION.md`.
 
-⚠️ **A stale mirror does NOT fail cleanly — it 401s mid-run** (diagnosed 2026-08-21).
-Nothing refreshes db 1 on its own. `Scheduler.run_job` gets the refresh free because
-it preflights, so the **07:00 scheduled run is fine**; a **direct/CLI run is not**.
-Measured: db 0 fresh at 125s while db 1 held a copy **7,473s** old. The fresh profile
-then ages past the 300s eviction line, the pool falls back to `private_seller_1` —
-which has *no heartbeat and is never evicted by design* (D-35) — and that jar's
-cookies are old enough to return **401**. Symptom to recognise: `vault_status` says
-green, and a run minutes later dies on 401.
-
-**So call `preflight.require(...)` in any entry point that builds a live client.**
-`discover`, `filter_trust` and `master_arbitrage` now do; `calendar_engine`,
-`cockpit` and `learn` are DB-only and need nothing. `core/test_preflight.py` pins
-this — it greps for a live client and demands a matching preflight.
+⚠️ **The mirror used to go stale silently and 401 mid-run** (diagnosed
+2026-08-21, root cause of the "vault_status says green, a run 401s minutes
+later" pattern) — this entire failure class no longer exists, because there
+is no second copy left to go stale. `preflight.require(...)` still gates every
+live entry point (`discover`, `filter_trust`, `master_arbitrage`), but it now
+only checks db 0 itself — it never syncs.
 
 ⚠️ **`git checkout <old-branch>` can DESTROY `.env`** (happened 2026-08-25). `.env`
 is gitignored *now*, but it was **tracked** in old `main` (`f27d36e`) and `git rm`'d
@@ -86,8 +81,8 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 
 ```bash
 # Full verification — run before every commit
-.venv/Scripts/python.exe -m core.test_graph_db          # + the other 58 suites
-# 59 OFFLINE suites, 1,596 assertions, no network required.
+.venv/Scripts/python.exe -m core.test_graph_db          # + the other 56 suites
+# 57 OFFLINE suites, 1,528 assertions, no network required.
 # ⚠️ pinterest/tests/ holds 5 more that are LIVE — their own docstrings say
 # "Live verification". They hit real Pinterest, their assertion counts VARY
 # with session state, and they print no summary when the vault is down. Never
@@ -225,7 +220,7 @@ account costs the business.
 | **The DISCOVER front door works** | `trending-search-terms-v2` returns rising terms with real volumes and no quota cost. Only **7** taxonomy ids are populated (1, 66, 199, 323, 891, 1429, 1633) — several plausible ones (Jewelry, Clothing, Craft Supplies) return nothing. 28 candidates total. |
 | **Pinterest momentum joins on the TERM, never on the stored featured topics** (D-44) | The obvious cheap join — matching Discover's pool against `trend_observations`' 84 Pinterest topics — scores **0 exact and 0 containment matches** against 1,333 Etsy terms. Editorial phrases ("Apple-Themed Preschool Activities") vs product keywords, the identical mismatch that broke the calendar. `/metrics/` asks Pinterest about the pool's OWN terms directly, one batched call. Pinterest DROPS terms it does not track (asked 7, got 3) — absent, not fading. `100.01` is Pinterest's own "10,000%+" display cap, not a real value. |
 | **POD's ceiling comes from page one, not the API's price band** (D-46) | `results-data`'s median band ($11.70–$14.30 on `personalized baby blanket`) is market-wide; the 20 listings that actually rank charge a median of **$25.19** — free in the same response. Pricing the margin floor off the band computes a $5.21 ceiling (POD near-impossible); off page one, $12.69 (plausible). Never returns "profitable" — Printify's catalog has no variant price, so the output is a ceiling plus a handoff. |
-| **This vault does not mirror `pinterest-apify`'s sessions** (D-47) | Measured: 7 of 9 pinterest profiles in this pool were their AdsPower jars (`ads_<user_id>`), not this project's extension captures (`profile_<random>`). Their own `identities.py::export()` pulls every profile in the shared pool with no ownership check and writes raw cookies to disk — the shared db 0 was never passive. `FOREIGN_PROFILE_PREFIXES` skips and purges anything not ours; db 0 itself is still never written by this project. Full physical separation (a second Redis, a second Go server) is the next step — see ROADMAP.md. |
+| **This vault does not mirror `pinterest-apify`'s sessions** (D-47, historical) | Measured 2026-08-25: 7 of 9 pinterest profiles in this pool were their AdsPower jars (`ads_<user_id>`), not this project's extension captures (`profile_<random>`). Their own `identities.py::export()` pulls every profile in the shared pool with no ownership check and writes raw cookies to disk — the shared db 0 was never passive. `FOREIGN_PROFILE_PREFIXES` skipped and purged anything not ours. Full physical separation followed the next day (their own separate Redis, port 6380), and once nothing shared db 0 any more the mirror itself — including this filter — was retired (D-49). This project now reads db 0 directly. |
 
 ---
 
@@ -277,7 +272,7 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. 59 offline suites, 1,596 assertions (+5 live
+request cache · run log · guards. 57 offline suites, 1,528 assertions (+5 live
 pinterest suites that need a session).
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
@@ -287,19 +282,24 @@ origin sampling (`etsy/analytics/sourcing.py`) · POD costing and both profit
 inverses (`etsy/analytics/pod_costing.py`) · Printify client
 (`etsy/api/printify/`) · LEARN outcome capture (`etsy/analytics/learn.py`) ·
 verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
-(`core/vault_mirror.py`) · session-layer hardening · **the Calendar screen**
-(`etsy/ui/calendar_page.py`, + `.ics` export) · saturation recovered from listings
-(`etsy/analytics/card_saturation.py`) · **17 MCP tools** (`mcp_server/`) ·
-the read server (`etsy/server/app.py`) · the interactive app (`etsy/ui/app_page.py`) ·
-a Docker service for the read server (`docker-compose.yml`, `etsy-server`) ·
-the intent gate (`etsy/analytics/discover.py::confirm_intent`, D-43) ·
-Pinterest momentum as a third axis (`etsy/analytics/momentum.py`, D-44) ·
-Etsy's own seasonal curve, recovered from a response every caller discarded
-(`etsy/analytics/seasonality.py`, D-45) · POD price-reality and viability
-(`etsy/analytics/pod_check.py`, `/pod`, D-46) · this vault no longer mirrors
-`pinterest-apify`'s sessions, even from the shared database (`core/vault_mirror.py`
-`FOREIGN_PROFILE_PREFIXES`, D-47).
-**1,596 assertions** across 59 offline suites, plus 5 live pinterest suites.
+(`core/vault_mirror.py`, since retired — D-49) · session-layer hardening ·
+**the Calendar screen** (`etsy/ui/calendar_page.py`, + `.ics` export) ·
+saturation recovered from listings (`etsy/analytics/card_saturation.py`) ·
+**17 MCP tools** (`mcp_server/`) · the read server (`etsy/server/app.py`) ·
+the interactive app (`etsy/ui/app_page.py`) · a Docker service for the read
+server (`docker-compose.yml`, `etsy-server`) · the intent gate
+(`etsy/analytics/discover.py::confirm_intent`, D-43) · Pinterest momentum as a
+third axis (`etsy/analytics/momentum.py`, D-44) · Etsy's own seasonal curve,
+recovered from a response every caller discarded (`etsy/analytics/seasonality.py`,
+D-45) · POD price-reality and viability (`etsy/analytics/pod_check.py`, `/pod`,
+D-46) · foreign-session filtering while db 0 was still shared, since moot —
+`pinterest-apify` moved to its own Redis the next day (D-47).
+
+**Added 2026-08-26:** the db-0/db-1 mirror is gone. `pinterest-apify` finished
+moving to its own separate Redis (port 6380), so `core/vault_mirror.py` had
+nothing left to defend against and was deleted along with every call site —
+this project now reads db 0 directly, live, everywhere (D-49).
+**1,528 assertions** across 57 offline suites, plus 5 live pinterest suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

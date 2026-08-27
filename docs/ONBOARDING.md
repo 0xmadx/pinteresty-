@@ -70,7 +70,7 @@ wrong; one live call settled it in seconds.
 
 | Trap | Reality |
 |---|---|
-| **The vault is db 1, and a stale copy reads as EMPTY** | This project reads its own Redis database; `vault_mirror` copies from the shared one (D-33). `HEARTBEAT_MAX_AGE` is 300s, so a copy five minutes old shows every profile stale and the vault empty while Chrome is beaming fine cookies. **Anything that judges db 1 must sync first** — `preflight` and `vault_status` do. A direct API call from an ad-hoc script does not. |
+| **A profile is purged after 300s with no heartbeat** | `HEARTBEAT_MAX_AGE` in `core/vault_status.py`. This used to be compounded by a private db-1 mirror that could itself go stale between syncs (D-33) — retired 2026-08-26 (D-49) once `pinterest-apify` moved off the shared db 0 this project reads directly now. One less layer to go stale. |
 | **A signed-out jar still has 30+ cookies** | The vault now checks for `session-key-www` (Etsy) / `_auth` (Pinterest), not merely that cookies exist. Without that, requests go out anonymous and Etsy answers with plausible PUBLIC data — the run "succeeds" while collecting the wrong thing. |
 | **Two Redis servers share port 6379** | `localhost` reaches a stale native one; the real vault is the Docker container at the address in `.env`. If the vault suddenly reads empty, this is the first suspect. |
 | **snake_case vs camelCase** | Etsy Private returns snake_case. Seven modules read camelCase and got `None` for the project's whole life. Always go through `parse_results_data` / `parse_term_summaries`. |
@@ -90,7 +90,7 @@ Four checks, in this order:
 
 1. **Does the function exist?** A capability is real when it is a function, not a
    paragraph. Count functions.
-2. **Does a test cover it?** 1,596 assertions across 59 offline suites (the 5
+2. **Does a test cover it?** 1,528 assertions across 57 offline suites (the 5
    live pinterest suites are separate and vary run to run). A test
    that fails in a way you did not predict has found a real bug — twice this week.
 3. **What does the wire say?** The vault is usually green; probing is faster and

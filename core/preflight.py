@@ -109,25 +109,6 @@ def require(*platforms, clean=True, config=None):
     """
     config = config or ScraperConfig()
 
-    # Pull the latest sessions from the SHARED vault into this project's private
-    # one before judging whether we have any. Without this the separation would
-    # trade one problem for a worse one: our pool would silently go stale while
-    # the extension kept beaming fresh cookies into a database we no longer read,
-    # and preflight would refuse a run that should have gone ahead.
-    #
-    # Deliberately non-fatal. The mirror being unavailable is not the same as
-    # having no session — we may hold a perfectly good copy already — so a failure
-    # here is reported and the real check below decides.
-    # The report stays keyed by platform and nothing else — a caller iterating it
-    # must never trip over a bookkeeping key. The mirror's own result is available
-    # from core.vault_mirror.sync() for anyone who wants it.
-    try:
-        from core.vault_mirror import sync
-        sync()
-    except Exception as exc:
-        print(f"[preflight] could not refresh from the shared vault: {exc}")
-        print("    Continuing with the copy we already hold.")
-
     client = redis.Redis.from_url(config.REDIS_URL, decode_responses=True)
     try:
         client.ping()

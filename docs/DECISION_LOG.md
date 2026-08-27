@@ -1185,3 +1185,66 @@ a thin wrapper. The property that matters is which CODE PATH runs, so
 `mcp_server/test_server.py` asserts on the source directly (same pattern as
 `core/test_preflight.py`'s D-33 sync check): `discover()`'s body must import
 `app_data.build_discovered` and must not construct `MarketDatabase()` itself.
+
+## D-49 — The db-0/db-1 mirror is retired; this project reads one database
+
+**Date:** 2026-08-26
+
+**Context.** D-33 built `core/vault_mirror.py` because `pinterest-apify` shared
+Redis db 0 with this project — a mirror into a private db 1 meant our evictions
+and prunes could never reach their sessions, or theirs ours. D-47 hardened that
+mirror further, filtering their AdsPower profiles out on the way in. Both were
+solving a real problem at the time. That problem is now gone: `pinterest-apify`
+has moved to its own, fully separate Redis (`pinterest-redis`, port 6380) and no
+longer touches db 0 at all — the physical separation D-47 marked "not chosen yet"
+was completed outside this session, on the other project's side. With no shared
+database left, the mirror was defending against a risk that no longer exists,
+at real ongoing cost: a second copy that only refreshes when something remembers
+to call `sync_if_stale()`, and — confirmed live below — silently drifts stale
+between calls. That drift is what actually bit this project three separate
+times this session (`CLAUDE.md`'s "3-day incident pattern": `vault_status` green,
+a live run 401s minutes later), always traced back to db 1 holding a copy older
+than db 0's real state.
+
+**Chosen.** Deleted `core/vault_mirror.py` and its test file outright, rather
+than leaving it dormant — dead code that constructs Redis connections is a
+liability even unused, and the project already prunes hard for exactly this
+reason (see `git log` around branch cleanup, same session). Removed every call
+site: the `sync_if_stale()` call in each of the three live API client
+constructors (`etsy/api/private/api.py`, `etsy/api/public/api.py`,
+`pinterest/endpoints/api.py`), `core/preflight.py::require()`'s sync-before-judge
+block, `core/vault_status.py::main()`'s `separation_check()` and its own sync
+block, `mcp_server/server.py::_sync_mirror()` and its two call sites, and the two
+`vault_mirror` imports in `etsy/server/app.py` (`/api/analyze`, `/api/health`).
+`core/settings.py`'s `REDIS_URL` default moved from
+`redis://localhost:6379/1` to `redis://localhost:6379/0` — the only vault now —
+and `.env`, `.env.example` and `docker-compose.yml`'s three `REDIS_URL` lines
+(go-api was already on db 0; python-scraper and etsy-server moved to match) were
+updated the same way, with the `VAULT_SOURCE_URL` variable deleted everywhere it
+appeared.
+
+**`core/test_preflight.py`'s D-33 sync-coverage sweep — the one D-48 just
+described — no longer tests a real property**, since nothing syncs any more.
+Replaced it with a narrower regression: a tree-wide sweep asserting no module
+still imports `vault_mirror` or calls `sync_if_stale()`/`_sync_mirror()`, so a
+reintroduced reference fails loudly in the offline suite rather than raising
+`ModuleNotFoundError` the first time some code path actually executes it. (The
+first version of this check also matched the plain-English mention of
+`vault_mirror.py` inside `core/settings.py`'s own historical comment — tightened
+to match import/call syntax specifically, since a prose mention of a retired
+module's name is exactly the kind of historical marker this log and `CLAUDE.md`
+keep on purpose.)
+
+**Verified live, not just offline.** Before this change, `vault_status` against
+the mirrored db 1 reported **0 usable `etsy`, 0 usable `pinterest`** — profiles
+last-heartbeat 938,240s and 1,105,609s ago (10+ days), because nothing had
+called `sync()` recently enough to refresh them. Pointing `REDIS_URL` straight
+at db 0 (no code change, same run) reported **1 usable `etsy`, 2 usable
+`etsy_private`, 1 usable `pinterest` — vault is green**, and `core.preflight`
+passed cleanly against the same database with zero mirror code in the path. All
+57 offline suites (unchanged count — `core/test_vault_mirror.py` deleted,
+`core/test_preflight.py` rewritten in place) pass.
+
+**Not touched:** `docs/VAULT_SEPARATION.md`, `CLAUDE.md` and `README.md` still
+describe the db-1 mirror as current fact as of this entry — updating them is the
+next step, tracked immediately below in this same work.

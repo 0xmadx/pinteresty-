@@ -140,7 +140,6 @@ prevent confidently reporting a number that is not true.
 | Client shows 0 tools, or fails to start the server | `command` path wrong, or venv not built | Run the verify snippet above by hand; fix the path in the client's MCP config |
 | Tool schemas require odd params like `a`/`kw` | Was a real bug once (`_guarded` decorator lost the signature) — regression-tested in `mcp_server/test_server.py` | Run that test; if it fails, the fix is `functools.wraps` on the wrapper |
 | Every live tool returns `ready: false` | Empty session vault | Open Chrome with the extension logged in so it re-posts cookies to the vault; then `vault_status` again |
-| `ready: true` from `vault_status` but a live tool still 503s | The db-1 mirror is >300s stale (D-33) | Run `.venv/Scripts/python.exe -m core.vault_mirror` once, or just retry — live tools sync the mirror themselves before checking |
 | A number looks off | Check `basis` on that field first | `provisional`/`default`/`bound` are not the same claim as `measured` — the tool is telling you, not lying |
 | Antigravity/Claude Desktop can't find `config/`, `.env`, or the database | `cwd` missing or wrong in the MCP config | `cwd` must be the repo root, exactly as in the JSON block above |
 

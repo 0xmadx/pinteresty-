@@ -11,13 +11,6 @@ from etsy.analytics import product_type
 
 class EtsyPublicAPI:
     def __init__(self, cache=None):
-        # Refresh the db-1 mirror before this client draws a session (D-33).
-        # Throttled, best-effort. Without it a lagging mirror reads as an
-        # EMPTY pool while the extension is beaming fine — the client is the
-        # one place every entry point passes through, so it belongs here
-        # rather than at ~26 call sites.
-        from core.vault_mirror import sync_if_stale
-        sync_if_stale()
         self.config = ScraperConfig()
         self.session = SessionManager(self.config)
         # Shared cache-with-TTL, replacing the two hand-rolled file caches this client

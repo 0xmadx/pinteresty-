@@ -12,15 +12,12 @@ class ScraperConfig:
     PROXY_URL: str = os.environ.get("PROXY_URL", "") # Format: http://user:pass@host:port
     
     # Redis Settings (replaces .env for cookies)
-    # db 1, NOT db 0. db 0 is the SHARED vault the Chrome extension and Go cookie
-    # server write to, and which the pinterest-apify project also reads. This project
-    # reads a private copy (see core/vault_mirror.py) so its evictions, prunes and
-    # leases cannot reach the other project's sessions.
-    #
-    # The default matters as much as the .env value: if it pointed at db 0, a
-    # missing or unloaded .env would silently re-merge the two projects and every
-    # isolation guarantee would quietly stop holding, with nothing failing to say so.
-    REDIS_URL: str = os.environ.get("REDIS_URL", "redis://localhost:6379/1")
+    # db 0. This project used to mirror a shared db 0 into a private db 1
+    # (core/vault_mirror.py, D-33) because pinterest-apify also read db 0. That
+    # project now runs its own separate Redis (pinterest-redis, port 6380) and
+    # never touches this database, so the mirror had nothing left to defend
+    # against and was retired (D-49). This is the only vault now.
+    REDIS_URL: str = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
     # Target site
     BASE_URL: str = "https://www.etsy.com"

@@ -116,10 +116,9 @@ stops it.
 **Only `POST /api/analyze/{term}` touches the network.** Everything else is a
 thin read over `etsy/ui/app_data.py` — the exact same functions the static
 tiers use, so the server cannot drift from the files (D-41). It gates on the
-session vault first (`vault_mirror.sync()` then `vault_status.scan()`) and
-returns a clean `503` with a fix message if the vault is empty, rather than
-hanging — an empty pool is the one failure mode this whole codebase is built
-to never silently swallow.
+session vault first (`vault_status.scan()`) and returns a clean `503` with a
+fix message if the vault is empty, rather than hanging — an empty pool is the
+one failure mode this whole codebase is built to never silently swallow.
 
 **Reach it from your phone** on the same network: set `HOST=0.0.0.0` before
 starting —

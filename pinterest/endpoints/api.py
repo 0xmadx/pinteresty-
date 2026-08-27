@@ -84,13 +84,6 @@ class PinterestTrendsAPI:
         return get_pinterest_cookies()
 
     def __init__(self, cache=True, delay=0.6, store=True, cookies=None):
-        # Refresh the db-1 mirror before drawing a session (D-33). Throttled and
-        # best-effort: a lagging mirror otherwise reads as an EMPTY pool while the
-        # extension is beaming fine, which is how "0 usable pinterest sessions"
-        # gets reported for a vault that actually holds eight.
-        from core.vault_mirror import sync_if_stale
-        sync_if_stale()
-
         # D-28 moved sessions into the Redis vault, but only the Etsy tier was
         # migrated: this class still called get_pinterest_cookies(), which reads
         # PINTEREST_COOKIES from .env — a variable nothing writes any more. So the

@@ -167,115 +167,30 @@ would = preflight.hygiene(fake, dry_run=True)
 check("dry run reports the removal", len(would) == 1, would)
 check("dry run deletes nothing", "cookie:etsy:hollow" in fake.hashes)
 
-# --- every live entry point must refresh the mirror before it runs -----------------
-# This project reads a MIRROR of the shared vault (D-33) and nothing refreshes it on
-# its own. `Scheduler.run_job` gets the refresh for free because it calls preflight,
-# but a CLI entry point does not — and a stale mirror does not fail cleanly. The
-# fresh profile ages past the eviction threshold, the pool falls back to the
-# heartbeat-less seller profile (never evicted by design, D-35), and that returns a
-# 401 partway through a pipeline. Measured 2026-08-21: db0 fresh at 125s while db1
-# held a copy 7,473s old, and every direct run 401'd while `vault_status` — which
-# syncs — reported the vault green minutes earlier.
-import pathlib  # noqa: E402
+# --- no live client or entry point references the retired mirror -----------------
+# core/vault_mirror.py (D-33) was removed once pinterest-apify moved to its own
+# Redis and there was nothing left to mirror from (D-49). This is the one guard
+# worth keeping from that era: a stray `sync_if_stale()`/`vault_mirror import`
+# reappearing anywhere would be dead code pointing at a module that no longer
+# exists, and would raise ModuleNotFoundError the first time that path executed.
 import re  # noqa: E402
+from pathlib import Path  # noqa: E402
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
-LIVE_CLIENTS = re.compile(r"EtsyPrivateAPI\(\)|EtsyPublicAPI\(\)|PinterestTrendsAPI\(")
-
-# ⚠️ This list was ONCE three CLI files, and that hand-maintained list is exactly
-# why the MCP server shipped without a sync (found 2026-08-25 when the agent
-# reported "0 usable sessions" to the operator while Chrome was beaming fine —
-# the mirror lagged 131s, sessions expire at 300s, so our copy aged out first).
-# A list you have to remember to extend is not a guard. `test_every_live_entry_point`
-# below walks the tree instead; these three stay as named regressions.
-for module in ["etsy/analytics/discover.py",
-               "etsy/analytics/filter_trust.py",
-               "etsy/engines/master_arbitrage.py",
-               "mcp_server/server.py"]:
-    source = (ROOT / module).read_text(encoding="utf-8")
-    name = module.rsplit("/", 1)[-1]
-    check(f"{name} builds a live client (so it needs a session)",
-          bool(LIVE_CLIENTS.search(source)), name)
-    check(f"{name} preflights first, refreshing the mirror",
-          "from core.preflight import require" in source
-          or "vault_mirror import sync" in source,
-          f"{name} instantiates a live API client without refreshing the mirror — a "
-          f"stale copy will surface as a 401 mid-run, or as a false 'no sessions'")
-
-# --- the guard that does NOT depend on remembering to update a list ---------------
-# Walk every module that builds a live client and demand it refreshes the mirror
-# first, by whatever route. Anything genuinely session-free is listed as exempt
-# with a reason, so an addition here is a deliberate act rather than an omission.
-#
-# The rule is narrower than "constructs a client", and deliberately so. A library
-# reached THROUGH the scheduler inherits `run_job`'s preflight; it is only a
-# module you can run DIRECTLY that can start a live call against an unsynced
-# mirror. So the guard is: builds a live client AND has its own __main__.
-EXEMPT = {
-    # The access layer and the sync itself — refreshing here would recurse.
-    "core/session_manager.py": "IS the access layer",
-    "core/cookie_vault.py": "IS the access layer",
-    "core/vault_mirror.py": "IS the mirror",
-    "core/vault_status.py": "syncs internally; see separation_check",
-    "core/preflight.py": "IS the sync",
-}
-CONSTRUCTS_LIVE = re.compile(r"EtsyPrivateAPI\(\)|EtsyPublicAPI\(\)|PinterestTrendsAPI\(")
-HAS_MAIN = re.compile(r"^if __name__ == [\"']__main__[\"']", re.M)
-REFRESHES = re.compile(r"from core\.preflight import require|vault_mirror import sync"
-                       r"|preflight\.require|_sync_mirror|require\(")
-
-runnable, missing = [], []
+ROOT = Path(__file__).resolve().parent.parent
+# Matches real import/call syntax only — not a prose mention like "core/vault_mirror.py
+# (D-33)" in a historical comment, which several files keep on purpose.
+STALE_REF = re.compile(r"vault_mirror\s+import|import\s+vault_mirror"
+                       r"|sync_if_stale\s*\(|_sync_mirror\s*\(")
+offenders = []
 for path in ROOT.rglob("*.py"):
     rel = path.relative_to(ROOT).as_posix()
-    if any(part in rel for part in (".venv", "__pycache__", "/test_", "tests/")):
-        continue
-    if rel in EXEMPT:
+    if any(part in rel for part in (".venv", "__pycache__")) or rel == "core/test_preflight.py":
         continue
     src = path.read_text(encoding="utf-8", errors="replace")
-    if CONSTRUCTS_LIVE.search(src) and HAS_MAIN.search(src):
-        runnable.append(rel)
-        if not REFRESHES.search(src):
-            missing.append(rel)
+    if STALE_REF.search(src):
+        offenders.append(rel)
 
-check("the sweep actually found runnable live entry points to check",
-      len(runnable) >= 3, runnable)
-
-# 26 of these had no sync, and editing 26 files would have left the 27th broken.
-# The fix went into the three API CLIENT constructors instead — the one place every
-# entry point passes through — so this now asserts the property holds, by whatever
-# route, rather than that each file remembered to do it.
-CLIENTS = ["etsy/api/private/api.py", "etsy/api/public/api.py",
-           "pinterest/endpoints/api.py"]
-for client in CLIENTS:
-    src = (ROOT / client).read_text(encoding="utf-8", errors="replace")
-    check(f"{client.split('/')[-2]}/{client.split('/')[-1]} syncs the mirror on construction",
-          "sync_if_stale" in src,
-          f"{client} builds sessions without refreshing the mirror — every entry "
-          f"point that uses it inherits a possibly-stale pool")
-
-check("so a runnable entry point without its own sync is still covered",
-      not missing or all((ROOT / c).read_text(encoding="utf-8",
-                                              errors="replace").count("sync_if_stale")
-                         for c in CLIENTS),
-      f"uncovered: {missing}")
-
-# The throttle matters: a client built in a loop must not re-sync every time.
-from core import vault_mirror as _vm  # noqa: E402
-check("the sync is throttled, not per-construction",
-      _vm.MAX_MIRROR_AGE >= 60, _vm.MAX_MIRROR_AGE)
-check("and the throttle window is shorter than the 300s eviction line",
-      _vm.MAX_MIRROR_AGE < 300, _vm.MAX_MIRROR_AGE)
-# If the window met or exceeded 300s the mirror could still age past eviction
-# between syncs, which is the whole failure this is meant to close.
-
-# And the guard that makes the above meaningful: require() must actually sync.
-src = (ROOT / "core" / "preflight.py").read_text(encoding="utf-8")
-check("preflight.require refreshes from the shared vault before judging",
-      "from core.vault_mirror import sync" in src and "sync()" in src)
-check("and treats a mirror failure as non-fatal, not as an empty pool",
-      "Continuing with the copy we already hold" in src)
-# A mirror that cannot be reached is not the same as having no session — we may
-# already hold a good copy, so the real check decides.
+check("no module still imports or calls the retired vault_mirror", not offenders, offenders)
 
 print(f"{passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)
