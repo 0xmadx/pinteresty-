@@ -114,8 +114,37 @@ def check_one_read_layer():
           "MarketDatabase()" not in body, body[:200])
 
 
+def check_deep_dive_wiring():
+    """deep_dive_keyword must preflight both platforms, and the engine it wraps
+    must actually return its result.
+
+    HybridArbitrageEngine.run() had no return statement on its success path
+    (D-50) -- only its own CLI ever called it, and only ever read the JSON file
+    it wrote rather than using the return value. A behavioural test would need a
+    live, several-minute run to catch a regression here; both properties are
+    facts about the source, so that is what gets asserted instead.
+    """
+    src = open(os.path.join(REPO, "mcp_server", "server.py"), encoding="utf-8").read()
+    start = src.index("\ndef deep_dive_keyword(")
+    end = src.index("\n@mcp.tool()", start)
+    body = src[start:end]
+    check("deep_dive_keyword preflights etsy AND etsy_private before the engine runs",
+          '_preflight(("etsy", "etsy_private"))' in body, body[:200])
+    check("deep_dive_keyword wraps HybridArbitrageEngine",
+          "HybridArbitrageEngine" in body, body[:200])
+
+    engine_src = open(os.path.join(REPO, "etsy", "engines", "master_arbitrage.py"),
+                      encoding="utf-8").read()
+    run_start = engine_src.index("\n    def run(self):")
+    check("HybridArbitrageEngine.run() returns its payload on the success path",
+          "return final_payload" in engine_src[run_start:],
+          "run() building final_payload but never returning it means every "
+          "programmatic caller (MCP included) gets None back on success")
+
+
 def main():
     check_one_read_layer()
+    check_deep_dive_wiring()
     return asyncio.run(run())
 
 

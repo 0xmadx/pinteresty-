@@ -143,8 +143,10 @@ seriously, split the product along that line first.
 3. **Rate limiting and cost control on live tools**: `analyze_keyword`,
    `sourcing_profile`, `cheap_competitors`, `pod_quote` all spend real
    requests against Etsy/Printify. A public listing needs a quota per tenant,
-   or one noisy user burns another tenant's session budget.
-4. **A tool manifest**: the 17 tools already carry docstrings good enough to
+   or one noisy user burns another tenant's session budget. `deep_dive_keyword`
+   (D-50) is the sharpest version of this problem — dozens of requests and
+   several minutes per call, not one or two.
+4. **A tool manifest**: the 18 tools already carry docstrings good enough to
    double as a listing description (`vault_status` — "Can this system make
    live calls right now? Check FIRST" — is already written for an unfamiliar
    reader, not just this operator). Minimal extra work here.

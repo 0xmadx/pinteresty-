@@ -97,7 +97,7 @@ Re-audits which Etsy SERP filters can be believed. **9 of 12 currently cannot.**
 ```bash
 .venv/Scripts/python.exe -m core.test_graph_db
 ```
-One of **57 offline suites** — 1,528 assertions, no network required.
+One of **57 offline suites** — 1,531 assertions, no network required.
 
 `pinterest/tests/` holds 5 further suites that are **live** (their docstrings say so):
 they call the real Pinterest API, so their counts move with session state and they
@@ -115,7 +115,7 @@ go quiet when the vault is empty. The offline 58 are the gate.
                   └───────┬───────┘
                           │
      core/         session vault (Redis) · cache · run log · guards
-     mcp_server/   17 read-only tools for Claude / Antigravity
+     mcp_server/   18 read-only tools for Claude / Antigravity
      etsy/server/  optional FastAPI read API + live analysis (D-42)
 ```
 
@@ -128,7 +128,7 @@ go quiet when the vault is empty. The offline 58 are the gate.
 | `etsy/server/` | optional FastAPI read API (D-42) — `run_server.cmd` |
 | `core/` | sessions, database, cache, scheduler, guards, settings |
 | `pinterest/` | the Pinterest tier: `endpoints/` (client + wire reference), `pipelines/` |
-| `mcp_server/` | the agent-facing surface — 17 tools, wired by `.mcp.json` |
+| `mcp_server/` | the agent-facing surface — 18 tools, wired by `.mcp.json` |
 | `cookie_server_go/`, `chrome_extension/` | **the access layer.** Read, never extend. |
 | `config/` | `settings.json`, `filter_trust.json`, scheduler state |
 | `docs/` | see `docs/ONBOARDING.md` first |
@@ -167,7 +167,7 @@ go quiet when the vault is empty. The offline 58 are the gate.
 inverses · survivor bound · gap analysis with a filter-trust gate and working
 demand-in-bracket · sourcing and lead time · POD costing · scoring with a
 discrimination check · scheduler running daily · verdict change log · LEARN
-scaffold · 17 MCP tools · the interactive app · the optional read server.
+scaffold · 18 MCP tools · the interactive app · the optional read server.
 
 **Thin:** the data. Trend, listing and shop observations accumulate daily;
 keyword history covers 8 watched terms; **0 launches**. The machine is built and has

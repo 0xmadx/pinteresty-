@@ -1270,3 +1270,63 @@ convention as `vault_status --prune`'s backups) and `FLUSHDB`'d. Verified
 after: `vault_status` and `core.preflight` report the identical usable
 sessions as before the flush — proof db 1 was contributing nothing live,
 exactly as expected once no code reads it.
+
+## D-50 — `deep_dive_keyword` wires the BFS-crawl-plus-arbitrage engine into MCP
+
+**Date:** 2026-08-27
+
+**Context.** The operator pointed at `master_spider.py` — a top-level script, not
+part of any package — and asked why it had no MCP tool. It doesn't, but the more
+useful finding was what it actually is: a thin `ThreadPoolExecutor` wrapper that
+runs `MasterNicheFinder`'s BFS keyword-crawl across several seeds concurrently,
+last substantively touched in this project's very first infrastructure commit —
+before `core/preflight.py` existed. It still uses its own unbounded polling wait
+(`wait_for_minimum_profiles`: `while True: ... time.sleep(5)`), the exact hanging
+failure mode `mcp_server/server.py`'s own design rules single out as "the worst
+failure mode for an agent." It also only wraps the plain BFS crawl, not the
+richer `etsy/engines/master_arbitrage.py::HybridArbitrageEngine`, which wraps
+that same crawl AND adds the public-API gap/sourcing/arbitrage pass —
+`README.md` already documents *that* as the real "full sweep on a seed keyword"
+tool.
+
+So the real gap was broader than the one file named: **no MCP tool did a BFS
+crawl at all.** `analyze_keyword`, the closest existing tool, is one private
+call plus one public call — no recursion into related keywords, no scoring, no
+survivorship.
+
+**Chosen.** Added `deep_dive_keyword(seed, product_type, max_depth, max_nodes,
+cogs, shipping_cost, labor_minutes)`, wrapping `HybridArbitrageEngine` — not
+`master_spider.py`. Reasoning: an MCP client can already call a single-keyword
+tool repeatedly if it wants several, so `master_spider.py`'s only real
+differentiator (thread-pool concurrency across seeds) was the least valuable
+part to expose, and its unpreflighted wait was a defect to route around, not
+carry forward. `max_depth=1, max_nodes=5` defaults match the engine author's
+own `__main__` demo scale, keeping an unbounded-cost call from being the
+out-of-the-box behavior. Preflights on `("etsy", "etsy_private")` before
+starting, same as every other live tool here — this one more than any other,
+given a run can take several minutes once started.
+
+**A real bug found in the process, not invented for MCP's sake.**
+`HybridArbitrageEngine.run()` had no `return` statement on its success path —
+only ever called from its own CLI (`if __name__ == "__main__"`), which never
+used the return value, just read the JSON file the method wrote to disk. Any
+programmatic caller, MCP included, would have received `None` on a fully
+successful run and `None` on a "nothing cleared the profit gate" run
+indistinguishably. Added `return final_payload` (plus the report path) at the
+end — additive only, no existing behavior changes, since nothing previously
+read the return value.
+
+**Cost is real and stated plainly, not hidden behind a uniform "live" tag.**
+The engine spends roughly 41+ public requests per niche that clears the profit
+gate, with deliberate `time.sleep(1)` pacing between many of them — several
+minutes per call is normal, not a bug. `docs/MCP.md`'s tool table tags it
+`live, expensive` rather than the plain `live` every other network-touching
+tool gets, and its docstring says explicitly: call `analyze_keyword` or
+`discover` first, reach for this once a seed already looks worth the cost.
+
+**Verified:** `deep_dive_keyword`'s body preflights on both platforms before
+constructing the engine (checked directly, same source-inspection pattern
+`mcp_server/test_server.py` already used for D-41/D-48); all 57 offline
+suites still pass. Not verified live — a real run costs real requests and
+several minutes, and the point of this session's ask was the wiring, not a
+fresh keyword analysis.

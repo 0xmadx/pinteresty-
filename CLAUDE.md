@@ -82,7 +82,7 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 ```bash
 # Full verification — run before every commit
 .venv/Scripts/python.exe -m core.test_graph_db          # + the other 56 suites
-# 57 OFFLINE suites, 1,528 assertions, no network required.
+# 57 OFFLINE suites, 1,531 assertions, no network required.
 # ⚠️ pinterest/tests/ holds 5 more that are LIVE — their own docstrings say
 # "Live verification". They hit real Pinterest, their assertion counts VARY
 # with session state, and they print no summary when the vault is down. Never
@@ -229,7 +229,7 @@ account costs the business.
 | File | Answers |
 |---|---|
 | `docs/ONBOARDING.md` | **start here for a fresh session** — what is true, what is a trap |
-| `docs/MCP.md` | **tutorial**: wiring the MCP server (17 tools) into Claude Code/Desktop/Antigravity, the tool table, troubleshooting, and where DeepSeek is allowed to touch the system |
+| `docs/MCP.md` | **tutorial**: wiring the MCP server (18 tools) into Claude Code/Desktop/Antigravity, the tool table, troubleshooting, and where DeepSeek is allowed to touch the system |
 | `docs/UI_GUIDE.md` | **tutorial**: the three UI tiers (static screens, interactive app, live server) — what each is for, how to launch it, when to reach for which |
 | `ROADMAP.md` | what's still missing (single-operator scope) + design-only notes for a future listed-MCP/SaaS version — read before assuming multi-tenancy is a small change |
 | `docs/architecture/09_build_plan.md` | **what we are building and in what order** |
@@ -272,7 +272,7 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. 57 offline suites, 1,528 assertions (+5 live
+request cache · run log · guards. 57 offline suites, 1,531 assertions (+5 live
 pinterest suites that need a session).
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
@@ -285,7 +285,7 @@ verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
 (`core/vault_mirror.py`, since retired — D-49) · session-layer hardening ·
 **the Calendar screen** (`etsy/ui/calendar_page.py`, + `.ics` export) ·
 saturation recovered from listings (`etsy/analytics/card_saturation.py`) ·
-**17 MCP tools** (`mcp_server/`) · the read server (`etsy/server/app.py`) ·
+**MCP tools** (`mcp_server/`) · the read server (`etsy/server/app.py`) ·
 the interactive app (`etsy/ui/app_page.py`) · a Docker service for the read
 server (`docker-compose.yml`, `etsy-server`) · the intent gate
 (`etsy/analytics/discover.py::confirm_intent`, D-43) · Pinterest momentum as a
@@ -298,8 +298,13 @@ D-46) · foreign-session filtering while db 0 was still shared, since moot —
 **Added 2026-08-26:** the db-0/db-1 mirror is gone. `pinterest-apify` finished
 moving to its own separate Redis (port 6380), so `core/vault_mirror.py` had
 nothing left to defend against and was deleted along with every call site —
-this project now reads db 0 directly, live, everywhere (D-49).
-**1,528 assertions** across 57 offline suites, plus 5 live pinterest suites.
+this project now reads db 0 directly, live, everywhere (D-49). MCP gained an
+18th tool, `deep_dive_keyword`, wrapping the BFS-crawl-plus-arbitrage engine
+(`etsy/engines/master_arbitrage.py::HybridArbitrageEngine`) that had no MCP
+equivalent before — see D-50. That engine's `run()` also silently returned
+`None` on its success path (only ever called from its own CLI, which just
+read the JSON file it wrote); now returns the payload directly.
+**1,531 assertions** across 57 offline suites, plus 5 live pinterest suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

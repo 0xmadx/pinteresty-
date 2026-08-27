@@ -287,6 +287,52 @@ def cheap_competitors(keyword: str, n: int = 5) -> dict:
 
 @mcp.tool()
 @_guarded
+def deep_dive_keyword(seed: str, product_type: str = "physical", max_depth: int = 1,
+                      max_nodes: int = 5, cogs: float = 0.0, shipping_cost: float = 0.0,
+                      labor_minutes: float = 0.0) -> dict:
+    """The full instrument: BFS-crawl related keywords, profit-gate them, then
+    arbitrage every winner across format/quality/occasion/feature/color/sourcing.
+
+    SLOW AND EXPENSIVE relative to every other tool here — dozens of public
+    requests per niche that clears the profit gate, realistically several
+    minutes total. This is not a first look; call `analyze_keyword` or
+    `discover` first, and only reach for this once a seed already looks
+    promising and you want the full breakdown of WHERE the room is.
+
+    `cogs`/`shipping_cost`/`labor_minutes` feed the same profit gate as
+    `profit_verdict` — leave them at 0 only if the seed is a digital download.
+    For anything physical or made to order, leaving them at 0 makes the gate
+    flatter every candidate for free, which means EVERYTHING clears it — the
+    opposite failure of what it looks like (it does not report false gaps, it
+    reports false winners that then get the full expensive arbitrage pass).
+
+    Returns an error result, not an empty success, if nothing cleared the crawl
+    or the profit gate — a real "nothing here for this seed" finding, not a
+    tool failure.
+    """
+    blocked = _preflight(("etsy", "etsy_private"))
+    if blocked:
+        return blocked
+
+    from etsy.engines.master_arbitrage import HybridArbitrageEngine
+
+    product_profile = {"product_type": product_type, "cogs": cogs,
+                       "shipping_cost": shipping_cost, "labor_minutes": labor_minutes}
+    engine = HybridArbitrageEngine(seed_keyword=seed, max_depth=max_depth,
+                                   max_nodes=max_nodes, product_type=product_type,
+                                   product_profile=product_profile)
+    report = engine.run()
+    if not report:
+        return _fail(
+            "nothing cleared the BFS crawl or the profit gate for this seed",
+            fix="try a different seed, a different product_type, or pass real "
+                "cogs/shipping_cost/labor_minutes if this is a physical or "
+                "personalized product and they were left at 0")
+    return _ok(report)
+
+
+@mcp.tool()
+@_guarded
 def filter_trust_report() -> dict:
     """Which Etsy SERP filters can be believed — and which silently lie.
 

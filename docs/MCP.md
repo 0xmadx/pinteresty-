@@ -12,7 +12,7 @@ becoming a source of numbers.
 .venv/Scripts/python.exe -m mcp_server.server
 ```
 
-Speaks stdio. **17 read-only tools.** You do not run this command yourself in
+Speaks stdio. **18 read-only tools.** You do not run this command yourself in
 normal use — the MCP client (Claude Code, Claude Desktop, Antigravity) launches
 it as a subprocess on demand, over stdio. Run it by hand only to sanity-check it
 starts, or when writing/debugging a new tool.
@@ -55,7 +55,7 @@ for t in tools: print(' ', t.name)
 "
 ```
 
-17 tools should print. If Claude Code / Antigravity shows a different count
+18 tools should print. If Claude Code / Antigravity shows a different count
 after adding the server, the client is pointed at a stale `cwd` or a different
 Python (not the venv) — check the command path first.
 
@@ -86,6 +86,7 @@ Python (not the venv) — check the command path first.
 | `analyze_keyword` | is there room in this niche — demand, supply, the ratio | **live** |
 | `sourcing_profile` | where sellers in this niche ship from, and how fast | **live** |
 | `cheap_competitors` | why the cheapest listings are cheap — origin of the price floor | **live** |
+| `deep_dive_keyword` | full BFS crawl + gap/sourcing arbitrage on a seed — slow, dozens of requests | **live, expensive** |
 | `filter_trust_report` | which Etsy SERP filters can be believed, which silently lie | local |
 | `profit_verdict` | go/no-go on one unit, with the reason it failed | local |
 | `price_and_cost_ladder` | at each price, the most a unit may cost and still clear the floor | local |
@@ -99,6 +100,16 @@ Python (not the venv) — check the command path first.
 "Live" tools spend a real HTTP request against Etsy/Printify and gate on
 `vault_status` first — call it once at the start of a session and re-use the
 `ready` answer rather than checking before every single live call.
+
+`deep_dive_keyword` is a different order of cost from the rest of the "live"
+row — dozens of public requests per niche that clears its profit gate,
+realistically several minutes per call. It wraps `etsy/engines/master_arbitrage.py`,
+the same BFS-crawl-plus-arbitrage engine `docs/DECISION_LOG.md` D-50 wired in
+after finding `master_spider.py` (a standalone, unpreflighted concurrency
+wrapper around the older, narrower `MasterNicheFinder` alone) was the only
+thing offering this shape of analysis and had no MCP equivalent. Treat it as
+the deep instrument, not the first look — run `analyze_keyword` or `discover`
+first and only reach for this once a seed already looks worth the cost.
 
 ### Four design rules
 

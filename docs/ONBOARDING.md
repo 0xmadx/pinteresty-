@@ -90,7 +90,7 @@ Four checks, in this order:
 
 1. **Does the function exist?** A capability is real when it is a function, not a
    paragraph. Count functions.
-2. **Does a test cover it?** 1,528 assertions across 57 offline suites (the 5
+2. **Does a test cover it?** 1,531 assertions across 57 offline suites (the 5
    live pinterest suites are separate and vary run to run). A test
    that fails in a way you did not predict has found a real bug — twice this week.
 3. **What does the wire say?** The vault is usually green; probing is faster and
@@ -112,7 +112,7 @@ Printify) · profit gate with per-type margin floors and a weekly capacity ceili
 gap analysis gated on filter trust · sourcing, origin sampling and lead time ·
 POD costing · scoring with a discrimination check · request cache · run log ·
 scheduler running daily · verdict change log · vault separation · LEARN
-scaffold · 17 MCP tools (`docs/MCP.md`) · the interactive app and optional read
+scaffold · 18 MCP tools (`docs/MCP.md`) · the interactive app and optional read
 server (`docs/UI_GUIDE.md`).
 
 **Empty or thin — and this is the real constraint:**

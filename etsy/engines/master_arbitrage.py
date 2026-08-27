@@ -475,6 +475,13 @@ class HybridArbitrageEngine:
             st.note(f"report: {report_path}")
         print(f"[+] Run health: python -m core.runlog")
 
+        # Every prior caller was the CLI entry point below, which only ever read the
+        # JSON file this wrote — so a bare `run()` returning None went unnoticed.
+        # A programmatic caller (MCP among them) needs the payload in hand, not a
+        # file path to go re-read.
+        final_payload["report_path"] = report_path
+        return final_payload
+
 if __name__ == "__main__":
     # Refresh the mirror this project reads (D-33) and refuse cleanly if the pool is
     # empty. The scheduler gets this from `run_job`'s preflight; a CLI run does not,
