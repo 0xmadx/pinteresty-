@@ -81,8 +81,8 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 
 ```bash
 # Full verification — run before every commit
-.venv/Scripts/python.exe -m core.test_graph_db          # + the other 51 suites
-# 52 OFFLINE suites, 1,417 assertions, no network required.
+.venv/Scripts/python.exe -m core.test_graph_db          # + the other 52 suites
+# 53 OFFLINE suites, 1,506 assertions, no network required.
 # ⚠️ pinterest/tests/ holds 5 more that are LIVE — their own docstrings say
 # "Live verification". They hit real Pinterest, their assertion counts VARY
 # with session state, and they print no summary when the vault is down. Never
@@ -200,6 +200,10 @@ account costs the business.
 | **Unused, verified to exist** | `predicted_days` (Pinterest 91-day forecast), `page` (pagination), `include_trendline`. See `08_capability_map.md`. |
 | **`similar_search_terms` and `market_gap_recommendations` are EMPTY** | Recorded earlier as free unread signals. Probed 2026-08-15 on `felt garland`, `mom necklace`, `christmas ornament`: all returned `total_results_count: 0` and a null gap block. The keys are in the schema; Etsy returns nothing in them. **Do not build on them.** |
 | **`locationQuery` is not a filter** | It returns a *broader* result set than the search it filters. On `monogrammed waffle weave towel` (10,011 unfiltered) Germany returned 28,271 and seven countries summed to **1116%** of the market they claim to partition. Origin share is **not obtainable from the SERP** — use `sourcing.sample_origins()`, which reads each listing's declared origin and can see countries Etsy's list omits (it found a Turkish seller). `delivery_days` was checked the same way and **is** sound: monotonic, cumulative, never above total. |
+| **`chart-series-data` answers only the FIRST 3 TERMS** | Positionally, silently, in a well-formed 200 (measured 2026-09-01). The daily sweep passed 11 watched terms and stored 3 — terms 1, 2, 3, every run — so 8 had no seasonal curve including `mom necklace`, whose December peak this file cites as a headline finding. `MAX_CHART_TERMS = 3`; `get_chart_series` now **chunks and merges**, so pass any number of terms at `ceil(N/3)` requests. Use **`chart_coverage()`** to read an absence: `omitted` (Etsy declined to size it — N-02 unmeasured, and only this) vs `failed_chunks` (may never have been fetched). ⚠️ The old *"asked for four, `linen apron` was absent"* N-02 example was a **truncation artifact** — `linen apron` returns a full 12-point curve, Dec peak 3,543. |
+| **"Listed on ⟨date⟩" RESETS ON AUTO-RENEWAL** | It is on the listing page (og:description **and** the body) but it is **not a creation date**. Measured on listing `1864690497`: **7,700 reviews**, page says listed *that day*. Read as age it calls a four-year best-seller brand new. `listing_age()` returns `age_days_lower_bound` and a **three-valued** `honeymoon` — `None` when the review count contradicts a young date. Never restate `listed_on` as an age. |
+| **The cart count is NOT on the listing page** | Probed 2026-09-01: a 707KB fully-rendered page-one listing has **neither** a cart count nor a "bought in the past 24 hours" badge. **Favourites are** (`54,148`, linked to that listing's own favoriters page — listing-level, not the shop total). The count the operator sees lives on `/cart/?show_cart=<id>`, reached by **adding to cart** — unreachable here, because `SessionManager` claims a **freshly shuffled profile per request**, so an add and a read are two different buyer identities and the second sees an empty cart. Session affinity would mean extending the forbidden access layer. |
+| **`tags[:13]` was throwing away Etsy's own query expansion** | The tail of `click_queries` is Etsy's **broadened/expanded** query set for that listing — now kept as `broadened_queries`. It is what separates a genuine accidental keyword (Etsy ranks a listing for a term its seller never claimed) from the synonym layer doing its job. |
 | **`organic_listing_ids` was ALWAYS empty** | Parser bug fixed 2026-08-20. The regex demanded `"result_count"` within 200 chars of the array; the real neighbours are `bucket_id`/`user_id`. It returned `[]` on every page for the project's life — silently, because an empty list is plausible for a page with no results. Now 39–51 ranked ids, which also unblocks rank tracking. |
 | **There is no UI. MCP is the interface.** (D-52, 2026-09-01) | The 7 HTML screens and the FastAPI read server were deleted. They were built in a 2-day burst on 2026-08-19/20 and never touched again; the server had **zero callers** anywhere in the codebase. The operator works through an agent, so the agent's surface is the product. |
 | **`etsy/ui/app_data.py` survives, and matters more now** | The one read layer (D-41) — MCP is its only consumer, so there is no second screen to notice a wrong number. `gather_shops()` was moved into it from the deleted `market_page.py`; both `build_shops()` and the `tracked_market` tool call it. Covered by `etsy/ui/test_app_data.py`. |
@@ -292,7 +296,7 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. 52 offline suites, 1,417 assertions (+5 live
+request cache · run log · guards. 53 offline suites, 1,506 assertions (+5 live
 pinterest suites that need a session).
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
@@ -335,15 +339,36 @@ wall-clock timestamps and `build_pinterest` returns only `MAX(collected_at)`, so
 the suite failed whenever the two inserts straddled a second — a real race, hidden
 because it passed on rerun. Production was never affected (`trends_bridge` passes
 one shared timestamp per run).
-**1,417 assertions** across 52 offline suites, plus 5 live pinterest suites.
+**1,506 assertions** across 53 offline suites, plus 5 live pinterest suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend
 observations into a table that had held zero.
 
+**Fixed 2026-09-01 — the four defects the audit found (`docs/SEO_LAYER_AUDIT.md`).**
+Three were producing a wrong number on a surface the operator reads:
+`chart-series` truncation (8 of 11 seasonal curves recovered — **11 of 11 verified
+live**) · `analyze(discriminate)` judging rankability on **one** dimension of six,
+because the discovery pool's column names never matched `scoring.DIMENSIONS`
+(now demand + intent + supply, with per-dimension **coverage counts**, since `cvr` is
+non-null in 3 rows of 1,716 and bare presence overstated it) · four analytics modules
+dead since birth on an `AttributeError` at line one, swallowed by a bare `except`.
+The fourth was an unbackfillable daily loss — see below.
+
+**The rank series is accruing.** `job_competition_sweep` reduced a fully ranked SERP
+to `ranked_ids_count` — an integer — every day, so a year of sweeps could not
+reconstruct one competitor's climb. It now writes one row per listing into
+`rank_observations` (reused, not a new table: `record_rank` never had a `launches`
+FK). Verified live: 43 rows for `felt garland`, with `ARTOFJOYStudio` holding ranks
+**1, 6 and 7** — the shape a count can never show. ⚠️ The ~12 rendered cards and the
+39–51 organic ids are **different populations**; `card_rendered` keeps them readable
+rather than merging them into one position.
+
 **Still thin:** trend, listing and shop observations are accumulating; keyword
 history now covers 8 watched terms; **0 launches**, so LEARN cannot start. **Value compounds only with time** — a daily
-delta needs two readings a day apart and cannot be backfilled.
+delta needs two readings a day apart and cannot be backfilled. The competitor rank
+series is the one outcome dataset that does **not** wait for a launch, and is
+unbiased precisely because our model did not select it (B-04).
 
 **Settings confirmed 2026-08-20:** fees verified against Etsy's published schedule,
 operator rate $25/hr, capacity 10 hrs/week. Profit verdicts now read `derived`, not

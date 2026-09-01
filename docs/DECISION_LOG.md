@@ -2048,3 +2048,62 @@ optimised away by the next reader who finds it inconvenient.
 **0 launches** LEARN still cannot calibrate, so every verdict remains
 unfalsifiable — the skills say so out loud rather than letting confident
 formatting imply otherwise.
+
+---
+
+## D-62 — four defects, and the one that only a probe could have caught
+
+**2026-09-01.** The audit (`docs/SEO_LAYER_AUDIT.md`) named four. All four are
+fixed. Three were code; the fourth was a *meaning*, and it is the one worth
+recording.
+
+**What the code fixes were.** `chart-series-data` answers only the first three
+terms, silently — the daily sweep passed 11 and stored 3 for the life of the job.
+`analyze(discriminate)` judged rankability on **one** dimension of six, because
+the discovery layer names its columns for a reader and `scoring` names them for
+the weighting and nothing translated. Four analytics modules had been raising
+`AttributeError` on line one since they were written, swallowed by a bare
+`except`. And a fully ranked SERP was reduced to `len(ids)` every day, which is
+the only one of the four that was destroying something unrecoverable.
+
+Each is the same shape: **nothing raised.** A truncated response is well-formed.
+A missing scoring dimension is a legitimate state that `score_pool` handles
+correctly. A swallowed exception prints one line. An integer is a valid column
+value. This is what "a plausible wrong number, not a crash" means in practice —
+not one dramatic bug, but four quiet ones that each looked like normal operation.
+
+**The one that a review would not have caught.** The plan said to parse
+`Listed on <date>` out of the listing page and called it *"honeymoon detection,
+done"* — the date is right there, on HTML already cached for 30 days. Live probe,
+listing `1864690497`: **7,700 reviews**, and the page says `Listed on Sep 1,
+2026`. That day.
+
+Etsy auto-renews listings and the displayed date moves with the renewal. The
+regex was correct. The claim built on it would have called a four-year
+best-seller brand new, in a field explicitly named for deciding whether a listing
+is new.
+
+So `listing_age()` reports `age_days_lower_bound`, never an age, and `honeymoon`
+is **three-valued** — `None` when a young-looking date meets a review count that
+contradicts it. A boolean would have to pick a side for the renewed case, and
+either choice asserts something the data does not support.
+
+The general lesson is not "probe more". It is that **a field being present and
+parseable says nothing about what it means**, and the audit, the plan and the
+first implementation all agreed with each other while being wrong. Only the wire
+disagreed.
+
+The same probe answered two other things by looking: the cart count is **not** on
+the listing page at all (favourites are, and are listing-level), and it is not
+reachable behind an add-to-cart either, because `SessionManager` claims a freshly
+shuffled profile per request — an add and a read are two different buyer
+identities. Both are recorded in the code so they are not re-litigated.
+
+**What accrues from here.** `rank_observations` now gets one row per listing per
+term per day — verified live at 43 rows for `felt garland`, with one shop holding
+ranks 1, 6 and 7. It reuses the existing table because `record_rank` never had a
+`launches` foreign key, which turns out to matter: the competitor series is the
+only outcome dataset available that does **not** wait for the operator to launch,
+and it is unbiased precisely because our own model did not select it (B-04).
+
+With **0 launches** that remains the binding constraint. None of this fixes it.

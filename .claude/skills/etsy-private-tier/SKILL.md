@@ -62,7 +62,7 @@ stop silently at the seed while looking exactly like "the API returned nothing".
 |---|---|---|
 | `results_data` | volume, supply, `query_cvr`, price band, **20 competitor cards free** | one call; do not scrape the SERP to rebuild the cards |
 | `daily_stats` | a **daily** volume curve + 7-day rolling average | rides free on the SAME `results_data` call (D-51). ~3 weeks of days. Answers "is this moving NOW" |
-| `chart_series` | the **12-month** curve, multi-term in one call | ⚠️ last bucket is the current month counted so far — judging on it manufactures a collapse (D-45) |
+| `chart_series` | the **12-month** curve, multi-term | ⚠️ **Etsy answers only 3 terms per request, silently and positionally.** The client chunks; cost is `ceil(N/3)`. Read an absence via `chart_coverage()`, never `returned` alone. ⚠️ last bucket is the current month counted so far — judging on it manufactures a collapse (D-45) |
 | `similar_keywords` | ~120–165 terms, **each already sized** with volume and supply | async enqueue+poll; the tree has CYCLES, dedupe |
 | `trending` | rising terms per taxonomy | ⚠️ Etsy's PICKS, not the market (B-01). Only 7 of 15 taxonomy ids return anything |
 
@@ -126,4 +126,6 @@ move across distinct calls. The ceiling is folklore inherited from old docs.
 - Multiplying `volume × query_cvr` and calling it orders
 - Treating a 401 as an endpoint bug, or letting a 429 evict a session
 - Reading the last `chart_series` bucket as a real reading
+- Reading a term missing from `chart_series` as "Etsy cannot size it" without
+  checking `chart_coverage` — for the project's life that meant "we never asked"
 - Reporting a derived request count as if it were measured

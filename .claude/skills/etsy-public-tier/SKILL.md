@@ -98,8 +98,21 @@ manufactures a runaway winner.
 - **competitor outcomes over time** — review velocity is the one *unbiased*
   outcome dataset here, since a competitor's launches are independent of our model
 
-`get_listing_data` is the cheapest call in the system: tags + breadcrumb +
-product type from **one** fetch, cached 30 days.
+`get_listing_data` is the cheapest call in the system: tags + breadcrumb + product
+type + `listed_on` + **`broadened_queries`** from **one** fetch, cached 30 days. That
+last one is the tail `tags[:13]` used to discard — Etsy's own expanded query set,
+which is what tells a genuine accidental keyword from the synonym layer.
+
+⚠️ **`listed_on` RESETS ON AUTO-RENEWAL.** Measured on a listing with **7,700
+reviews** whose page said it was listed *that day*. Use `listing_age()`, which returns
+an `age_days_lower_bound` and a **three-valued** `honeymoon` — `None` when the review
+count contradicts a young date. Never restate it as an age.
+
+⚠️ **The cart count is not on the listing page.** Favourites are (listing-level).
+The "In N carts" badge lives behind an add-to-cart, and profile rotation makes a
+two-step cart flow impossible without touching the access layer. `get_listing_live`
+(never cached, `TTL_LIVE`) carries what is actually there, all **threshold-gated** —
+absent means below the display threshold, never zero.
 
 ---
 
