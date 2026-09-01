@@ -1999,3 +1999,52 @@ further measurement changes that."* More tools do not fix it; a listing does.
 **25 tools, 70 capabilities, 4,743 tokens** — efficiency improved again to
 **68 tokens/capability** (from 72, from 75). Reach going up while cost per
 capability goes down is grouping doing exactly what it was chosen for.
+
+---
+
+## D-61 — the strategy layer moves into skills, because the UI that carried it is gone
+
+**2026-09-01.** Five new skills: `etsy-private-tier`, `etsy-public-tier`,
+`pinterest-tier`, `finding-winners`, `calendar-and-timing`. `ui-builder` deleted.
+
+**Why now.** D-52 deleted the UI and the read server and made MCP the interface.
+That was the right call, but it quietly removed the place where a lot of
+discipline lived. A generated page could *show* a Wilson interval, grey out an
+untrusted filter, or label a bound as a bound — the layout itself enforced
+honesty. An MCP tool returns a dict, and nothing stops a model reading
+`query_cvr` as orders per month.
+
+The tool payloads already carry `basis` on every number. That is necessary and
+not sufficient: `basis` says *what kind of number this is*, never *what you are
+allowed to conclude from it*. The seven existing skills all ask whether the
+**work** is right — is the number true, is it shown first, is it worth
+gathering. None of them answered "what does this number mean once I have it",
+because until now a screen answered it.
+
+**Why skills and not longer docstrings.** The MCP surface is 25 tools / 70
+capabilities / 4,743 tokens, and the phase gate is a ceiling on that number.
+Caveats in schemas are paid for on **every** request whether or not they are
+relevant; a skill is paid for only when its trigger fires. The house rule stands:
+docstring ≤ 1 line, operation table in `Field(description=…)`, **long caveats go
+in the matching skill.** The skills are where the expensive-to-rediscover
+material goes precisely because they are not resident.
+
+**Why these five.** Three are the tiers, because the first question about any
+number here is which tier produced it and what that tier is allowed to say —
+private is irreplaceable and relative-only, public is unlimited and 9 of its 12
+filters lie, Pinterest is 0-100 normalised and arrives backwards. Two are the
+verbs: `finding-winners` fixes the gate ORDER (wall → intent → margin → timing →
+discrimination, worst-of, each able only to reject), and `calendar-and-timing`
+holds the distinction the whole product is named for — **late is not missed**.
+
+Each carries the measured evidence, not the rule alone. `home decor` at 0.14
+demand-per-listing versus `backpack name tag` at 2.79. `custom family name
+necklace` ranked first while converting at 0.15x its neighbours. The $5.21
+versus $12.69 COGS ceiling on the same term. `mom necklace` peaking in December.
+A rule with its counter-example attached survives a rewrite; a rule alone gets
+optimised away by the next reader who finds it inconvenient.
+
+**What this does not do.** It does not make any recommendation correct. With
+**0 launches** LEARN still cannot calibrate, so every verdict remains
+unfalsifiable — the skills say so out loud rather than letting confident
+formatting imply otherwise.

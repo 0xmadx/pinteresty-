@@ -243,14 +243,27 @@ account costs the business.
 | `docs/GOAL.md` | the north star |
 | `BIASES_AND_BLIND_SPOTS.md` | ⚠️ self-declared **unverified**; 2 of its 10 claims were wrong. Prefer `bias_audit.md`. |
 
-Skills in `.claude/skills/` — **all 8, and they are enforced, not advisory:**
+Skills in `.claude/skills/` — **all 12, and they are enforced, not advisory.**
+
+*The craft lenses — is the work right:*
 **`etsy-pipeline-work`** (is the number *true* — read it before touching a pipeline),
 **`etsy-seo-and-opportunity`** (is it the *right number to show first* — read it before
 ranking or recommending anything), **`etsy-market-intelligence`**,
-**`web-surface-mapping`**, `system-architect`, `bias-aware-analysis`, `ui-builder`,
+**`web-surface-mapping`**, `system-architect`, `bias-aware-analysis`,
 `git-and-comments`.
 
-⚠️ All 8 are git-tracked as of 2026-09-01. Six of them were **untracked before that** —
+*The strategy layer, added 2026-09-01 — what the MCP agent is allowed to conclude
+(D-52 made MCP the interface, so the discipline had to move from the UI into skills):*
+`etsy-private-tier` (the scarce seller account — spend it last) ·
+`etsy-public-tier` (unlimited, and 9 of its 12 filters lie) ·
+`pinterest-tier` (leading indicator; every count relative, the curve backwards) ·
+`finding-winners` (the five gates, in order, each able only to reject) ·
+`calendar-and-timing` (takeoff → `list_by`; late is not missed).
+
+`ui-builder` was **deleted 2026-09-01** — it governed React pages and the API-consuming
+layer, both removed by D-52.
+
+⚠️ All are git-tracked as of 2026-09-01. Six of them were **untracked before that** —
 a `.gitignore` rule meant to normalise `Skills/` vs `skills/` casing matched every
 spelling on case-insensitive NTFS and silently ignored the whole directory, so a fresh
 clone would have had two skills, not eight. Fixed; the on-disk directory is lowercase

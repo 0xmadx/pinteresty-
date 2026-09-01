@@ -78,11 +78,28 @@ docs/
 | `etsy-seo-and-opportunity` | **is it the right number to show first?** | ranking, scoring, or recommending anything |
 | `etsy-market-intelligence` | **is this worth gathering at all?** | planning data work or judging an endpoint's value |
 | `web-surface-mapping` | **what does this tool actually expose?** | a browser session mapping a site |
-| `system-architect` · `bias-aware-analysis` · `ui-builder` · `git-and-comments` | design · bias · UI · commits | as their descriptions say |
+| `system-architect` · `bias-aware-analysis` · `git-and-comments` | design · bias · commits | as their descriptions say |
 
 The first three are deliberately a set: one catches a wrong number, one catches a correct
 number shown in the wrong order, one catches gathering the wrong thing entirely. All
 three cost the operator a wasted launch, and only the first looks like a bug.
+
+### The strategy layer (added 2026-09-01)
+
+Those lenses ask whether the *work* is right. These five say what the **agent** may
+conclude from a number once it has one — the discipline that used to live in the UI
+and had nowhere to live after D-52 made MCP the interface.
+
+| Skill | Asks | Read before |
+|---|---|---|
+| `etsy-private-tier` | **is this worth the seller account?** | any private call — it is the one unreplaceable asset (D-29) |
+| `etsy-public-tier` | **can this number be believed?** | any SERP, filter, saturation or shop-counter reading |
+| `pinterest-tier` | **relative to what?** | any Pinterest count, curve, demographic or momentum join |
+| `finding-winners` | **which gate rejects this?** | discover, crawl, or ranking a candidate pool |
+| `calendar-and-timing` | **is it too late?** | the calendar, a takeoff/peak, or any seasonal curve |
+
+`ui-builder` was deleted the same day: it governed React pages and the API-consuming
+layer, and D-52 removed both.
 
 ---
 
