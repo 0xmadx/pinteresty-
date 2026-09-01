@@ -16,6 +16,7 @@ Needs no network and no session vault: every tool exercised here is local.
 import asyncio
 import json
 import os
+import pathlib
 import sys
 
 from mcp import ClientSession, StdioServerParameters
@@ -90,6 +91,25 @@ async def run():
     return FAIL
 
 
+def tool_source(name):
+    """The source of one tool, found ANYWHERE in the mcp_server package.
+
+    Deliberately not a hardcoded file path. These checks used to open
+    `server.py` directly, which broke the moment the tools were split into
+    per-domain modules (D-53) even though nothing about their behaviour changed
+    — a test that fails on a file move is testing the layout, not the property.
+    """
+    for path in sorted(pathlib.Path(REPO, "mcp_server").glob("*.py")):
+        src = path.read_text(encoding="utf-8")
+        marker = f"\ndef {name}("
+        if marker not in src:
+            continue
+        start = src.index(marker)
+        nxt = src.find("\n@mcp.tool()", start)
+        return src[start:nxt if nxt != -1 else len(src)], path.name
+    raise AssertionError(f"tool {name!r} not found anywhere in mcp_server/")
+
+
 def check_one_read_layer():
     """discover() must route through app_data, not query the database itself.
 
@@ -101,14 +121,13 @@ def check_one_read_layer():
 
     This is the regression that prompted the fix: discover() used to query
     MarketDatabase directly, its own second implementation of "what counts as
-    discovered" that could silently drift from what the web UI shows for the
-    identical pool.
+    discovered" that could silently drift from what the web UI showed for the
+    identical pool. The UI is gone (D-52) and MCP is now the read layer's ONLY
+    consumer, which makes this stricter, not looser: nothing else is left to
+    notice a drift.
     """
-    src = open(os.path.join(REPO, "mcp_server", "server.py"), encoding="utf-8").read()
-    start = src.index("\ndef discover(")
-    end = src.index("\n@mcp.tool()", start)
-    body = src[start:end]
-    check("discover() routes through etsy.ui.app_data (D-41)",
+    body, where = tool_source("discover")
+    check(f"discover() routes through etsy.ui.app_data (D-41) [{where}]",
           "from etsy.ui.app_data import build_discovered" in body, body[:200])
     check("discover() does not query MarketDatabase directly any more",
           "MarketDatabase()" not in body, body[:200])
@@ -124,11 +143,8 @@ def check_deep_dive_wiring():
     live, several-minute run to catch a regression here; both properties are
     facts about the source, so that is what gets asserted instead.
     """
-    src = open(os.path.join(REPO, "mcp_server", "server.py"), encoding="utf-8").read()
-    start = src.index("\ndef deep_dive_keyword(")
-    end = src.index("\n@mcp.tool()", start)
-    body = src[start:end]
-    check("deep_dive_keyword preflights etsy AND etsy_private before the engine runs",
+    body, where = tool_source("deep_dive_keyword")
+    check(f"deep_dive_keyword preflights etsy AND etsy_private [{where}]",
           '_preflight(("etsy", "etsy_private"))' in body, body[:200])
     check("deep_dive_keyword wraps HybridArbitrageEngine",
           "HybridArbitrageEngine" in body, body[:200])
@@ -142,7 +158,26 @@ def check_deep_dive_wiring():
           "programmatic caller (MCP included) gets None back on success")
 
 
+def check_package_layout():
+    """The split itself: every tool registers, and none went missing in the move.
+
+    D-53 moved 18 tools out of one 699-line file into five domain modules that
+    register on import. The failure mode that would be invisible otherwise is a
+    module `server.py` forgets to import — its tools simply do not exist, and a
+    server with 14 tools starts and answers perfectly well.
+    """
+    server_src = pathlib.Path(REPO, "mcp_server", "server.py").read_text(encoding="utf-8")
+    modules = sorted(p.stem for p in pathlib.Path(REPO, "mcp_server").glob("tools_*.py"))
+    check("there are per-domain tool modules to import", len(modules) >= 5, modules)
+    for m in modules:
+        check(f"server.py imports {m} (or its tools vanish silently)",
+              m in server_src, server_src[:400])
+    check("server.py holds no tool definitions itself — it is wiring only",
+          "@mcp.tool()" not in server_src, "server.py should only import and run")
+
+
 def main():
+    check_package_layout()
     check_one_read_layer()
     check_deep_dive_wiring()
     return asyncio.run(run())

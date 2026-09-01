@@ -1468,3 +1468,64 @@ lines of each were removed.
 stdio round trip passes 19/19, and `tracked_market` was invoked directly through
 the rewired path (2 shops returned) rather than merely imported. `job_calendar()`
 was run for real and returned 5 moments with `list_now: [halloween, thanksgiving]`.
+
+## D-53 — `mcp_server/` becomes a package, so the surface can grow
+
+**Date:** 2026-09-01. Pure refactor — **zero behaviour change, proven** (below).
+
+**Context.** MCP is now the interface (D-52) and reaches ~7.5% of the codebase.
+Opening that up means adding many tools; the tools lived in **one 699-line
+`server.py`**, flat, grouped only by five comment banners — and one banner had
+already drifted (six tools sat under `# --- settings ---`, describing one of
+them). Expanding that file was not viable.
+
+**Chosen.** Split into a package that registers on import:
+
+```
+_plumbing.py          the shared `mcp` instance + _ok/_fail/_guarded/_preflight
+tools_system.py       (3) can this run, did it run, what is it assuming
+tools_opportunity.py  (5) is there room here
+tools_economics.py    (3) does it pay
+tools_decide.py       (4) what should I list, and when
+tools_learning.py     (3) did it work
+server.py             (69 lines) wiring + main() — no tool definitions
+```
+
+The `mcp` instance lives in `_plumbing.py` rather than `server.py` specifically
+to avoid the circular import that the obvious arrangement produces: tool modules
+need the instance to decorate against, and `server.py` needs the tool modules to
+exist. `server.py` imports them for the **side effect** of registration, marked
+`# noqa: F401` — deleting one of those imports silently removes its tools from a
+server that still starts and answers perfectly well, which is why
+`check_package_layout()` now asserts each module is imported.
+
+**The tools were moved mechanically, not retyped.** A script split on
+`@mcp.tool()` boundaries and asserted every extracted tool was assigned to
+exactly one module (18 extracted, 18 assigned, no duplicates) — hand-transcribing
+600 lines of docstring-heavy code is how a caveat gets silently dropped.
+
+**Proof of no behaviour change.** The published tool surface was reconstructed
+from `git show HEAD:mcp_server/server.py`, loaded in a subprocess, and diffed
+against the new package's `list_tools()`:
+
+```
+tools before: 18      tools after: 18
+MISSING: none    ADDED: none    SCHEMA CHANGED: none
+published schema size: 12928 chars (~3232 tokens)  — identical
+```
+
+**`functools.wraps` is re-flagged at the top of `_plumbing.py`**, because the
+split multiplies the chance someone adds a decorator: a bare `*a, **kw` wrapper
+republishes the schema bug that once broke all 13 then-existing tools at call
+time while `list_tools()` looked perfectly healthy.
+
+**Two source-inspection tests were made layout-independent.**
+`check_one_read_layer` (D-48) and `check_deep_dive_wiring` (D-50) opened
+`server.py` by path and broke on the move despite nothing about their subject
+changing — a test that fails on a file rename is testing the layout, not the
+property. They now locate a tool's source anywhere in the package and report
+which module it was found in.
+
+**Verified:** the MCP suite goes 19 → **26 assertions** (+7 layout checks), a
+real stdio round trip still registers all 18 and successfully CALLS four of them,
+and no tool leaks `a`/`kw` into its schema.

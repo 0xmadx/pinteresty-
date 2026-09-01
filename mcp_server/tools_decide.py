@@ -1,0 +1,131 @@
+"""What should I list, and when? The question-shaped front doors.
+
+Split out of the single 699-line `server.py` (D-53). Registration happens
+on import — `server.py` imports this module for that side effect alone.
+Every tool here follows the same contract: `@mcp.tool()` outermost,
+`@_guarded` innermost, `_preflight` first if it touches the network, and
+`_ok`/`_fail` with a per-field `basis` on the way out.
+"""
+from mcp_server._plumbing import _fail, _guarded, _ok, _preflight, mcp
+
+
+@mcp.tool()
+@_guarded
+def calendar(lead_weeks: int = 6, product_type: str = "personalized",
+             country: str = "US") -> dict:
+    """What should be listed, and by when? The front door.
+
+    Joins Pinterest takeoff dates to Etsy demand: each dated moment gets a list-by
+    deadline (takeoff minus `lead_weeks`) and the watched terms that belong to it,
+    each with volume, supply and demand-per-listing.
+
+    Read `is_wall` before recommending anything. A term can clear the margin gate
+    and still be unrankable — "christmas ornament" is 25,477 searches against
+    1,405,731 listings, profitable and impossible. Rank by demand_per_listing,
+    never by volume.
+
+    `state` is list_now / list_by / watching / untimed / passed. `untimed` means the
+    deadline has passed and no peak was measured, so late cannot be told from
+    missed — report it as unknown, never as an opportunity.
+    """
+    from etsy.engines import calendar_engine
+    rows = calendar_engine.build(country=country, lead_weeks=lead_weeks,
+                                 product_type=product_type)
+    return _ok({
+        "lead_weeks": lead_weeks,
+        "moments": [{
+            "moment": r["moment"], "state": r["state"], "list_by": r["list_by"],
+            "peak": r.get("peak"), "is_late": r.get("is_late"),
+            "reason": r["reason"], "actionable": r["actionable"],
+            "terms": r["evidence"],
+        } for r in rows],
+        "basis": "measured (Pinterest takeoff dates + Etsy keyword observations); "
+                 "profit verdicts follow the settings basis — see settings_summary",
+        "note": "A moment with no terms is dated but has nothing aimed at it — that "
+                "is 'we have not looked', not 'no opportunity'.",
+    })
+
+
+@mcp.tool()
+@_guarded
+def cockpit(keyword: str, product_type: str = "personalized",
+            lead_weeks: int = 6) -> dict:
+    """Everything known about ONE candidate, with the three sources kept apart.
+
+    `timing` (Pinterest), `demand` (Etsy Private) and `supply` (Etsy Public) are
+    separate readings and must be reported separately. `combined.conflicts` is the
+    most important field: when Pinterest times a term well and Etsy says it cannot
+    be ranked, those are two clear opposite readings, not a middling score.
+
+    Reads the database only — no live calls, so it is fast and repeatable. A
+    `trend` with basis `refused` means the comparison would have measured our own
+    instrument rather than the market; report it as refused, never as no change.
+    """
+    from etsy.engines import cockpit as ck
+    state = ck.build(keyword, product_type=product_type, lead_weeks=lead_weeks)
+    from core.settings_store import load
+    prov = "provisional (settings not confirmed)" if load().basis()["basis"] != "operator" else "derived (settings confirmed)"
+    return _ok({"candidate": state, "findings": ck.read(state),
+                "basis": f"measured where stated; profit verdict is {prov}"})
+
+
+@mcp.tool()
+@_guarded
+def discover(limit: int = 40) -> dict:
+    """The ranked candidate POOL — terms the operator has not typed.
+
+    Watched terms expanded into their long-tail neighbourhoods and ranked by
+    demand-per-listing, NOT search volume (D-31). Read `verdict`: only `winnable`
+    and `contested` are worth a look; a `wall` is supply overwhelming demand
+    however large its traffic. `moment` names a seasonal deadline when the term has
+    one. These are where to look, not what to make — the Cockpit checks each.
+
+    Reads the stored discover_sweep, so it is fast and empty until that job runs.
+    """
+    # Through app_data — the one read layer every view is supposed to share
+    # (D-41). This used to query MarketDatabase directly, its own second
+    # implementation of "what counts as discovered" that could silently drift
+    # from what the web UI shows for the exact same pool.
+    from etsy.ui.app_data import build_discovered
+    pool = build_discovered(limit=2000)
+    good = [r for r in pool if r.get("verdict") in ("winnable", "contested")]
+    return _ok({
+        "worth_a_look": good[:limit],
+        "total_discovered": len(pool),
+        "walls_folded": len(pool) - len(good),
+        "basis": "measured (LLM keyword edges carry their own volume and supply); "
+                 "ranked by demand-per-listing, never by volume",
+        "note": "verdict winnable/contested is a coarse label, not a score. A wall "
+                "is not a bad term, it is an unrankable one for a shop with no "
+                "authority.",
+    })
+
+
+@mcp.tool()
+@_guarded
+def tracked_market() -> dict:
+    """The competitor shop window: tracked shops and their listings that match a
+    watched term, ranked by review velocity.
+
+    Two numbers to read carefully. `sales_per_day` is a BOUND — Etsy's counter is
+    quantised, so "fewer than 21/day" is honest and "0/day" is not. Review velocity
+    is a FLOOR — reviews undercount sales, so a listing gaining reviews sells at
+    least that fast. Both tracked shops are stars (B-01): this shows what winners
+    do, not what works.
+    """
+    from etsy.ui.app_data import gather_shops
+    data = gather_shops()
+    return _ok({
+        "shops": [{
+            "shop": d["shop"],
+            "lifetime_sales": (d["latest"] or {}).get("total_sales"),
+            "sales_per_day_bound": d["rate_bound"],
+            "matched_listings": [{
+                "title": m.get("title"), "matches": m.get("matched_term"),
+                "review_velocity_floor": (m.get("velocity") or {}).get("velocity"),
+                "velocity_basis": (m.get("velocity") or {}).get("basis"),
+            } for m in d["matched"]],
+        } for d in data],
+        "basis": "measured; sales-per-day is a bound, review velocity a floor",
+        "warning": "all tracked shops are star sellers — survivor bias (B-01)",
+    })

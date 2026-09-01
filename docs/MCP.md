@@ -111,6 +111,32 @@ thing offering this shape of analysis and had no MCP equivalent. Treat it as
 the deep instrument, not the first look — run `analyze_keyword` or `discover`
 first and only reach for this once a seed already looks worth the cost.
 
+### Where the code lives
+
+`mcp_server/` is a package, not one file (D-53, 2026-09-01 — it was a single
+699-line `server.py` before that). Tools register **on import**:
+
+| File | Holds |
+|---|---|
+| `_plumbing.py` | the shared `mcp` instance, `_ok`/`_fail`/`_guarded`/`_preflight` |
+| `tools_system.py` | can this run, did it run, what is it assuming (3) |
+| `tools_opportunity.py` | is there room here (5) |
+| `tools_economics.py` | does it pay (3) |
+| `tools_decide.py` | what should I list, and when (4) |
+| `tools_learning.py` | did it work (3) |
+| `server.py` | wiring + `main()` only — no tool definitions |
+
+⚠️ **Adding a tool module means adding its import to `server.py`.** Those imports
+look unused (`# noqa: F401`) and are not: without one, its tools simply do not
+exist, and the server still starts and answers normally. `test_server.py`'s
+`check_package_layout()` asserts every `tools_*.py` is imported, for exactly that
+reason.
+
+⚠️ **Any new decorator in the stack must use `functools.wraps`.** MCP builds a
+tool's schema from the callable's signature; a bare `*a, **kw` wrapper publishes
+one demanding arguments named `a` and `kw`. That broke all 13 tools once, and
+`list_tools()` reported them healthy the whole time.
+
 ### Four design rules
 
 **1. Read only.** Nothing lists a product, edits a shop, places an order, or
