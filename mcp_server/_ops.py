@@ -87,7 +87,10 @@ AnalyzeOp = Literal[
 
 CrawlOp = Literal[
     "crawl",        # recursive best-first expansion + the winnable pockets
-    "expand_seed",  # one level only, cheaper
+    "expand_seed",  # one level only, cheaper — bare names
+    "drill",        # one level from ONE term, as RANKED sub-niche rows you can
+                    # drill again. Same row shape as compare, so going deeper
+                    # never means learning a second format.
 ]
 
 # --- the three spellings of one idea ---------------------------------------------------

@@ -89,8 +89,12 @@ _OP_DOC = (
     "found and returns the winnable POCKETS, the specific terms whose "
     "demand-per-listing beats their saturated neighbourhood. "
     "expand_seed: one level only, cheaper, when you just want the immediate "
-    "neighbours. BOTH SPEND THE SELLER ACCOUNT — read `spent` and "
-    "`stopped_because` on the way out."
+    "neighbours as a name list. drill: one level from one term, returning the "
+    "SUB-NICHES as ranked rows carrying their own volume, supply and ratio. "
+    "Those rows are the SAME shape as `compare`, and each can be drilled "
+    "again — that is how you go sub-niche by sub-niche. "
+    "ALL SPEND THE SELLER ACCOUNT — read `spent` "
+    "and `stopped_because` on the way out."
 )
 
 
@@ -103,6 +107,7 @@ def keyword_crawl(
     max_depth: int = 2,
     min_ratio: float = 0.25,
     want_pockets: int = 12,
+    limit: int = 40,
 ) -> dict:
     """Recursive keyword discovery. SPENDS THE SELLER ACCOUNT — hard-capped, reports spend."""
     if not seed or not seed.strip():
@@ -147,8 +152,16 @@ def keyword_crawl(
 
     try:
         nodes = kc.crawl(budgeted, seed,
-                         max_nodes=min(max_nodes, MAX_NODES),
-                         max_depth=1 if operation == "expand_seed" else min(max_depth, MAX_DEPTH),
+                         # A drill pays for ONE expansion and every child arrives in
+                         # that same response, so capping the node count buys nothing
+                         # and costs coverage. At the default 60 a live drill of
+                         # `badge reel` kept 59 of the 173 edges Etsy returned and
+                         # reported 59 as though that were the whole neighbourhood —
+                         # a silent cap presenting a slice as the answer.
+                         max_nodes=(MAX_NODES if operation == "drill"
+                                    else min(max_nodes, MAX_NODES)),
+                         max_depth=1 if operation in ("expand_seed", "drill")
+                                   else min(max_depth, MAX_DEPTH),
                          on_node=on_node)
     except _BudgetSpent:
         nodes, stopped = collected, "request budget spent"
@@ -160,6 +173,67 @@ def keyword_crawl(
                          "extension on a Shop Manager tab, then: "
                          "python -m core.vault_status",
                      spent={"expansions": budgeted.expansions})
+
+    if operation == "drill":
+        # ONE level down from one term, and every child returned with its own
+        # numbers instead of just its name.
+        #
+        # `expand_seed` already fetched exactly this and then threw the
+        # measurements away — it returns `all_terms`, a flat list of up to 300
+        # bare strings — so the sub-niches could not be read, ranked, or chosen
+        # between. The data was already paid for.
+        #
+        # Rows come back in the SAME shape `compare` emits, on purpose: the
+        # output of a drill is a valid input to another drill, so the operator
+        # can keep going down without learning a second format at each level.
+        #
+        # ⚠️ Free per child. `get_similar_keywords` returns 120-165 children each
+        # already carrying volume and supply, so ranking them costs NO extra
+        # call. Verified same-unit as results-data: `personalized gift` reads
+        # 234,622/615,194 = 0.381 from the expansion and 226,574/591,082 = 0.383
+        # live — so these ratios are comparable with every other table here.
+        kids = [n for n in nodes if (n.get("term") or "").lower() != seed.lower()]
+        kids.sort(key=lambda n: (n.get("demand_per_listing") is None,
+                                 -(n.get("demand_per_listing") or 0)))
+        rows = [{"term": n["term"], "volume": n.get("volume"),
+                 "supply": n.get("supply"),
+                 "demand_per_listing": n.get("demand_per_listing"),
+                 "winnability": n.get("verdict"),
+                 "verdict": n.get("verdict"),
+                 "why": (n.get("winnability") or {}).get("reason"),
+                 "basis": (n.get("winnability") or {}).get("basis"),
+                 "parent": n.get("parent") or seed,
+                 "depth": n.get("depth")} for n in kids[:limit]]
+        by = {}
+        for n in kids:
+            by[n.get("verdict")] = by.get(n.get("verdict"), 0) + 1
+        return _ok({
+            "operation": operation, "parent": seed,
+            "rows": rows, "returned": len(rows), "children_found": len(kids),
+            # `returned` is what this call shows, `children_found` is what Etsy
+            # actually offered. Reporting only the first would read as coverage.
+            "truncated_by_limit": max(0, len(kids) - len(rows)),
+            "node_ceiling": MAX_NODES,
+            "hit_node_ceiling": len(kids) + 1 >= MAX_NODES,
+            "breakdown": by,
+            "spent": {"expansions": budgeted.expansions,
+                      "private_requests_upper_bound":
+                          budgeted.expansions * REQUESTS_PER_EXPANSION,
+                      "basis": "BOUND — get_similar_keywords caches 30 days, so a "
+                               "re-drill of the same term spends 0"},
+            "stopped_because": stopped,
+            "drill_next": "Any `term` in `rows` can be drilled again with "
+                          "operation='drill' — the rows are the same shape going "
+                          "in as coming out.",
+            "basis": "measured — every child carries volume and supply from Etsy's "
+                     "own expansion, no extra call per term; same ~30-day unit as "
+                     "results-data",
+            "note": "Sorted by demand-per-listing (D-31), never volume. A term with "
+                    "no volume sorts LAST because it cannot be compared, not "
+                    "because it is worst (N-02). All-walls is a real finding: it "
+                    "says this branch is saturated all the way down, and the answer "
+                    "is to drill a different parent, not deeper here.",
+        })
 
     pockets = kc.pockets(nodes, min_ratio=min_ratio)
     summary = kc.summary(nodes)

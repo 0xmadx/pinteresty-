@@ -147,5 +147,40 @@ check("the module refuses rather than clamps — no min() on the caps at the gat
       "return _fail(" in open(tc.__file__, encoding="utf-8").read().split(
           "max_nodes > MAX_NODES")[1][:200])
 
+
+# --- drill: sub-niches as rows, and no silent slice --------------------------------
+#
+# `expand_seed` fetched exactly this data and returned `all_terms` — a flat list of
+# bare strings — so the sub-niches could not be read, ranked, or chosen between,
+# while the volume and supply for every one had already been paid for.
+#
+# The cap bug this pins: a drill pays for ONE expansion and every child arrives in
+# that same response, so a node cap buys nothing and costs coverage. At the old
+# default of 60 a live drill of `badge reel` kept 59 of the 173 edges Etsy returned
+# and reported 59 as if that were the neighbourhood — a slice shown as the answer.
+print()
+src = open(tc.__file__, encoding="utf-8").read()
+decide = open("mcp_server/tools_decide.py", encoding="utf-8").read()
+drill_block = src.split(chr(39) + "drill" + chr(39))[0]
+drill_block = src[src.index("if operation == " + chr(34) + "drill" + chr(34)):][:5200]
+check("drill is a registered operation", chr(34) + "drill" + chr(34) in src)
+check("drill expands exactly ONE level, like expand_seed",
+      "(" + chr(34) + "expand_seed" + chr(34) + ", " + chr(34) + "drill" + chr(34) + ")" in src)
+check("drill ignores the node cap - children are free once the expansion is bought",
+      "MAX_NODES if operation ==" in src)
+check("it reports what Etsy OFFERED, not just what it showed",
+      "truncated_by_limit" in src and "children_found" in src)
+check("and flags when the ceiling itself was reached", "hit_node_ceiling" in src)
+check("rows are sorted by demand-per-listing, never volume (D-31)",
+      "demand_per_listing" in drill_block)
+check("an unsized child sorts LAST rather than as zero (N-02)",
+      "is None," in drill_block and "or 0)" in drill_block)
+check("the spend is a BOUND, since a re-drill hits the 30-day cache",
+      "BOUND" in drill_block)
+check("drill tells the reader the rows can be drilled again",
+      "drill_next" in drill_block)
+check("and compare points at drill, so every row in a comparison is a door",
+      "operation=" + chr(39) + "drill" + chr(39) in decide)
+
 print(f"\n{PASS} passed, {FAIL} failed")
 raise SystemExit(1 if FAIL else 0)

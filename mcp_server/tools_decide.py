@@ -387,6 +387,13 @@ def compare(terms: str, mode: str = "cheap") -> dict:
                 + ". There is no reference, so the gate refuses rather than ranking "
                   "against noise. Add more terms to the batch to build one."),
         },
+        # Every row is a valid drill target, and the drill returns rows of this
+        # same shape. That is the loop the operator asked for: compare a list,
+        # take any row, get its sub-niches ranked, take any of THOSE, repeat.
+        "drill_next": "Any `term` in `rows` can be opened into its SUB-NICHES with "
+                      "keyword_crawl(operation='drill', seed=<term>). That returns "
+                      "rows in this same shape, each drillable again — including "
+                      "the walls, whose children are sometimes not walls.",
         "note": "Sorted by demand-per-listing (D-31), never volume. The headline "
                 "`verdict` is the WORSE of the gates, not an average. `ranked` is "
                 "null when the dimensions cannot separate the pool — a real answer "
