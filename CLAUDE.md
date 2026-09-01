@@ -81,8 +81,8 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 
 ```bash
 # Full verification — run before every commit
-.venv/Scripts/python.exe -m core.test_graph_db          # + the other 52 suites
-# 53 OFFLINE suites, 1,506 assertions, no network required.
+.venv/Scripts/python.exe -m core.test_graph_db          # + the other 54 suites
+# 55 OFFLINE suites, 1,589 assertions, no network required.
 # ⚠️ pinterest/tests/ holds 5 more that are LIVE — their own docstrings say
 # "Live verification". They hit real Pinterest, their assertion counts VARY
 # with session state, and they print no summary when the vault is down. Never
@@ -203,6 +203,9 @@ account costs the business.
 | **`chart-series-data` answers only the FIRST 3 TERMS** | Positionally, silently, in a well-formed 200 (measured 2026-09-01). The daily sweep passed 11 watched terms and stored 3 — terms 1, 2, 3, every run — so 8 had no seasonal curve including `mom necklace`, whose December peak this file cites as a headline finding. `MAX_CHART_TERMS = 3`; `get_chart_series` now **chunks and merges**, so pass any number of terms at `ceil(N/3)` requests. Use **`chart_coverage()`** to read an absence: `omitted` (Etsy declined to size it — N-02 unmeasured, and only this) vs `failed_chunks` (may never have been fetched). ⚠️ The old *"asked for four, `linen apron` was absent"* N-02 example was a **truncation artifact** — `linen apron` returns a full 12-point curve, Dec peak 3,543. |
 | **"Listed on ⟨date⟩" RESETS ON AUTO-RENEWAL** | It is on the listing page (og:description **and** the body) but it is **not a creation date**. Measured on listing `1864690497`: **7,700 reviews**, page says listed *that day*. Read as age it calls a four-year best-seller brand new. `listing_age()` returns `age_days_lower_bound` and a **three-valued** `honeymoon` — `None` when the review count contradicts a young date. Never restate `listed_on` as an age. |
 | **The cart count is NOT on the listing page** | Probed 2026-09-01: a 707KB fully-rendered page-one listing has **neither** a cart count nor a "bought in the past 24 hours" badge. **Favourites are** (`54,148`, linked to that listing's own favoriters page — listing-level, not the shop total). The count the operator sees lives on `/cart/?show_cart=<id>`, reached by **adding to cart** — unreachable here, because `SessionManager` claims a **freshly shuffled profile per request**, so an add and a read are two different buyer identities and the second sees an empty cart. Session affinity would mean extending the forbidden access layer. |
+| **Etsy runs TWO autocomplete endpoints, and they DISAGREE** | `suggestions_ajax.php` returned **14** for `badge reel` where `/api/v3/ajax/public/search/suggestions` returned **10**; `halloween` 16 vs 10. Each carries terms the other misses, so reading one silently halves the candidate set — `get_search_suggestions` reads both and merges (18 for `badge reel`). **Buyer session, 2 requests, no seller cost.** ⚠️ `version` is INERT (garbage returns the same rows — nothing expires); `extras` is NOT (dropping it costs 3 of 14). ⚠️ **They do NOT rotate** — 10 consecutive calls returned identical lists across 10 different buyer profiles, so re-polling to "collect more" buys nothing. Day-to-day drift needs *storing*, not re-calling. |
+| **`supply` is a BROAD-match count, so long-tail terms read as walls by construction** | Private and public agree closely up to 3 words (`badge reel` 272,331 vs 273,905; `halloween badge reel nurse` 40,391 vs 38,947), so it is not a parsing artifact — Etsy really returns ~39,000 results for a 4-word phrase, and 6 of 7 page-one listings do contain all four words. But the listings truly competing are fewer and **Etsy publishes no exact-match count**. So `demand_per_listing` is CONSERVATIVE on long-tail terms. Not corrected — a correction would be a guess dressed as a measurement. Reported via `supply_basis` and `phrase_words`. ⚠️ **This qualifies the "1,713 of 1,716 discovered terms are walls" reading — they are all long-tail expansions.** Compare a child against its SIBLINGS, never against one-word head terms. |
+| **`query_cvr` of exactly 0 is a reporting floor, not a rate** | `back70 sneakers` returns `query_cvr = 0` on the wire against ~10,500 monthly searches. `confirm_intent` only guarded `is None`, so `0 / median = 0.0` fell under the weak threshold and the gate **rejected** the term on a number nobody measured. Now `unmeasured` with basis `cvr_zero`, and the term keeps its winnability verdict. |
 | **`tags[:13]` was throwing away Etsy's own query expansion** | The tail of `click_queries` is Etsy's **broadened/expanded** query set for that listing — now kept as `broadened_queries`. It is what separates a genuine accidental keyword (Etsy ranks a listing for a term its seller never claimed) from the synonym layer doing its job. |
 | **`organic_listing_ids` was ALWAYS empty** | Parser bug fixed 2026-08-20. The regex demanded `"result_count"` within 200 chars of the array; the real neighbours are `bucket_id`/`user_id`. It returned `[]` on every page for the project's life — silently, because an empty list is plausible for a page with no results. Now 39–51 ranked ids, which also unblocks rank tracking. |
 | **There is no UI. MCP is the interface.** (D-52, 2026-09-01) | The 7 HTML screens and the FastAPI read server were deleted. They were built in a 2-day burst on 2026-08-19/20 and never touched again; the server had **zero callers** anywhere in the codebase. The operator works through an agent, so the agent's surface is the product. |
@@ -296,7 +299,7 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. 53 offline suites, 1,506 assertions (+5 live
+request cache · run log · guards. 55 offline suites, 1,589 assertions (+5 live
 pinterest suites that need a session).
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
@@ -326,6 +329,21 @@ equivalent before — see D-50. That engine's `run()` also silently returned
 `None` on its success path (only ever called from its own CLI, which just
 read the JSON file it wrote); now returns the payload directly.
 
+**Added 2026-09-01 — the batch surface, and the free door into it (D-63).**
+`compare` (`mcp_server/tools_decide.py`) takes a LIST of keywords and returns a
+ranked table — the answer to "always a limited scan for only one keyword". Two
+modes: **cheap** (`ceil(N/3)` requests via chunked `chart_series`, adds the seasonal
+curve, no CVR) and **full** (1 request/term, adds CVR + page-one price). Over the
+per-mode cap it **refuses**, never trims. Nothing analytic was written — `score_pool`
+/ `percentile_ranks` / `explain` already existed with **zero MCP callers**, so the
+agent could reach `can_discriminate` (the guard that refuses a ranking) without
+reaching the ranking it guards.
+· `keyword_crawl(operation="drill")` opens **any** row into its sub-niches as rows of
+the *same shape*, drillable again — sub-niche by sub-niche. Free per child: one
+expansion buys 120–173 children each already carrying volume and supply.
+· `etsy_public(operation="suggest")` — Etsy's own autocomplete, **buyer session**,
+2 requests, no seller cost.
+
 **Removed 2026-09-01 — the UI (D-52).** All 7 HTML screens, the FastAPI read
 server, `run_server.cmd` and the `etsy-server` Docker service are deleted.
 Evidence: built in a 2-day burst 2026-08-19/20 and **never touched again**; the
@@ -339,7 +357,7 @@ wall-clock timestamps and `build_pinterest` returns only `MAX(collected_at)`, so
 the suite failed whenever the two inserts straddled a second — a real race, hidden
 because it passed on rerun. Production was never affected (`trends_bridge` passes
 one shared timestamp per run).
-**1,506 assertions** across 53 offline suites, plus 5 live pinterest suites.
+**1,589 assertions** across 55 offline suites, plus 5 live pinterest suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

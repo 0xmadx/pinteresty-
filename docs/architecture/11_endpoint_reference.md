@@ -288,3 +288,29 @@ on.
 (3.5) returned empty and stays unproven; probe on a populated term before building on it.
 Everything else about a keyword — demand, competition, seasonality — Etsy already
 answers on its own.
+
+### Etsy PUBLIC — search autocomplete ✅ 2026-09-01
+
+Two endpoints, and they **disagree**. Read both; `get_search_suggestions()` merges.
+
+| | `badge reel` | `halloween` |
+|---|---|---|
+| `GET /suggestions_ajax.php` | **14** | **16** |
+| `GET /api/v3/ajax/public/search/suggestions?query=` | 10 | 10 |
+| merged | **18** | — |
+
+`suggestions_ajax.php` params: `search_query` · `extras` (JSON
+`{"expt":"sft_nortn","lang":"en-US","extras":[]}`) · `search_type=all` ·
+`pathname=/search` · `previous_query`.
+
+- `version` is **INERT** — dropped or garbage returns the same rows. Nothing expires.
+- `extras` is **NOT** inert — dropping it costs 3 of 14 rows.
+- `limit` / `language` / `country` / `lang` are inert on the v3 endpoint.
+- ajax mixes in a **shop-name row of raw HTML** (`<span class=...>`); counted, it
+  poses as a keyword.
+- v3's `simplified_queries` is **always empty** — the `similar_search_terms` category.
+- **They do NOT rotate**: 10 consecutive calls, 10 different buyer profiles,
+  identical lists. Re-polling to collect more buys nothing.
+
+**Buyer session, 2 requests, no seller-account cost.** Strings only — no volume, no
+supply. Size candidates with `compare` before ranking anything.

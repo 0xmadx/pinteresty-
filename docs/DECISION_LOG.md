@@ -2107,3 +2107,75 @@ only outcome dataset available that does **not** wait for the operator to launch
 and it is unbiased precisely because our own model did not select it (B-04).
 
 With **0 launches** that remains the binding constraint. None of this fixes it.
+
+---
+
+## D-63 — the batch door, the drill, and the free source we already half-knew
+
+**2026-09-01.** Three additions that answer one complaint: *"always a limited scan
+for only one keyword… he cannot process all that and give me a list and
+comparison."*
+
+**The complaint was accurate and the cause was not where it looked.** Not the
+wire, not the analytics. Every decision tool on the surface was typed singular —
+one term, one moment, one shop — while a complete, tested pool ranker
+(`score_pool` / `percentile_ranks` / `shortlist` / `explain`) sat behind them with
+**zero MCP callers**. The agent could reach `can_discriminate`, the guard that
+REFUSES a ranking, without being able to reach the ranking it guards. The surface
+could say *"these cannot be compared"* and never *"here is the comparison"*.
+
+So `compare` writes almost no new analytics. It is an entry point.
+
+**`drill` is the same shape of finding.** `expand_seed` already called
+`get_similar_keywords`, which returns 120–173 children **each already carrying its
+own volume and supply** — and then returned `all_terms`, a flat list of bare
+strings. Every measurement paid for was discarded at the boundary. Drill returns
+them as ranked rows in the same shape `compare` emits, so a drill's output is a
+valid input to another drill and going deeper never means learning a second
+format.
+
+**And the autocomplete was listed as a capability that did not exist.** Two docs
+claimed "Search Autosuggest"; `core/settings.py:27` carried a dead
+`TYPING_SUGGEST_ENDPOINT` constant nothing imported. What existed was
+`similar_keywords` — LLM-*generated* adjacency, on the seller session, ~10
+requests. The real query stream is a buyer-session call. The operator supplied the
+better of the two endpoints from their own browser; probing settled the rest.
+
+### What probing changed, in each case
+
+Every one of these came from running the thing, not from reading it:
+
+* **The unit bug.** `compare`'s cheap mode divided a YEAR of searches by a
+  point-in-time listing count. `custom guitar strap` read **3.285 "winnable"**
+  against a true **0.156 "wall"** — and every verdict in an 8-term batch flipped.
+  The fix was free: the curve's last complete month is already in the response.
+* **The zero CVR.** `back70 sneakers` returns `query_cvr` exactly **0** against
+  ~10,500 monthly searches. `confirm_intent` only guarded `is None`, so `0/median
+  = 0.0` fell under the weak threshold and the gate *rejected* the term on a
+  number nobody measured.
+* **The silent slice.** The first live drill kept **59 of 173** children and
+  reported 59 as the neighbourhood.
+* **The rotation that isn't.** Ten consecutive suggestion calls returned identical
+  lists, across ten different buyer profiles.
+
+### The caveat that qualifies an earlier conclusion
+
+`supply` is the count Etsy **returns** for a query, which is a broad match. Private
+and public agree closely up to three words, so it is not a parsing artifact — Etsy
+really returns ~39,000 results for a four-word phrase, and 6 of 7 page-one
+listings do contain all four words. But the listings truly competing are fewer,
+and Etsy publishes **no exact-match count at any price**.
+
+So `demand_per_listing` is systematically **conservative** on long-tail terms: it
+divides a narrow, phrase-specific volume by a broad result count, and pushes
+specific terms toward `wall` by construction.
+
+This is **not corrected**, because any correction would be a guess dressed as a
+measurement. It is reported — `supply_basis`, `phrase_words`, and a note on drill
+saying to compare a child against its **siblings**.
+
+It matters because earlier the same day this repo produced "1,713 of 1,716
+discovered terms are walls", which reads as *the market is saturated*. They are
+all long-tail expansions, so a large part of that is the metric, not the market.
+A conclusion that survives one day and not the next is exactly what a decision
+log is for.

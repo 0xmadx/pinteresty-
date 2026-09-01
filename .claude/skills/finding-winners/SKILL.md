@@ -137,6 +137,28 @@ the system's job is to stop the operator wasting a launch, not to choose one.
 
 ---
 
+## Comparing a list, and going deeper
+
+`compare(terms=...)` is the batch door — a ranked table, worst-of verdicts, both
+floors stated. `keyword_crawl(operation="drill", seed=<term>)` opens **any** row into
+its sub-niches as rows of the same shape, drillable again.
+
+- **cheap** mode: `ceil(N/3)` requests, adds the seasonal curve, **no CVR** so intent
+  cannot be judged — it reads `not_checked`, never `weak`.
+- **full** mode: 1 request/term, adds CVR and page-one price.
+- Over the cap both **refuse**; they never trim. A silent cut leaves you comparing a
+  list you only partly measured while the output looks complete.
+
+⚠️ Both modes must feed `winnability` a **~30-day** volume. `chart_series` at
+`days=365` reports a YEAR of searches against a point-in-time supply — that mismatch
+read `custom guitar strap` as **3.285 winnable** when it is **0.156 wall**, and
+flipped every verdict in an 8-term batch. Read `volume_basis`.
+
+⚠️ A `wall` at four words is not the same claim as a `wall` at two — see the
+broad-match caveat in `etsy-public-tier`. Drill children are longer phrases than
+their parent, so each level down is pushed toward `wall` by construction. Judge a
+child against its siblings.
+
 ## Anti-patterns
 
 - Ranking by search volume, or by any composite that hides the ratio

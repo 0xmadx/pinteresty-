@@ -87,6 +87,35 @@ manufactures a runaway winner.
 
 ---
 
+## 4b. Etsy's autocomplete is FREE, and there are TWO of them
+
+`get_search_suggestions()` — buyer session, 2 requests, no seller cost. It reads
+`suggestions_ajax.php` **and** `/api/v3/ajax/public/search/suggestions` and merges,
+because they disagree: 14 vs 10 on `badge reel`, 16 vs 10 on `halloween`, each with
+terms the other misses. Reading one halves the candidate set.
+
+This is the **real query stream** — what buyers type. Contrast `similar_keywords`,
+which is LLM-*generated* adjacency on the seller session at ~10 requests.
+
+- ⚠️ **Strings only.** No volume, no supply. A suggestion proves people type it,
+  never that it is winnable. Size with `compare` before ranking.
+- ⚠️ **They do NOT rotate.** 10 calls across 10 buyer profiles returned identical
+  lists. Re-polling buys nothing; day-to-day drift needs *storing*.
+- ⚠️ `version` inert, `extras` not. ajax mixes in a shop-name row of raw HTML.
+
+## 4c. `supply` is a BROAD-match count — long-tail terms read as walls by construction
+
+Private and public agree closely up to 3 words, so this is not a parsing artifact:
+Etsy really returns ~39,000 results for `halloween badge reel nurse`, and 6 of 7
+page-one listings genuinely contain all four words. But the listings truly
+competing are fewer, and **Etsy publishes no exact-match count at any price**.
+
+So `demand_per_listing` is **conservative** on long-tail terms. Read `phrase_words`,
+and compare a child against its **siblings**, never against one-word head terms.
+
+⚠️ This qualifies "1,713 of 1,716 discovered terms are walls" — they are all
+long-tail expansions, so a large part of that is the metric, not the market.
+
 ## 5. What this tier uniquely answers
 
 - **who** ranks (12 cards + 39–51 ranked ids)
