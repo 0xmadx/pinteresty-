@@ -90,7 +90,7 @@ Re-audits which Etsy SERP filters can be believed. **9 of 12 currently cannot.**
 ```bash
 .venv/Scripts/python.exe -m core.test_graph_db
 ```
-One of **50 offline suites** — 1,354 assertions, no network required.
+One of **51 offline suites** — 1,379 assertions, no network required.
 
 `pinterest/tests/` holds 5 further suites that are **live** (their docstrings say so):
 they call the real Pinterest API, so their counts move with session state and they

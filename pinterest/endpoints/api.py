@@ -143,6 +143,7 @@ class PinterestTrendsAPI:
         ("metrics_", TTL_TREND_SERIES), ("related_", TTL_TREND_SERIES),
         ("prefix_", TTL_TREND_SERIES), ("trends_", TTL_TREND_SERIES),
         ("cat_metrics_", TTL_TREND_SERIES), ("top_categories_", TTL_TREND_SERIES),
+        ("moment_metrics_", TTL_TREND_SERIES),
         ("demographics_", TTL_TAXONOMY), ("cat_demographics_", TTL_TAXONOMY),
         ("product_categories", TTL_TAXONOMY), ("top_products_", TTL_TAXONOMY),
         ("featured_", TTL_TAXONOMY), ("editorial_", TTL_TAXONOMY),
@@ -441,6 +442,123 @@ class PinterestTrendsAPI:
                 "last_year_peak_ms": hist.get("peak_timestamp_millis"),
                 "next_occurrence_ms": (data.get("moment_next_occurrence_timestamps")
                                        or [None] * len(names))[i],
+            })
+        return self._store(key, out)
+
+    def moment_metrics(self, moments, country="US", aggregation="weekly",
+                       lookback_days=365, predicted_days=0, interest_limit=0,
+                       end_date=None):
+        """One moment's DEMAND CURVE — the only sub-weekly series in this API.
+
+        `moments_calendar()` gives a moment's takeoff/peak DATES. This gives its
+        SHAPE: the curve those dates sit on, plus an optional forecast and a
+        per-interest split. Added 2026-09-01 after an audit against the
+        `pinterest-apify` wire reference found it was the one endpoint of theirs
+        we had never implemented — which matters here more than anywhere, because
+        this project is calendar-first and this is the only daily-resolution
+        signal Pinterest exposes.
+
+        Verified live 2026-09-01 on `halloween`: `daily` + 365 lookback -> 365
+        points; `weekly` -> 66; `weekly` + predicted_days=91 -> 66 with 13 of them
+        forecast (91/7). `interest_limit=0` -> no `moment_interests`.
+
+        ⚠️ **THE WIRE RETURNS THIS SERIES NEWEST-FIRST.** Measured: `[0]` was
+        2026-11-23 and `[-1]` was 2025-08-25. Every other series in this system is
+        oldest-first, so a consumer looping forward would read every trend
+        backwards. **The points are reversed to ascending here**, at the one place
+        that knows the wire shape, rather than leaving a trap for callers (the
+        same reasoning as `parse_results_data` owning Etsy's snake_case).
+
+        ⚠️ **`peaks[]` is forward-looking; most of the curve is history.** Measured
+        on the same call: declared peak 2026-10-19 (next Halloween), observed max
+        2025-10-27 at `normal_counts` 61, forecast max 79. The two agree in shape,
+        which is the useful check — read the DATE from `peaks` and the expected
+        HEIGHT from the forecast points, then sanity-check it against last year's
+        observed peak.
+
+        ⚠️ **A worked example of the descending-order trap, because it caught the
+        author of this method.** Sampling `daily_values[0]` on the raw wire gives
+        `normal_counts: 2` and looks like a collapsed forecast. It is not — it is
+        2026-11-23, three weeks AFTER Halloween, i.e. the far tail read first
+        because the wire runs backwards. The actual forecast peak is 79. Any
+        summary statistic taken from the head of the unreversed series describes
+        the end of the story.
+
+        Every point carries `is_forecast`, so measured and predicted can never be
+        averaged together by accident (N-02's cousin: a prediction is not an
+        observation).
+        """
+        from .constants import (MOMENT_AGGREGATIONS, MOMENT_INTEREST_LIMIT_MAX,
+                                MOMENT_LOOKBACK_MAX, MOMENT_PREDICTED_DAYS_MAX)
+
+        if isinstance(moments, str):
+            moments = [moments]
+        agg = str(aggregation).lower()
+        if agg not in MOMENT_AGGREGATIONS:
+            raise ValueError(f"aggregation must be one of {MOMENT_AGGREGATIONS}; "
+                             f"{aggregation!r} (hourly returns 400)")
+        if not 1 <= lookback_days <= MOMENT_LOOKBACK_MAX:
+            raise ValueError(f"lookback_days must be 1..{MOMENT_LOOKBACK_MAX}; "
+                             f"{lookback_days} returns 400 'too large'")
+        if not 0 <= predicted_days <= MOMENT_PREDICTED_DAYS_MAX:
+            raise ValueError(f"predicted_days must be 0..{MOMENT_PREDICTED_DAYS_MAX}; "
+                             f"{predicted_days} returns 400 'too large'")
+        if not 0 <= interest_limit <= MOMENT_INTEREST_LIMIT_MAX:
+            raise ValueError(f"interest_limit must be 0..{MOMENT_INTEREST_LIMIT_MAX}; "
+                             f"{interest_limit} returns 400 'too large'")
+        if agg == "monthly" and predicted_days % 30 != 0 and predicted_days:
+            # Measured by the apify reference: "91 predicted days do not evenly
+            # divide into monthly agg" is a 400, not a silent truncation.
+            raise ValueError(
+                f"monthly aggregation needs predicted_days to divide evenly into "
+                f"months; {predicted_days} returns 400. Use weekly, or 0.")
+
+        end_date = end_date or self.latest_available_date()
+        slugs = [_moment_slug(m) for m in moments]
+        payload = {"moments": slugs, "end_date": end_date,
+                   "aggregation_level": agg, "lookback_days": lookback_days,
+                   "predicted_days": predicted_days,
+                   "interest_limit": interest_limit,
+                   "normalize_against_group": False}
+        key = (f"moment_metrics_{_slug(country)}_{_slug('_'.join(slugs))}_{agg}_"
+               f"{lookback_days}_{predicted_days}_{interest_limit}_{_slug(end_date)}")
+        hit = self._cached(key)
+        if hit is not None:
+            return hit
+
+        data = self._api_resource(
+            f"/ads/v4/trends/moment/metrics/{country}", payload,
+            source_url=f"/moments/{slugs[0]}/?country={country}")
+        if not data:
+            return None
+
+        out = []
+        for entry in data.get("moments") or []:
+            inner = entry.get("moment") or {}
+            points = []
+            for p in inner.get("daily_values") or []:
+                hi = p.get("predicted_normalized_upper_bound_count")
+                points.append({
+                    "timestamp": p.get("timestamp"),
+                    "count": p.get("normal_counts"),
+                    "predicted_lower": p.get("predicted_normalized_lower_bound_count"),
+                    "predicted_upper": hi,
+                    # The only marker the wire gives — there is no has_prediction
+                    # flag on this endpoint, unlike search /metrics/.
+                    "is_forecast": hi is not None,
+                })
+            # Oldest-first, so this behaves like every other series here.
+            points.reverse()
+            out.append({
+                "moment": entry.get("name"),
+                "aggregation": agg,
+                "points": points,
+                "observed_points": sum(1 for p in points if not p["is_forecast"]),
+                "forecast_points": sum(1 for p in points if p["is_forecast"]),
+                "peaks": inner.get("peaks") or [],
+                "interests": entry.get("moment_interests") or {},
+                "series_order": "ascending (reversed from the wire, which is newest-first)",
+                "basis": "measured; points flagged is_forecast are PREDICTED, not observed",
             })
         return self._store(key, out)
 

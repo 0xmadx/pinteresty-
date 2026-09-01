@@ -188,6 +188,55 @@ check whether the term has enough history first.
 
 ---
 
+## `moment_metrics(moments, …)` — the moment's CURVE ✅ live-probed 2026-09-01
+`POST`-style body through the ApiResource envelope:
+`/ads/v4/trends/moment/metrics/{country}` with
+`{moments:[slug], end_date, aggregation_level, lookback_days, predicted_days,
+interest_limit, normalize_against_group}`.
+
+**⭐ The only endpoint in this API that resolves below weekly.** Everything else —
+search `/metrics/`, `category_metrics`, `top_trends` — is weekly. Measured on
+`halloween`: `daily` + 365 lookback → **365 points**; `weekly` → 66; `weekly` +
+`predicted_days=91` → 66 with **13 forecast** (91/7, exact).
+
+`moments_calendar()` gives a moment's takeoff/peak **dates**; this gives the
+**shape** those dates sit on. For a calendar-first product that is the difference
+between "Halloween peaks around Oct 19" and "here is the ramp, day by day."
+
+### ⚠️ The wire returns this series NEWEST-FIRST
+Measured: `daily_values[0]` was **2026-11-23** and `[-1]` was **2025-08-25**.
+Every other series in this system is oldest-first. `moment_metrics()` **reverses
+to ascending** at the wire boundary and records that in `series_order` — callers
+get a forward series like everywhere else.
+
+**A worked example of why this matters**, because it caught the author: sampling
+the raw `[0]` gives `normal_counts: 2` and reads as a collapsed forecast. It is
+not — it is three weeks *after* Halloween, the far tail read first. The real
+forecast peak is **79**. Any summary statistic taken from the head of the
+unreversed series describes the end of the story.
+
+### ⚠️ `peaks[]` is forward-looking; most of the curve is history
+Same call: declared peak **2026-10-19** (next Halloween), observed max
+**2025-10-27 at 61**, forecast max **79**. Read the DATE from `peaks` and the
+HEIGHT from the forecast points, then sanity-check against last year's observed
+peak. There is **no `has_prediction` flag** on this endpoint, unlike search
+`/metrics/` — `is_forecast` is derived per point from a non-null
+`predicted_normalized_upper_bound_count`.
+
+### Parameters, all validated client-side before the request
+| Param | Valid | Wire behaviour if violated |
+|---|---|---|
+| `aggregation` | `daily · weekly · monthly` | `hourly` → 400 |
+| `lookback_days` | 1–730 | 1095 → 400 "too large" |
+| `predicted_days` | 0–91 | 180/365 → 400 "too large" |
+| `interest_limit` | 0–24 | 0 omits `moment_interests`; 50 → 400 |
+| `monthly` + `predicted_days` | must divide evenly | monthly + 91 → 400 |
+
+Pinned offline by `pinterest/endpoints/test_moment_metrics.py` (21 assertions) —
+including that every refusal happens **without spending a request**.
+
+---
+
 ## `editorial_content(country)` — Pinterest's written trend stories ✅ 2026-09-01
 `GET /ads/v4/trends/editorial/content/{country}`. Six hand-written stories. **Sat in
 the original captures marked "Unwired" since day one; now built and used by
@@ -628,6 +677,7 @@ check the wire" trap, so it is corrected rather than deleted.**
 | `related_terms` · `prefix_match` | `related_terms()` · `prefix_match()` | ✅ series ride along free |
 | `demographics` | `demographics()` | ✅ empty on low-volume terms, populated on real ones |
 | `moment/available` | `moments_calendar()` | ✅ region coverage mapped |
+| `moment/metrics` | `moment_metrics()` | ✅ **added 2026-09-01** — the only sub-weekly series in this API |
 | `shopping/product_categories` | `product_categories()` | ✅ 383-node tree |
 | `product_categories/top` | `top_categories()` | ✅ the intent signal |
 | `product_categories/metrics` | `category_metrics()` | ✅ forecast fully mapped |

@@ -158,6 +158,51 @@ def check_deep_dive_wiring():
           "programmatic caller (MCP included) gets None back on success")
 
 
+def check_stdout_is_protected():
+    """A tool that prints must not corrupt the JSON-RPC stream.
+
+    The server speaks JSON-RPC over STDOUT. Anything a tool prints lands in the
+    middle of that stream, and the failure mode is a dead connection rather than
+    a wrong answer — no `basis` field helps. The layers these tools call print
+    freely: ten print() calls sit under the Pinterest path alone, including
+    cookie_vault's "waiting for the extension" line, which fires exactly when a
+    session is missing and a tool is most likely to be called.
+
+    `_guarded` redirects stdout to stderr for every tool, so this asserts the
+    guard rather than trusting each tool author to remember.
+    """
+    import contextlib
+    import io
+
+    from mcp_server._plumbing import _guarded
+
+    @_guarded
+    def noisy_tool():
+        print("this would corrupt the protocol")
+        return {"ok": True, "value": 1}
+
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        result = noisy_tool()
+    check("a tool's print() never reaches stdout", buf.getvalue() == "",
+          repr(buf.getvalue()))
+    check("and the tool still returns its payload", result.get("value") == 1, result)
+
+    # The guard must not swallow the exception path either.
+    @_guarded
+    def noisy_and_broken():
+        print("noise before the failure")
+        raise RuntimeError("boom")
+
+    buf2 = io.StringIO()
+    with contextlib.redirect_stdout(buf2):
+        failed = noisy_and_broken()
+    check("stdout stays clean even when the tool raises", buf2.getvalue() == "",
+          repr(buf2.getvalue()))
+    check("and the failure still comes back as a structured refusal",
+          failed.get("ok") is False and "boom" in failed.get("error", ""), failed)
+
+
 def check_package_layout():
     """The split itself: every tool registers, and none went missing in the move.
 
@@ -177,6 +222,7 @@ def check_package_layout():
 
 
 def main():
+    check_stdout_is_protected()
     check_package_layout()
     check_one_read_layer()
     check_deep_dive_wiring()

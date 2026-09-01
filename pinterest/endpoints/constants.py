@@ -171,6 +171,17 @@ REGION_GROUPS = ["US", "GB+IE", "DE+AT+CH", "MX+AR+CO+CL"]
 # ...but Shopping accepts only these three. DE+AT+CH -> 400.
 SHOPPING_REGIONS = ["US", "CA", "GB+IE"]
 
+# --- moment/metrics -------------------------------------------------------------------
+# ⭐ The ONLY endpoint in this API that resolves below weekly. Verified live 2026-09-01
+# on `halloween`: aggregation_level="daily" + lookback_days=365 returned 365 points;
+# "weekly" returned 66. Everything else in Pinterest Trends is weekly-only.
+MOMENT_AGGREGATIONS = ["daily", "weekly", "monthly"]   # case-insensitive; "hourly" -> 400
+MOMENT_LOOKBACK_MAX = 730                              # 1095 -> 400 "too large"
+MOMENT_INTEREST_LIMIT_MAX = 24                         # 0 = omit moment_interests; 50 -> 400
+MOMENT_PREDICTED_DAYS_MAX = 91                         # 180/365 -> 400 "too large"
+# ⚠️ predicted_days must divide evenly into the aggregation unit: monthly + 91 -> 400
+# ("91 predicted days do not evenly divide into monthly agg"). weekly + 91 -> 13 points.
+
 # --- days / predicted_days ------------------------------------------------------------
 # Search /metrics/ takes ONLY these; days=45 or 60 returns 400.
 SEARCH_METRICS_DAYS = [30, 90, 180, 365, 730]

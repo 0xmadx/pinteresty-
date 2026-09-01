@@ -81,8 +81,8 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 
 ```bash
 # Full verification — run before every commit
-.venv/Scripts/python.exe -m core.test_graph_db          # + the other 49 suites
-# 50 OFFLINE suites, 1,354 assertions, no network required.
+.venv/Scripts/python.exe -m core.test_graph_db          # + the other 50 suites
+# 51 OFFLINE suites, 1,379 assertions, no network required.
 # ⚠️ pinterest/tests/ holds 5 more that are LIVE — their own docstrings say
 # "Live verification". They hit real Pinterest, their assertion counts VARY
 # with session state, and they print no summary when the vault is down. Never
@@ -278,7 +278,7 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. 50 offline suites, 1,354 assertions (+5 live
+request cache · run log · guards. 51 offline suites, 1,379 assertions (+5 live
 pinterest suites that need a session).
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
@@ -321,7 +321,7 @@ wall-clock timestamps and `build_pinterest` returns only `MAX(collected_at)`, so
 the suite failed whenever the two inserts straddled a second — a real race, hidden
 because it passed on rerun. Production was never affected (`trends_bridge` passes
 one shared timestamp per run).
-**1,354 assertions** across 50 offline suites, plus 5 live pinterest suites.
+**1,379 assertions** across 51 offline suites, plus 5 live pinterest suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

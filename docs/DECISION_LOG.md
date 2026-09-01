@@ -1529,3 +1529,72 @@ which module it was found in.
 **Verified:** the MCP suite goes 19 → **26 assertions** (+7 layout checks), a
 real stdio round trip still registers all 18 and successfully CALLS four of them,
 and no tool leaks `a`/`kw` into its schema.
+
+## D-54 — stdout was a live protocol hazard, and `moment/metrics` was the missing endpoint
+
+**Date:** 2026-09-01. Two findings from auditing the Pinterest layer before
+opening the MCP surface to it.
+
+### The blocker: a printing tool corrupts JSON-RPC
+
+**The server speaks JSON-RPC over stdout, and the layers its tools call print
+freely.** Ten `print()` calls sit under the Pinterest path alone —
+`api.py`'s cache-hit line and three failure lines, `metrics`' local-serve line,
+and `core/cookie_vault.py`'s "waiting for the extension" message, which fires
+*exactly* when a session is missing and a tool is most likely to be invoked.
+`mcp_server/` had **no stdout redirection anywhere** (grep-confirmed), so the
+first Pinterest tool call would have corrupted the stream.
+
+This is a nastier class than a wrong number: the failure is a **dead
+connection**, so no `basis` field, refusal or guard downstream can express it.
+
+**Fixed in `_guarded`**, not per-tool — `contextlib.redirect_stdout(sys.stderr)`
+around every tool body. A tool author cannot forget it, and a library that starts
+printing tomorrow is covered retroactively. stderr is the right destination: the
+operator still sees the message in the client's server log.
+`check_stdout_is_protected()` asserts it on both the success and the raising
+path, since a guard that only holds when nothing goes wrong is not a guard.
+
+### The gap: `moment/metrics`, the only sub-weekly series in the API
+
+Diffing this project's actual call paths against the `pinterest-apify` wire
+reference (a 20-endpoint index the operator built for that project) found four
+endpoints we never implemented. Three are minor. The fourth,
+`/ads/v4/trends/moment/metrics/{region}`, is **the only endpoint in Pinterest
+Trends that resolves below weekly** — and this project is calendar-first. We were
+calling `moment/available` for takeoff/peak *dates* and never fetching the
+*curve* those dates sit on. Our own market_map doc did not catch it either: its
+coverage table listed `moment/available` and never mentioned `moment/metrics`.
+
+Implemented and **live-probed before being built on** (Rule 1 of
+`etsy-pipeline-work`). Measured on `halloween`: `daily` + 365 → 365 points,
+`weekly` → 66, `weekly` + `predicted_days=91` → 66 with 13 forecast.
+
+**Two traps found by probing, both now handled at the wire boundary:**
+
+1. **The wire returns the series NEWEST-FIRST** — `[0]` was 2026-11-23, `[-1]`
+   was 2025-08-25. Every other series here is oldest-first, so a consumer looping
+   forward reads every trend backwards. The method reverses to ascending and
+   records it in `series_order`.
+2. **`peaks[]` is forward-looking while most of the curve is history.** Declared
+   peak 2026-10-19, observed max 2025-10-27 at 61, forecast max 79. Read the DATE
+   from `peaks`, the HEIGHT from the forecast points. There is no
+   `has_prediction` flag on this endpoint (unlike search `/metrics/`), so
+   `is_forecast` is derived per point from a non-null upper bound.
+
+**Trap 1 caught its own author**, which is why it is documented as a worked
+example rather than a footnote: sampling the raw `[0]` gives `normal_counts: 2`
+and reads as a collapsed forecast, when it is really the far tail three weeks
+*after* Halloween. The claim "the forecast tops out at 2, understating by 30×"
+was made and then disproved by the verification run — the real forecast peak is
+79, slightly *above* last year's observed 61. Any summary statistic taken from
+the head of an unreversed series describes the end of the story.
+
+**Also:** every one of the five wire-measured 400/500 conditions
+(`hourly`, lookback > 730, predicted > 91, interest_limit > 24, monthly + 91) is
+refused **client-side before a request is spent** — a 400 costs a round trip and
+returns `None`, which is indistinguishable from "no data" (N-02).
+
+**Verified:** `pinterest/endpoints/test_moment_metrics.py`, **21 offline
+assertions**, stubbing `_api_resource` with a deliberately DESCENDING fixture so
+the reversal is pinned rather than assumed.

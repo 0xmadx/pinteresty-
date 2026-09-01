@@ -13,7 +13,9 @@ happened once here, to all 13 tools at the time, and an in-process
 `wraps` sets `__wrapped__`, which `inspect.signature` follows back to the true
 parameters. **Any new decorator layered into this stack must do the same.**
 """
+import contextlib
 import functools
+import sys
 import traceback
 
 from mcp.server.mcpserver import MCPServer
@@ -48,14 +50,32 @@ def _fail(error, fix=None, **meta):
 
 
 def _guarded(fn):
-    """Turn any exception into a structured refusal rather than a protocol error.
+    """Turn any exception into a structured refusal, and keep stdout clean.
 
-    See the module docstring for why `functools.wraps` cannot be dropped here.
+    Two jobs, and the second is not optional.
+
+    ⚠️ **THE SERVER SPEAKS JSON-RPC OVER STDOUT.** Anything a tool prints lands
+    in the middle of the protocol stream and corrupts it — the failure is a dead
+    connection, not a wrong answer, so no `basis` field can save you from it.
+    This is not hypothetical: the layers these tools call print freely. Ten
+    `print()` calls sit under the Pinterest path alone —
+    `api.py`'s cache-hit line and its three failure lines, `metrics`' local-serve
+    line, and `core/cookie_vault.py`'s "waiting for the extension" message, which
+    fires exactly when a session is missing and a tool is most likely to be
+    called.
+
+    Redirecting here rather than per-tool is deliberate: a tool author cannot
+    forget, and a library that starts printing tomorrow is covered retroactively.
+    stderr is the right destination — the operator still sees it in the client's
+    server log.
+
+    See the module docstring for why `functools.wraps` cannot be dropped.
     """
     @functools.wraps(fn)
     def wrapper(*a, **kw):
         try:
-            return fn(*a, **kw)
+            with contextlib.redirect_stdout(sys.stderr):
+                return fn(*a, **kw)
         except Exception as e:
             return _fail(f"{type(e).__name__}: {e}",
                          fix="See traceback in `detail`; most failures here are a "
