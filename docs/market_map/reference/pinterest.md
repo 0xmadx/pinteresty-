@@ -188,6 +188,29 @@ check whether the term has enough history first.
 
 ---
 
+## `editorial_content(country)` — Pinterest's written trend stories ✅ 2026-09-01
+`GET /ads/v4/trends/editorial/content/{country}`. Six hand-written stories. **Sat in
+the original captures marked "Unwired" since day one; now built and used by
+`pinterest/products/moodboard.py::editorial()`.**
+
+Per story: `title` · `body` (real editorial copy, not a generated blurb) · `pins`
+with dominant colours · `interests` · `start_date` · and a `keywords` dict.
+
+⚠️ **The region path segment is IGNORED.** `/US`, `/CA` and `/GB+IE` return
+byte-identical titles — the per-region split lives INSIDE each story's `keywords`
+dict instead. So this is **one request for all three markets, not three**. The
+`country` argument is kept only so the cache key and `source_url` mirror the UI.
+
+**What it is not:** there is no time series and no growth number here. Do not try
+to rank on it. `featured_topics` says *how fast*; this says *what to write*. It is
+the narrative layer — listing copy, angle, seasonal framing — and it is the one
+Pinterest surface aimed at the words rather than the numbers.
+
+**Region reach:** US / CA / GB+IE only (other regions return 200 + empty), the same
+narrow set as `featured_topics` and `top_products` — much narrower than moments.
+
+---
+
 ## `top_categories(event, country)` — Shopping trends ✅ 2026-08-16
 `OUTBOUND_CLICK` → 37 categories · `SAVE` → 20 · `ENGAGEMENT` → 35. **The intent signal.**
 
@@ -588,7 +611,36 @@ not a 200 with empty data).
 
 ---
 
-## Never-probed surface ❓
-`category_metrics`, `category_demographics`, `top_products`, `etsy_competitors`
-(Pinterest's view of Etsy competitors per category — worth probing),
-`editorial_content` (narrative layer, no metrics), `product_categories`. Assume nothing.
+## Coverage — the client reaches everything this API exposes ✅ re-audited 2026-09-01
+
+**This section used to read "Never-probed surface ❓" and list `category_metrics`,
+`category_demographics`, `top_products`, `etsy_competitors`, `editorial_content`
+and `product_categories` as unknowns. That was already false when written — every
+one of them is documented and verified in the sections ABOVE, in this same file.
+A stale tail contradicting its own document is exactly the "believe the code, then
+check the wire" trap, so it is corrected rather than deleted.**
+
+| Endpoint | Client method | State |
+|---|---|---|
+| `latest_available_date` | `latest_available_date()` | ✅ |
+| `top_trends_filtered` | `top_trends()` | ✅ all 5 UI filters verified |
+| `metrics` | `metrics()` | ✅ + `split_forecast()` |
+| `related_terms` · `prefix_match` | `related_terms()` · `prefix_match()` | ✅ series ride along free |
+| `demographics` | `demographics()` | ✅ empty on low-volume terms, populated on real ones |
+| `moment/available` | `moments_calendar()` | ✅ region coverage mapped |
+| `shopping/product_categories` | `product_categories()` | ✅ 383-node tree |
+| `product_categories/top` | `top_categories()` | ✅ the intent signal |
+| `product_categories/metrics` | `category_metrics()` | ✅ forecast fully mapped |
+| `product_categories/demographics` | `category_demographics()` | ✅ 3 blocks in one call |
+| `top_products` | `top_products()` · `etsy_competitors()` | ✅ merchant names direct from REST |
+| `topics/featured` | `featured_topics()` | ✅ |
+| `editorial/content` | `editorial_content()` | ✅ — see its own section above |
+
+**Genuinely out of reach, and correctly so:** the two `{advertiser_id}` endpoints
+(personalized to our own ad account — not market truth) and `POST /_/graphql/`
+`v3GetPinsQuery` (redundant; the REST `top_products` response already carries
+`merchant_name` and `title`).
+
+⚠️ **The one real open defect is in OUR client, not the API** — see the
+`_api_resource` retry gap flagged above: a transient 500 becomes `None`, which
+downstream cannot distinguish from "no data" (N-02).

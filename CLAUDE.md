@@ -235,6 +235,8 @@ account costs the business.
 | `docs/architecture/09_build_plan.md` | **what we are building and in what order** |
 | `docs/HOW_WE_WORK.md` | **the operating model** — the three seats, the loop, which lens fires when. Read first. |
 | `docs/market_map/` | **the shared knowledge base** — `reference/` (params, payloads, verified per platform) + `analysis/` (what each is worth, and the combinations). Read before planning data work. |
+| `pinterest/products/README.md` | ⚠️ **easy to miss — 8 standalone Pinterest products** (keyword_research · content_calendar · ad_targeting · market_intel · history · audience · moodboard · alerts), their own CLI, 54 live checks. Nothing here imports Etsy or `core/`. This is where `category_demographics` and `editorial_content` are actually used, and it was invisible from this file until 2026-09-01. |
+| `pinterest/pipelines/README.md` | the Etsy-facing Pinterest tier — the joins (`trends_bridge`, `pin_graph_pipeline`), as opposed to `products/` which stands alone |
 | `docs/architecture/11_endpoint_reference.md` | one-page endpoint summary; `docs/market_map/` is the full version |
 | `docs/architecture/10_session_layer.md` | how sessions really work now (Redis vault), the defect list, and why nothing can run today |
 | `docs/architecture/08_capability_map.md` | every endpoint + parameter, used vs never called |
@@ -244,11 +246,18 @@ account costs the business.
 | `docs/GOAL.md` | the north star |
 | `BIASES_AND_BLIND_SPOTS.md` | ⚠️ self-declared **unverified**; 2 of its 10 claims were wrong. Prefer `bias_audit.md`. |
 
-Skills in `.claude/skills/`: **`etsy-pipeline-work`** (is the number *true* — read it
-before touching a pipeline), **`etsy-seo-and-opportunity`** (is it the *right number to
-show first* — read it before ranking or recommending anything), `system-architect`,
-`bias-aware-analysis`, `ui-builder`, `git-and-comments`. They are enforced, not
-advisory.
+Skills in `.claude/skills/` — **all 8, and they are enforced, not advisory:**
+**`etsy-pipeline-work`** (is the number *true* — read it before touching a pipeline),
+**`etsy-seo-and-opportunity`** (is it the *right number to show first* — read it before
+ranking or recommending anything), **`etsy-market-intelligence`**,
+**`web-surface-mapping`**, `system-architect`, `bias-aware-analysis`, `ui-builder`,
+`git-and-comments`.
+
+⚠️ All 8 are git-tracked as of 2026-09-01. Six of them were **untracked before that** —
+a `.gitignore` rule meant to normalise `Skills/` vs `skills/` casing matched every
+spelling on case-insensitive NTFS and silently ignored the whole directory, so a fresh
+clone would have had two skills, not eight. Fixed; the on-disk directory is lowercase
+now and there is nothing left to drift.
 
 Those first two are deliberately a pair. `etsy-pipeline-work` catches a wrong number;
 `etsy-seo-and-opportunity` catches a correct number shown in the wrong order. Both cost

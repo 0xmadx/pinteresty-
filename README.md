@@ -127,7 +127,7 @@ go quiet when the vault is empty. The offline 58 are the gate.
 | `etsy/ui/` | the screens + `app_data.py`, the one read layer (D-41) |
 | `etsy/server/` | optional FastAPI read API (D-42) — `run_server.cmd` |
 | `core/` | sessions, database, cache, scheduler, guards, settings |
-| `pinterest/` | the Pinterest tier: `endpoints/` (client + wire reference), `pipelines/` |
+| `pinterest/` | the Pinterest tier — `endpoints/` (client + full wire reference), `pipelines/` (the Etsy-facing joins), and **`products/`: 8 standalone Pinterest tools with their own CLI and 54 live checks** (`pinterest/products/README.md`), which import nothing from Etsy or `core/` |
 | `mcp_server/` | the agent-facing surface — 18 tools, wired by `.mcp.json` |
 | `cookie_server_go/`, `chrome_extension/` | **the access layer.** Read, never extend. |
 | `config/` | `settings.json`, `filter_trust.json`, scheduler state |

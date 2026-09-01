@@ -8,11 +8,17 @@ pinterest_cookies.json
 etsy_datadome.txt
 pinterest_test.html
 
-# Windows NTFS is case-insensitive, so `.claude/skills/` and `.claude/Skills/` are ONE
-# directory here — but git is case-sensitive and would happily commit both spellings.
-# On a Linux/macOS checkout that becomes two real directories which then drift apart.
-# Track the lowercase spelling only.
-.claude/Skills/
+# NOTE (2026-09-01): there used to be a `.claude/Skills/` ignore rule here, meant to
+# track the lowercase spelling only — Windows NTFS is case-insensitive, so
+# `.claude/skills/` and `.claude/Skills/` are ONE directory here, while git is
+# case-sensitive and would happily commit both spellings, which become two drifting
+# directories on a Linux/macOS checkout.
+#
+# The intent was right; the mechanism could not work. With core.ignorecase=true the
+# pattern matched EVERY spelling, so it ignored the whole directory — 6 of 8 skills
+# were untracked and would have vanished on a fresh clone. Verified with
+# `git check-ignore -v`. The rule is removed and the on-disk directory renamed to
+# lowercase, so disk and git now agree and there is nothing left to drift.
 request_cache.db
 
 # Contains a captured live Etsy session (32 cookies incl. session-key-*, uaid).

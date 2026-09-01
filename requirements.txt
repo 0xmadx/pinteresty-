@@ -14,3 +14,7 @@ requests>=2.31.0
 fastapi>=0.110.0
 uvicorn>=0.29.0
 redis
+# The MCP server (mcp_server/server.py) — same class of omission as F-13, found
+# 2026-09-01. It was installed in the venv but undeclared, so a rebuilt venv
+# broke `python -m mcp_server.server` at the import line with no clue why.
+mcp>=2.0.0
