@@ -341,6 +341,120 @@ class EtsyPublicAPI:
 
         return result if result["total_results"] is not None or result["cards"] else None
 
+    # Etsy runs TWO autocomplete endpoints and they do not agree. Measured 2026-09-01
+    # on the same queries, same session:
+    #
+    #   suggestions_ajax.php                 badge reel -> 14    halloween -> 16
+    #   /api/v3/ajax/public/search/suggestions           -> 10               -> 10
+    #
+    # and each carries terms the other misses (`badge reel personalized`, `vintage`,
+    # `accessories` only on ajax; `halloween`, `charms`, `miffy` only on v3). Reading
+    # one endpoint would silently halve the candidate set, so both are read and
+    # merged. Two public requests, buyer session, no seller cost.
+    _SUGGEST_AJAX = "https://www.etsy.com/suggestions_ajax.php"
+    _SUGGEST_V3 = "https://www.etsy.com/api/v3/ajax/public/search/suggestions"
+
+    def get_search_suggestions(self, query):
+        """Etsy's OWN search-box autocomplete — what buyers actually type.
+
+        **Why this is not `similar_keywords`.** That one is
+        `llm-exploratory-keywords`: LLM-GENERATED adjacencies, on the SELLER session,
+        ~10 requests per expansion. This is the real query stream — the phrases
+        buyers type into the box — on the BUYER session, 2 requests, no seller risk.
+        Use this to find candidates and spend the private tier only to size them.
+
+        Measured 2026-09-01, `badge reel` -> nurse · medical · healthcare · funny ·
+        cute · charms · halloween · fall · personalized · vintage. It surfaced the
+        same healthcare cluster and the same seasonal hooks that a paid LLM expansion
+        of that term found, for none of the seller-account cost.
+
+        ⚠️ **No volume and no supply.** These are candidate STRINGS. A suggestion is
+        evidence people type it, never evidence it is winnable — size them through
+        `compare` (3 terms per request) before ranking anything.
+
+        ⚠️ **The ordering is Etsy's, and Etsy is not neutral (B-01).** A curated
+        sample of real queries, not a demand ranking.
+
+        ⚠️ **They do NOT rotate.** Ten consecutive calls returned byte-identical
+        lists — and because `SessionManager` shuffles a different buyer profile per
+        request, that was ten identities getting one answer, so it is not per-user
+        personalisation either. Calling repeatedly to "collect more" buys nothing.
+        Day-to-day drift is a separate question and needs storing, not re-calling.
+
+        Wire facts, each probed rather than assumed:
+          * `version` is INERT — dropped or set to garbage, the same 14 rows come
+            back. Nothing here expires, so no build string has to be kept current.
+          * `extras` is NOT inert — dropping it costs 3 of 14 rows.
+          * `limit`/`language`/`country`/`lang` are inert on the v3 endpoint.
+          * ajax mixes in a shop-name row that is raw HTML (`<span class=...>`), not
+            a query. It is dropped; counted, it would pose as a keyword.
+          * `simplified_queries` (v3) is ALWAYS EMPTY — the same category as
+            `similar_search_terms` and `market_gap_recommendations`. Do not build on it.
+        """
+        import json as _json
+
+        def _clean(rows, out, source, seen):
+            for row in rows or []:
+                q = (row or {}).get("query")
+                if not q or "<" in q:          # the shop-name row is markup
+                    continue
+                if q.strip().lower() == (query or "").strip().lower():
+                    continue                   # Etsy echoes the input as row 0
+                if q not in seen:
+                    seen[q] = source
+                    out.append(q)
+
+        def _fetch():
+            out, seen = [], {}
+            extras = _json.dumps({"expt": "sft_nortn", "lang": "en-US", "extras": []})
+            params = {"extras": extras, "search_query": query, "search_type": "all",
+                      "pathname": "/search", "previous_query": query}
+            url = self._SUGGEST_AJAX + "?" + urllib.parse.urlencode(params)
+            ajax_n = v3_n = 0
+            # Success is tracked from the STATUS, never from the row count. Keyed off
+            # rows, "both endpoints errored" and "both answered and Etsy has no
+            # completions for this term" collapse into one state — and they are
+            # opposite claims: one is our failure, one is a fact about the term (N-02).
+            ok_ajax = ok_v3 = False
+            with soft_parse("search.suggestions_ajax", query=query):
+                resp = self.session.request("GET", url, headers=self.headers,
+                                            platform="etsy")
+                if resp.status_code == 200:
+                    ok_ajax = True
+                    before = len(out)
+                    _clean(resp.json().get("results"), out, "ajax", seen)
+                    ajax_n = len(out) - before
+
+            url2 = self._SUGGEST_V3 + "?" + urllib.parse.urlencode({"query": query})
+            with soft_parse("search.suggestions_v3", query=query):
+                resp2 = self.session.request("GET", url2, headers=self.headers,
+                                             platform="etsy")
+                if resp2.status_code == 200:
+                    ok_v3 = True
+                    before = len(out)
+                    _clean(resp2.json().get("results"), out, "v3", seen)
+                    v3_n = len(out) - before
+
+            if not ok_ajax and not ok_v3:
+                # NEITHER endpoint answered. An empty list here would read as "Etsy
+                # has no suggestions for this term" — a claim about the market — when
+                # the truth is we never got an answer (N-02).
+                return None
+            return {"query": query, "suggestions": out, "sources": seen,
+                    "from_ajax_only": ajax_n, "added_by_v3": v3_n,
+                    # A partial answer is not a full one, and the caller must be able
+                    # to tell: with one endpoint down the candidate set is roughly
+                    # halved, and a short list would otherwise read as a narrow niche.
+                    "endpoints_ok": [n for n, ok in (("ajax", ok_ajax), ("v3", ok_v3))
+                                     if ok],
+                    "partial": not (ok_ajax and ok_v3),
+                    "basis": "measured" if (ok_ajax and ok_v3) else "partial"}
+
+        # TTL_SERP (1 day): autocomplete tracks what is being typed NOW, which is the
+        # whole reason to read it. A long TTL would turn a live signal into a stale one.
+        return self.cache.get_or_fetch(f"suggest2_{query}", TTL_SERP, _fetch,
+                                       source="etsy_public")
+
     def get_listing_data(self, listing_id):
         """Scrapes a public listing page: tags, breadcrumb, type, age, broadened queries.
 

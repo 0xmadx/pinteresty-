@@ -39,6 +39,8 @@ _PRIVATE_DOC = (
 
 _PUBLIC_DOC = (
     "search: the SERP — total supply, ranked ids, ~12 cards. "
+    "suggest: Etsy's own autocomplete — the phrases buyers TYPE, ~10 per "
+    "call, free and public. Strings only, no volume: size them with compare. "
     "listing: 13 tags + breadcrumb + product type + listed_on (age/honeymoon) + "
     "Etsy's own broadened queries; 30-day cache, the cheapest call here. "
     "listing_live: cart count, favourites, 24h bought badge — NEVER cached, all "
@@ -187,10 +189,11 @@ def etsy_public(
     page: int = 1,
 ) -> dict:
     """Competition truth — who ranks, what they tag. Buyer session: unlimited, safe."""
-    need = {"search": term, "listing": listing_id, "listing_live": listing_id,
+    need = {"search": term, "suggest": term,
+            "listing": listing_id, "listing_live": listing_id,
             "shop_metrics": shop, "shop_listings": shop}.get(operation)
     if not need:
-        arg = {"search": "term", "listing": "listing_id",
+        arg = {"search": "term", "suggest": "term", "listing": "listing_id",
                "listing_live": "listing_id"}.get(operation, "shop")
         return _fail(f"operation '{operation}' needs `{arg}`")
 
@@ -218,6 +221,34 @@ def etsy_public(
                     "half are ADS — do not divide by results_per_page. Page 2+ is "
                     "never requested by this system, so rank beyond page one is "
                     "unknown rather than absent.",
+        })
+
+    if operation == "suggest":
+        data = api.get_search_suggestions(term) or {}
+        sugg = data.get("suggestions") or []
+        return _ok({
+            "operation": operation, "term": term,
+            "suggestions": sugg, "returned": len(sugg),
+            "sources": data.get("sources"),
+            "endpoints_ok": data.get("endpoints_ok"),
+            "partial": data.get("partial"),
+            "basis": data.get("basis", "measured"),
+            "cost": "TWO public requests, buyer session. Nothing here spends the "
+                    "seller account.",
+            "note": "Etsy's own search-box autocomplete: what buyers actually TYPE, "
+                    "not an LLM's guess at adjacency (that is etsy_private "
+                    "similar_keywords, ~10 seller requests). "
+                    "⚠️ STRINGS ONLY — no volume, no supply. A suggestion proves "
+                    "people type it, NEVER that it is winnable. Size them with "
+                    "`compare` (3 terms per request) before ranking anything. "
+                    "⚠️ The order is Etsy's own and Etsy is not neutral (B-01) — a "
+                    "curated sample of real queries, not a demand ranking. "
+                    "⚠️ They do NOT rotate: ten consecutive calls returned identical "
+                    "lists, across ten different buyer profiles, so calling again to "
+                    "collect more buys nothing. Day-to-day drift is a separate "
+                    "question — store it, do not re-poll for it. "
+                    "`partial: true` means one endpoint was down and the list is "
+                    "roughly half size — do not read that as a narrow niche.",
         })
 
     if operation == "listing":

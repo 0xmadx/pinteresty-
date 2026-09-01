@@ -202,6 +202,8 @@ def keyword_crawl(
                  "verdict": n.get("verdict"),
                  "why": (n.get("winnability") or {}).get("reason"),
                  "basis": (n.get("winnability") or {}).get("basis"),
+                 "phrase_words": len((n.get("term") or "").split()),
+                 "supply_basis": (n.get("winnability") or {}).get("supply_basis"),
                  "parent": n.get("parent") or seed,
                  "depth": n.get("depth")} for n in kids[:limit]]
         by = {}
@@ -228,7 +230,12 @@ def keyword_crawl(
             "basis": "measured — every child carries volume and supply from Etsy's "
                      "own expansion, no extra call per term; same ~30-day unit as "
                      "results-data",
-            "note": "Sorted by demand-per-listing (D-31), never volume. A term with "
+            "note": "⚠️ Children are LONGER phrases than the parent, and `supply` is "
+                    "a BROAD-match count, so each level down is pushed toward `wall` "
+                    "by construction rather than by the market. Read `phrase_words` "
+                    "and compare a child against its SIBLINGS, not against the "
+                    "one-word head terms in `compare`. "
+                    "Sorted by demand-per-listing (D-31), never volume. A term with "
                     "no volume sorts LAST because it cannot be compared, not "
                     "because it is worst (N-02). All-walls is a real finding: it "
                     "says this branch is saturated all the way down, and the answer "

@@ -125,6 +125,24 @@ def winnability(data):
     else:
         verdict, reason = "wall", f"{supply:,} listings against {volume:,} searches"
 
+    # ⚠️ THE LONG-TAIL CAVEAT, measured 2026-09-01. `supply` is the number of
+    # listings Etsy RETURNS for the query, and for multi-word queries that is a
+    # broad match. Private and public agree closely up to three words
+    # (`badge reel` 272,331 vs 273,905; `halloween badge reel nurse` 40,391 vs
+    # 38,947), so the count is not a parsing artifact — Etsy really does return
+    # ~39,000 results for a four-word phrase.
+    #
+    # But the listings genuinely competing for that phrase are far fewer, and Etsy
+    # publishes no exact-match count at any price. So the ratio is CONSERVATIVE for
+    # long-tail terms: it divides a narrow, phrase-specific search volume by a broad
+    # result count, and a specific 4-word term is pushed toward `wall` by
+    # construction rather than by the market.
+    #
+    # This is not corrected here, because any correction would be a guess dressed as
+    # a measurement. It is REPORTED, so a `wall` at four words is not read the same
+    # way as a `wall` at two — and so nobody concludes "the whole neighbourhood is
+    # saturated" from a list of long-tail expansions, which is exactly the reading
+    # this repo's 1,713-of-1,716 discovery pool invites.
     return {
         "demand_per_listing": round(ratio, 3),
         "volume": volume,
@@ -133,6 +151,10 @@ def winnability(data):
         "verdict": verdict,
         "reason": reason,
         "basis": "measured",
+        "supply_basis": "broad match — listings Etsy RETURNS for this query, not "
+                        "listings that target the exact phrase. Etsy publishes no "
+                        "exact-match count, so for multi-word terms this ratio is "
+                        "conservative and `wall` may understate winnability.",
     }
 
 

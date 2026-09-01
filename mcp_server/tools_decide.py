@@ -305,6 +305,11 @@ def compare(terms: str, mode: str = "cheap") -> dict:
             # Stated, not assumed. Both modes must feed winnability a ~30-day
             # volume; the day this silently became annual, every verdict flipped.
             "volume_basis": d.get("volume_basis", "results-data (~30 days)"),
+            # A `wall` at four words is not the same claim as a `wall` at two: supply
+            # is a BROAD-match count, so long-tail terms are pushed toward `wall` by
+            # construction. Surfaced per row so the reader can weigh it.
+            "phrase_words": len(term.split()),
+            "supply_basis": win.get("supply_basis"),
         }
         if mode == "full":
             row["page_one_median_price"] = d.get("page_one_median_price")
@@ -402,5 +407,10 @@ def compare(terms: str, mode: str = "cheap") -> dict:
                 "`volume` is a ~30-DAY figure in BOTH modes so the ratio means the "
                 "same thing either way — read `volume_basis`. In cheap mode "
                 "`volume_annual` is the 12-month total and must NEVER be divided by "
-                "`supply`, which is a point-in-time count.",
+                "`supply`, which is a point-in-time count. "
+                "⚠️ `supply` is a BROAD-match count — Etsy returns ~39,000 results "
+                "for a 4-word phrase and publishes no exact-match count. So the "
+                "ratio is CONSERVATIVE on long-tail terms: read `phrase_words`, and "
+                "do not conclude a neighbourhood is saturated from a list of "
+                "multi-word expansions.",
     })
