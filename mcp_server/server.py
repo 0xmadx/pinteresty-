@@ -53,6 +53,7 @@ from mcp_server._plumbing import mcp, strip_schema_titles
 # Imported for the side effect of registering their tools on `mcp`. They look
 # unused and are not — deleting one silently removes those tools from the server.
 from mcp_server import (  # noqa: F401
+    tools_crawl,
     tools_decide,
     tools_economics,
     tools_learning,

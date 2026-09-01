@@ -1714,3 +1714,89 @@ And `alerts` states the difference between *no movement* and *not enough
 history*: with fewer than two archived weeks it returns a `finding` saying so,
 because an empty event list otherwise reads as "nothing changed" when the truth
 is "a diff needs two readings and cannot be backfilled."
+
+## D-57 — the crawl gets a wall an agent cannot argue past
+
+**Date:** 2026-09-01.
+
+**Context.** `keyword_crawl` is the operator's stated need — one seed in, the
+whole long-tail neighbourhood out, each term sized for winnability — and it is
+**the single riskiest tool on this surface**, for the same reason. It spends
+`etsy_private`: the operator's own seller account, the one asset here that
+cannot be replaced (D-29).
+
+The cost compounds three levels deep, measured:
+`get_similar_keywords(iterations=10)` runs 10 enqueue rounds per keyword, each
+polling ~2–3 times, and the crawl calls it once per expanded node — **~35 private
+requests and ~90 seconds per keyword**. At the CLI's defaults
+(`max_nodes=150, max_depth=3`) a deep crawl runs to hundreds of requests. Fine
+for a human to type deliberately; terrible for an agent reaching for it while
+exploring.
+
+**Chosen: refuse, never clamp.** An over-cap argument returns a `_fail` naming
+the ceiling. The alternative — silently clamping 5,000 to 200 — is the worse
+failure: the agent believes it searched the whole neighbourhood when it saw 4% of
+it, and nothing in the response says otherwise. A refusal is noisy and correct.
+
+**Inside the ceiling the tool decides for itself**, which is what the operator
+asked for ("let the mcp decide"): it stops when the frontier is exhausted, when
+the budget is spent, or — adaptively — once it has already found enough winnable
+pockets to answer the question. Every result carries `spent`, `expansions_remaining`
+and `stopped_because`, so going deeper is an explicit second call rather than an
+automatic escalation.
+
+**Implemented as a counting proxy, not a forked crawl.** `_Budgeted` wraps the
+private client and raises once the expansion ceiling is hit; nodes found before
+that survive via the crawl's own `on_node` callback. This keeps
+`keyword_crawl.crawl`'s real logic — the best-first frontier, the cycle dedupe,
+the top-k pruning — exactly as the CLI runs it. All that changes is who is
+allowed to keep going. `iterations` drops 10 → 3 on the agent path: each
+iteration asks Etsy's LLM again for *different* edges, so this trades edge
+diversity for a ~3.5× cost cut.
+
+### The live run corrected the tool's own number
+
+First live crawl (`felt garland`, 40 terms) returned in **under a second** having
+spent **zero** network requests — `get_similar_keywords` is cached for 30 days
+and that neighbourhood had been crawled before. But the payload reported
+`estimated_private_requests: 10`.
+
+That is precisely the plausible-wrong-number this project exists to prevent: a
+derived figure presented as a measurement. Renamed to
+**`private_requests_upper_bound`**, with a basis stating that a cached expansion
+spends 0 and the true cost lies between 0 and the bound (Rule 3 — bounds are
+labelled as bounds). The expansion count itself remains exactly measured.
+
+**The run's actual finding is also worth recording**: 40 terms, **0 winnable, 0
+contested, 39 walls**. The payload says plainly that this is a *result* — "the
+neighbourhood is a wall all the way down" — not a failed run, because an agent
+seeing `pockets: []` would otherwise report a broken tool.
+
+**Verified:** `mcp_server/test_crawl_budget.py`, **19 offline assertions**. The
+load-bearing one drives the real `crawl()` with a deliberately runaway client
+that returns fresh children for ever: without the proxy that test would hang or
+run away rather than fail, which is exactly the production failure being
+prevented. Others assert the caps refuse rather than clamp, that the refusal
+explains *why* the ceiling exists, that the cheaper iteration count is actually
+passed through, and that the request figure is named as a bound.
+
+**The budget test earned its keep the same day.** Adding this tool pushed the
+published surface to **4,076 tokens** and the offline gate went red on
+`mcp_server.test_server` — the ceiling introduced one commit earlier (D-56)
+catching a real regression rather than sitting decorative.
+
+The fix was to trim, not to raise the ceiling again: three descriptions that
+predated the house rule were carrying more prose than their warnings needed —
+`deep_dive_keyword` **1,091 → 452**, `calendar` **717 → 450**, `cockpit`
+**610 → 383**. **1,163 chars reclaimed, no warning lost**; `deep_dive_keyword`
+still says that leaving `cogs` at 0 produces false *winners*, `calendar` still
+leads with `is_wall` and the christmas-ornament example, `cockpit` still says
+conflicts are two opposite readings rather than a middling score.
+
+Final: **15,142 chars ≈ 3,785 tokens, 21 tools reaching 46 capabilities.**
+
+A note on the house rule: the plan said "descriptions ≤ 400 chars". Seven now sit
+at 449–529 because what they carry is worth the bytes, and the test does not
+police them individually. The **total** is what is enforced, and that is the
+honest arrangement — a per-tool rule nobody meets is worse than no rule, and the
+budget is the constraint that actually matters to an agent's context.

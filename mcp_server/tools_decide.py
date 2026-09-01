@@ -13,21 +13,12 @@ from mcp_server._plumbing import _fail, _guarded, _ok, _preflight, mcp
 @_guarded
 def calendar(lead_weeks: int = 6, product_type: str = "personalized",
              country: str = "US") -> dict:
-    """What should be listed, and by when? The front door.
-
-    Joins Pinterest takeoff dates to Etsy demand: each dated moment gets a list-by
-    deadline (takeoff minus `lead_weeks`) and the watched terms that belong to it,
-    each with volume, supply and demand-per-listing.
-
-    Read `is_wall` before recommending anything. A term can clear the margin gate
-    and still be unrankable — "christmas ornament" is 25,477 searches against
-    1,405,731 listings, profitable and impossible. Rank by demand_per_listing,
-    never by volume.
-
-    `state` is list_now / list_by / watching / untimed / passed. `untimed` means the
-    deadline has passed and no peak was measured, so late cannot be told from
-    missed — report it as unknown, never as an opportunity.
-    """
+    """What to list and by when — Pinterest takeoff dates joined to Etsy demand, each
+    moment carrying a list-by deadline and its watched terms. ⚠️ Read `is_wall`: a term
+    can clear the margin gate and still be unrankable (christmas ornament — 25,477
+    searches against 1,405,731 listings). Rank by demand_per_listing, never volume.
+    `state` untimed = deadline passed with no measured peak, so late cannot be told
+    from missed — report unknown, never opportunity."""
     from etsy.engines import calendar_engine
     rows = calendar_engine.build(country=country, lead_weeks=lead_weeks,
                                  product_type=product_type)
@@ -50,17 +41,11 @@ def calendar(lead_weeks: int = 6, product_type: str = "personalized",
 @_guarded
 def cockpit(keyword: str, product_type: str = "personalized",
             lead_weeks: int = 6) -> dict:
-    """Everything known about ONE candidate, with the three sources kept apart.
-
-    `timing` (Pinterest), `demand` (Etsy Private) and `supply` (Etsy Public) are
-    separate readings and must be reported separately. `combined.conflicts` is the
-    most important field: when Pinterest times a term well and Etsy says it cannot
-    be ranked, those are two clear opposite readings, not a middling score.
-
-    Reads the database only — no live calls, so it is fast and repeatable. A
-    `trend` with basis `refused` means the comparison would have measured our own
-    instrument rather than the market; report it as refused, never as no change.
-    """
+    """Everything known about ONE candidate, three sources kept APART: timing
+    (Pinterest), demand (Etsy Private), supply (Etsy Public). `combined.conflicts` is
+    the field that matters — good timing plus unrankable supply is two opposite
+    readings, not a middling score. DB-only, no live calls. A `trend` basis of
+    `refused` means the comparison would have measured our own instrument."""
     from etsy.engines import cockpit as ck
     state = ck.build(keyword, product_type=product_type, lead_weeks=lead_weeks)
     from core.settings_store import load

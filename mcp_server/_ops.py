@@ -48,6 +48,11 @@ ResearchOp = Literal[
     "history",          # rank history / longevity, local archive, no network
 ]
 
+CrawlOp = Literal[
+    "crawl",        # recursive best-first expansion + the winnable pockets
+    "expand_seed",  # one level only, cheaper
+]
+
 # --- the three spellings of one idea ---------------------------------------------------
 # The same "upper prediction bound" ships under a different key on every endpoint
 # that has one. Normalising here means a consumer never has to know which

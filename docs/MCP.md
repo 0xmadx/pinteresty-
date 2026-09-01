@@ -12,7 +12,7 @@ becoming a source of numbers.
 .venv/Scripts/python.exe -m mcp_server.server
 ```
 
-Speaks stdio. **20 read-only tools**, two of which group 26 operations between them. You do not run this command yourself in
+Speaks stdio. **21 read-only tools**, three of which group 28 operations between them. You do not run this command yourself in
 normal use — the MCP client (Claude Code, Claude Desktop, Antigravity) launches
 it as a subprocess on demand, over stdio. Run it by hand only to sanity-check it
 starts, or when writing/debugging a new tool.
@@ -55,7 +55,7 @@ for t in tools: print(' ', t.name)
 "
 ```
 
-20 tools should print. If Claude Code / Antigravity shows a different count
+21 tools should print. If Claude Code / Antigravity shows a different count
 after adding the server, the client is pointed at a stale `cwd` or a different
 Python (not the venv) — check the command path first.
 
@@ -88,6 +88,7 @@ Python (not the venv) — check the command path first.
 | `cheap_competitors` | why the cheapest listings are cheap — origin of the price floor | **live** |
 | `pinterest` | **15 operations** — the raw audience/timing/momentum surface. See below | **live** |
 | `pinterest_research` | **11 operations** — composed research: expansion, audience skew, merchant share, movement | **live** (2 are local-only) |
+| `keyword_crawl` | recursive seed expansion → the winnable pockets. **SPENDS THE SELLER ACCOUNT**, hard-capped | **live, seller-tier** |
 | `deep_dive_keyword` | full BFS crawl + gap/sourcing arbitrage on a seed — slow, dozens of requests | **live, expensive** |
 | `filter_trust_report` | which Etsy SERP filters can be believed, which silently lie | local |
 | `profit_verdict` | go/no-go on one unit, with the reason it failed | local |
@@ -148,6 +149,33 @@ alerts · history`.
 | `sweep` (all interests) | **24**, ~15s wall clock at the client's 0.6s pacing |
 | `alerts` · `history` | **0** — local archive, and they skip preflight entirely since they need no session |
 
+### `keyword_crawl` — the only tool with a wall around it
+
+Every other tool here is either free or spends a replaceable buyer/Pinterest
+session. This one spends **`etsy_private`, the operator's own seller account**,
+and it spends it *recursively* — which is why it is the only tool with hard caps.
+
+Measured cost at the CLI's settings: **~35 private requests and ~90 seconds per
+keyword expanded**. A deep crawl runs to hundreds. On the agent path,
+`iterations` drops 10 → 3 and expansions are capped at 4.
+
+**It refuses rather than clamps.** `max_nodes=5000` returns an error naming the
+ceiling, not a quietly truncated crawl — an agent that asked for 5,000 and
+silently got 200 would report "I searched the whole neighbourhood" having seen
+4% of it.
+
+Read three fields on the way out:
+
+| Field | Means |
+|---|---|
+| `spent.expansions` | **measured** — keywords whose children were fetched |
+| `spent.private_requests_upper_bound` | a **bound**, not a count. A cached expansion spends 0; observed live, a 40-term crawl returned in under a second having spent nothing |
+| `stopped_because` | `frontier exhausted` · `request budget spent` · `found N winnable pockets — enough to answer` |
+
+**`pockets: []` is an answer, not a failure.** A crawl that finds 40 terms and 0
+pockets has told you the neighbourhood is a wall all the way down. Measured on
+`felt garland`: 40 terms, 39 walls, 0 winnable.
+
 ### The context budget is a test, not a hope
 
 Every tool's schema is resident in the agent's context for the whole session, so
@@ -171,6 +199,15 @@ choose correctly.
 | Required, never `Optional[Literal[…]]` | `Optional` collapses the enum into an `anyOf` and buries it |
 | One `Field(description=…)` on `operation` | cheapest documentation channel measured (544 vs 579 dedented-docstring vs 601 raw) |
 | Docstring stays ONE line | published **verbatim, including source indentation** — a multi-line docstring ships its leading whitespace on the wire |
+
+**Keep descriptions tight, but the enforced constraint is the TOTAL**, not a
+per-tool rule. Adding `keyword_crawl` pushed the surface to 4,076 tokens and the
+budget test failed the build; the fix was trimming three oversized descriptions
+(`deep_dive_keyword` 1,091 → 452, `calendar` 717 → 450, `cockpit` 610 → 383)
+without dropping a single load-bearing warning — 1,163 chars reclaimed. A handful
+of descriptions still sit in the 450–530 range because what they carry is worth
+the bytes; the test does not police them individually, and pretending otherwise
+would be a rule nobody follows.
 
 ⚠️ Shared `Literal` aliases live in `mcp_server/_ops.py` and must be **imported
 into the tool module by bare name**. MCP resolves annotations with
@@ -197,6 +234,7 @@ bounded **120-second wait** before it raises.
 | `tools_learning.py` | did it work (3) |
 | `tools_pinterest.py` | audience, timing, momentum — 15 operations |
 | `tools_pinterest_research.py` | composed research over `pinterest/products/` — 11 operations |
+| `tools_crawl.py` | recursive keyword discovery — the only seller-tier tool, hard-capped |
 | `server.py` | wiring + `main()` only — no tool definitions |
 
 ⚠️ **Adding a tool module means adding its import to `server.py`.** Those imports
