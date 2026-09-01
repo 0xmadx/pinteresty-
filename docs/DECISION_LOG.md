@@ -2179,3 +2179,48 @@ discovered terms are walls", which reads as *the market is saturated*. They are
 all long-tail expansions, so a large part of that is the metric, not the market.
 A conclusion that survives one day and not the next is exactly what a decision
 log is for.
+
+---
+
+## D-64 — `compare` was written in the wrong layer, and the UI question exposed it
+
+**2026-09-01.** Moved `compare` out of `mcp_server/tools_decide.py` into
+`etsy/analytics/compare.py`. The MCP tool is now a wrapper that adds the preflight
+and the `_ok`/`_fail` envelope, and nothing else.
+
+**How it was found.** The operator asked whether the plan had changed — *"we are
+working on MCP and we are going to work on the UI web app later, I do not know
+what we are doing now."* Checking whether today's work would actually survive
+into a web app answered the question and found the defect at the same time.
+
+~290 lines of gate sequencing — the two fetchers, `_monthly_volume`, the
+winnability/intent/discrimination ordering, the worse-of rule — sat inside a
+protocol adapter whose only import was `mcp_server._plumbing`. A second surface
+had exactly two options, both bad: import from `mcp_server` (a protocol adapter is
+not a library) or reimplement the gates, leaving the system with **two gate orders
+that drift apart**. D-41 already names one read layer for precisely this reason,
+and this walked straight past it.
+
+**Why it happened.** Every tool in `mcp_server/` before this was thin — a call into
+`etsy/analytics/` plus framing — so the file did not look like a place where logic
+accumulates. `compare` was the first tool that *composed* several analytics
+functions rather than wrapping one, and the composition landed where the wrapper
+lived because that was the file already open.
+
+**What the split buys, concretely.** `compare()` now takes injectable `fetch_cheap`
+/ `fetch_full` / `preflight`, so any surface can drive the judgement layer with no
+session and no MCP at all — which is also how the 52 assertions now run. The web
+app, a CLI, and the MCP tool call one function and get one answer.
+
+**Pinned, not just fixed.** `test_compare` now asserts the analytics module imports
+no MCP plumbing, that the gate sequencing is absent from the tool file, and that
+`compare()` runs offline through injected fetchers. The pull to write the next
+composite tool the same way is strong, and the cost of not resisting it only
+appears once the second surface exists — which is exactly too late.
+
+⚠️ The first version of that assertion was itself wrong: it searched for the
+substring `mcp_server` and fired on the docstring paragraph *explaining why the
+module is not in mcp_server*. It now matches import syntax only — the same false
+positive `test_preflight` hit on a prose mention of `vault_mirror.py`, which is
+twice now that a naive substring check has flagged the documentation of a rule as
+a violation of it.

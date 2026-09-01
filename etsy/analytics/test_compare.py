@@ -19,11 +19,11 @@ What these pin, in order of how expensive the mistake would be:
   5. Both floors are reported even when they bite: cheap mode cannot judge intent
      at all, and under MIN_POOL_FOR_INTENT there is no reference to judge against.
 
-Run:  python -m mcp_server.test_compare
+Run:  python -m etsy.analytics.test_compare
 """
 import sys
 
-import mcp_server.tools_decide as td
+import etsy.analytics.compare as td
 
 PASS = FAIL = 0
 
@@ -53,8 +53,7 @@ def main():
     # Stub the two fetchers and the preflight. The point of this suite is the
     # judgement layer — the fetchers are thin wrappers over parsers already covered
     # by test_parsers, and stubbing them keeps the seller account out of the loop.
-    real = (td._compare_cheap, td._compare_full, td._preflight)
-    td._preflight = lambda *a, **k: None
+    real = (td._compare_cheap, td._compare_full)
 
     # --- refusals come first: they are the guards, not the edge cases --------------
     print("\nrefusals")
@@ -256,7 +255,46 @@ def main():
           (z["floors"]["cvr_reference_median"] is not None)
           == (z["floors"]["terms_with_usable_cvr"] >= td_min_intent()), z["floors"])
 
-    td._compare_cheap, td._compare_full, td._preflight = real
+    td._compare_cheap, td._compare_full = real
+    # --- the LAYER, pinned ----------------------------------------------------------
+    #
+    # This was written inside mcp_server/tools_decide.py: ~290 lines of gate
+    # sequencing in a protocol adapter, reachable only through the MCP plumbing. The
+    # web app on the roadmap would have had to import from `mcp_server` — a protocol
+    # adapter is not a library — or reimplement the gates, leaving the system with
+    # two gate orders that drift apart. D-41 names one read layer for this reason.
+    #
+    # Pinned because the pull to write the next tool the same way is strong, and the
+    # cost only shows up once a second surface exists.
+    print(chr(10) + "the layer")
+    analytics = open("etsy/analytics/compare.py", encoding="utf-8").read()
+    tool = open("mcp_server/tools_decide.py", encoding="utf-8").read()
+    # Match IMPORT SYNTAX, not the substring. The docstring explains why the module
+    # is not in mcp_server, so a bare `in` check fires on the prose that documents
+    # the very rule it is testing — the same false positive test_preflight hit on a
+    # prose mention of vault_mirror.py.
+    import_lines = [l for l in analytics.split(chr(10))
+                    if l.strip().startswith(("import ", "from "))]
+    check("the analytics layer does NOT import the MCP plumbing",
+          not any("mcp_server" in l for l in import_lines), import_lines)
+    check("the gate sequencing lives here, not in the tool",
+          "confirm_intent" in analytics and "confirm_intent" not in tool)
+    check("the MCP tool is a thin wrapper over it",
+          "from etsy.analytics.compare import" in tool)
+    check("...and adds only the envelope it owns: preflight and _ok/_fail",
+          "preflight=_preflight" in tool and "_ok(" in tool)
+    from etsy.analytics.compare import compare as _c
+    import inspect
+    params = inspect.signature(_c).parameters
+    check("fetchers and preflight are injectable, so any surface can drive it",
+          {"fetch_cheap", "fetch_full", "preflight"} <= set(params), list(params))
+    offline = _c("a,b,c", mode="full",
+                 fetch_full=lambda terms: ({t: {"volume": 100 * (i + 1),
+                                                "supply": 50, "cvr": None}
+                                            for i, t in enumerate(terms)}, None, 0))
+    check("and it runs with NO session and NO MCP at all",
+          offline["ok"] and len(offline["rows"]) == 3, offline)
+
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
 

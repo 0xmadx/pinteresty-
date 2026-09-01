@@ -160,7 +160,8 @@ check("the module refuses rather than clamps — no min() on the caps at the gat
 # and reported 59 as if that were the neighbourhood — a slice shown as the answer.
 print()
 src = open(tc.__file__, encoding="utf-8").read()
-decide = open("mcp_server/tools_decide.py", encoding="utf-8").read()
+decide = (open("mcp_server/tools_decide.py", encoding="utf-8").read()
+          + open("etsy/analytics/compare.py", encoding="utf-8").read())
 drill_block = src.split(chr(39) + "drill" + chr(39))[0]
 drill_block = src[src.index("if operation == " + chr(34) + "drill" + chr(34)):][:5200]
 check("drill is a registered operation", chr(34) + "drill" + chr(34) in src)

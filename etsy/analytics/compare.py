@@ -1,0 +1,344 @@
+"""Compare a LIST of keywords side by side — the batch judgement.
+
+**Why this is here and not in `mcp_server/`.** It was written there first, and that
+was wrong: ~290 lines of gate sequencing sitting inside a protocol adapter, whose
+only import was the MCP plumbing. A second surface — the web app on the roadmap —
+would have had to either import from `mcp_server` (a protocol adapter is not a
+library) or reimplement the gates, giving the system two gate orders that drift
+apart. D-41 already says there is ONE read layer for exactly this reason.
+
+So the logic lives here, in analytics, and `mcp_server/tools_decide.py::compare`
+is a thin wrapper that adds `_ok`/`_fail` framing and the preflight. Any other
+surface calls `compare()` directly and gets the identical answer.
+
+THE GATES, in order, each able only to reject:
+
+    winnability   demand-per-listing (D-31) — can you rank here at all?
+    intent        relative query_cvr (D-43) — do these searchers buy?
+    discrimination can_discriminate (N-01)  — may this pool be ranked at all?
+
+The headline verdict is the WORSE of them, never an average: averaging lets a huge
+market hide a closed door.
+
+Pure of MCP, not pure of I/O — the two fetchers hit the private tier. They are
+injectable (`fetch_cheap` / `fetch_full`) so tests, a CLI or a web app can drive
+the judgement layer without a session.
+"""
+from etsy.analytics.discover import (MIN_POOL_FOR_INTENT, confirm_intent,
+                                     reference_median, winnability)
+from etsy.analytics.scoring import (MIN_POOL_SIZE, PoolTooSmall, can_discriminate,
+                                    explain, score_pool)
+
+
+def _refuse(message, fix=None, **extra):
+    """A refusal, in the analytics layer's own vocabulary — no MCP framing."""
+    out = {"ok": False, "error": message}
+    if fix:
+        out["fix"] = fix
+    out.update(extra)
+    return out
+
+
+def _result(payload):
+    return {"ok": True, **payload}
+
+
+# The batch entry point the surface never had. Every other tool here is singular —
+# one term, one moment, one shop — and behind them sits a complete, tested pool
+# ranker (`scoring.score_pool`/`explain`) whose only callers were two CLI engines.
+# So the agent could reach `can_discriminate`, the guard that REFUSES a ranking,
+# without being able to reach the ranking it guards: the surface could say "these
+# cannot be compared" and never "here is the comparison".
+#
+# Caps are per-mode because the modes cost differently per term. Both REFUSE rather
+# than clamp (the `keyword_crawl` precedent): a silent clamp leaves the agent
+# believing it compared a list it only sampled, which is worse than an error.
+MAX_COMPARE_CHEAP = 60   # ceil(60/3) = 20 requests
+MAX_COMPARE_FULL = 25    # 1 request per term, irreducibly
+
+
+
+def _monthly_volume(curve):
+    """A MONTHLY search volume out of the 12-month curve. `(value, basis)`.
+
+    ⚠️ THE UNIT BUG THIS EXISTS TO KILL, caught live 2026-09-01 before it shipped.
+    `chart-series-data` at days=365 reports `term_summaries.search_volume` as a
+    YEAR of searches, while `avg_total_listings` is a point-in-time count. Dividing
+    one by the other is a 12-month numerator over a right-now denominator, and it
+    inflated demand-per-listing by ~20x:
+
+        custom guitar strap   42,735 / 13,010 = 3.285  "winnable"   <- WRONG
+                               2,089 / 13,400 = 0.156  "wall"       <- results-data
+
+    Every term in an 8-term batch flipped verdict. `winnability`'s own thresholds
+    (D-31) are calibrated on the ~30-day volume that `results-data` returns, so the
+    ratio must be fed the same unit or the labels mean nothing.
+
+    The fix costs no extra request: the curve's last COMPLETE month is already in
+    the response and is a real monthly reading. Verified against results-data on
+    four terms — within 2-7% (2,232 vs 2,089 · 3,052 vs 2,989 · 38,295 vs 37,592 ·
+    11,538 vs 11,141).
+
+    The final bucket is skipped when the response flags it partial: it is the current
+    month counted so far, and using it would understate demand and look like a
+    collapse (D-45). Returns None rather than falling back to the annual figure —
+    an unmeasured ratio is honest, a 20x-inflated one is not (N-02).
+    """
+    points = (curve or {}).get("points") or []
+    complete = points[:-1] if (curve or {}).get("last_is_partial") else points
+    if not complete:
+        return None, "unmeasured — no complete month in the curve"
+    last = complete[-1]
+    return last.get("value"), f"last complete month ({last.get('label')})"
+
+
+def _compare_cheap(terms):
+    """One chunked chart-series sweep: volume, supply, wow and the 12-month curve.
+
+    ~ceil(N/3) requests for the whole batch, and the seasonal curve rides along free
+    (D-45). No CVR at any price — this endpoint does not carry it — so the intent
+    gate cannot run in this mode, and says so rather than being skipped in silence.
+    """
+    from etsy.analytics import seasonality as se
+    from etsy.api.private.api import (EtsyPrivateAPI, chart_coverage,
+                                      parse_chart_series, parse_term_summaries)
+
+    api = EtsyPrivateAPI()
+    raw = api.get_chart_series(terms, days=365)
+    summaries = {s["keyword"]: s for s in parse_term_summaries(raw) if s.get("keyword")}
+    curves = parse_chart_series(raw)
+
+    rows = {}
+    for term in terms:
+        s = summaries.get(term) or {}
+        curve = curves.get(term)
+        monthly, vbasis = _monthly_volume(curve)
+        rows[term] = {
+            # ⚠️ NOT s["volume"]. At days=365 that is a YEAR of searches, while
+            # `supply` is a point-in-time listing count — see _monthly_volume.
+            "volume": monthly, "volume_basis": vbasis,
+            "volume_annual": s.get("volume"),
+            "supply": s.get("supply"),
+            "cvr": None,                      # not on this endpoint, ever
+            "wow_change": s.get("wow_change"),
+            "price_low": None, "price_high": None,
+            "seasonality": se.profile(curve) if curve else
+                           {"verdict": "unmeasured", "basis": "no_curve"},
+        }
+    return rows, chart_coverage(raw), -(-len(terms) // 3)
+
+
+def _compare_full(terms):
+    """One results-data call per term: adds CVR, the price band and page-one prices.
+
+    The expensive mode, and the only one that can answer "do these searchers buy".
+    Cached 7 days, so a repeat within the week costs nothing — which makes the
+    request count an UPPER BOUND, never a measurement.
+    """
+    from etsy.api.private.api import EtsyPrivateAPI, parse_results_data
+
+    api = EtsyPrivateAPI()
+    rows, spent = {}, 0
+    for term in terms:
+        data = parse_results_data(api.get_results_data(term))
+        spent += 1
+        if not data:
+            rows[term] = {"volume": None, "supply": None, "cvr": None,
+                          "basis": "fetch_failed"}
+            continue
+        listings = data.get("listings") or []
+        prices = sorted(p for p in (l.get("price") for l in listings) if p)
+        rows[term] = {
+            "volume": data.get("volume"), "supply": data.get("supply"),
+            "cvr": data.get("cvr"), "wow_change": data.get("wow_change"),
+            "price_low": data.get("price_low"), "price_high": data.get("price_high"),
+            # D-46: the band is market-wide and includes every listing that never
+            # ranks; the median of the 20 that DO rank is a different, higher number
+            # and is the one a margin floor should be priced against.
+            "page_one_median_price": prices[len(prices) // 2] if prices else None,
+            "competitors_returned": len(listings),
+        }
+    return rows, None, spent
+
+
+def compare(terms, mode="cheap", fetch_cheap=None, fetch_full=None,
+            preflight=None):
+    """Compare a LIST of keywords you typed, side by side, ranked. The batch door.
+
+    mode=cheap: one chunked chart-series sweep, ~ceil(N/3) requests, adds the
+    12-month seasonal curve, NO CVR so the intent gate cannot run.
+    mode=full: one results-data call per term, adds CVR, the price band and
+    page-one prices, so intent is judged. Spends the seller account per term.
+
+    Sorted by demand-per-listing, never volume (D-31). REFUSES to score when the
+    dimensions cannot separate the pool (N-01). Both floors reported, never worked
+    around. Over the per-mode cap it refuses rather than trimming.
+    """
+    if mode not in ("cheap", "full"):
+        return _refuse(f"mode '{mode}' is not one of cheap/full")
+
+    # dict.fromkeys dedupes while preserving the order the operator typed, which is
+    # the order they will read the table in.
+    wanted = list(dict.fromkeys(t.strip() for t in (terms or "").split(",") if t.strip()))
+    if len(wanted) < 2:
+        return _refuse("`terms` needs at least 2 comma-separated keywords",
+                     fix="A comparison of one term is a lookup — use `cockpit`.")
+
+    cap = MAX_COMPARE_CHEAP if mode == "cheap" else MAX_COMPARE_FULL
+    if len(wanted) > cap:
+        return _refuse(
+            f"{len(wanted)} terms exceeds the {mode}-mode ceiling of {cap}",
+            fix=f"This authenticates as the operator's own Etsy SELLER account "
+                f"(D-29), which cannot be replaced. Split the list, or use "
+                f"mode=cheap (ceiling {MAX_COMPARE_CHEAP}). The 7- and 30-day "
+                f"caches make an overlapping second batch nearly free. Refusing "
+                f"rather than trimming on purpose: a silent cut would leave you "
+                f"comparing a list you only partly measured.")
+
+    blocked = preflight(("etsy_private",)) if preflight else None
+    if blocked:
+        return blocked
+
+    cheap_fn = fetch_cheap or _compare_cheap
+    full_fn = fetch_full or _compare_full
+    fetched, coverage, spent = (cheap_fn(wanted) if mode == "cheap"
+                                else full_fn(wanted))
+
+    # --- the gates, in order, each able only to reject -----------------------------
+    measured = [d for d in fetched.values() if d.get("volume")]
+    # Count CVRs the way `reference_median` counts them — TRUTHY, not just non-None.
+    # Etsy returns query_cvr as exactly 0 for some terms (see confirm_intent), and
+    # counting those made the payload contradict itself: `terms_with_cvr: 8` beside a
+    # null median that had refused because only 6 were usable. Two definitions of
+    # "has a CVR" in one response is how a reader stops trusting the floors.
+    cvrs = [d["cvr"] for d in fetched.values() if d.get("cvr")]
+    zero_cvrs = [d for d in fetched.values()
+                 if d.get("cvr") is not None and not d.get("cvr")]
+    # reference_median refuses below MIN_POOL_FOR_INTENT rather than comparing
+    # against noise — the same discipline as PoolTooSmall.
+    pool_median = reference_median([], extra_cvrs=cvrs) if mode == "full" else None
+
+    rows = []
+    for term in wanted:
+        d = fetched.get(term) or {}
+        win = winnability(d)
+        row = {
+            "term": term,
+            "volume": d.get("volume"), "supply": d.get("supply"),
+            "demand_per_listing": win.get("demand_per_listing"),
+            "winnability": win.get("verdict"), "why": win.get("reason"),
+            "basis": win.get("basis"),
+            "wow_change": d.get("wow_change"),
+            "price_low": d.get("price_low"), "price_high": d.get("price_high"),
+            # Stated, not assumed. Both modes must feed winnability a ~30-day
+            # volume; the day this silently became annual, every verdict flipped.
+            "volume_basis": d.get("volume_basis", "results-data (~30 days)"),
+            # A `wall` at four words is not the same claim as a `wall` at two: supply
+            # is a BROAD-match count, so long-tail terms are pushed toward `wall` by
+            # construction. Surfaced per row so the reader can weigh it.
+            "phrase_words": len(term.split()),
+            "supply_basis": win.get("supply_basis"),
+        }
+        if mode == "full":
+            row["page_one_median_price"] = d.get("page_one_median_price")
+            intent = confirm_intent(d, pool_median)
+            row["cvr"] = intent.get("cvr")
+            row["intent"] = intent.get("verdict")
+            row["cvr_vs_pool"] = intent.get("cvr_vs_pool")
+            row["intent_detail"] = intent.get("reason") or intent.get("detail")
+        else:
+            row["intent"] = "not_checked"
+            row["seasonality"] = d.get("seasonality")
+            row["volume_annual"] = d.get("volume_annual")
+
+        # The headline is the WORSE of the gates, never an average — averaging lets
+        # a huge market hide a closed door.
+        if row["basis"] != "measured":
+            row["verdict"] = "unmeasured"
+        elif row["winnability"] == "wall":
+            row["verdict"] = "wall"
+        elif row.get("intent") == "weak":
+            row["verdict"] = "searched_not_bought"
+        else:
+            row["verdict"] = row["winnability"]
+        rows.append(row)
+
+    # Sort by the ratio, not by any composite. A term nobody could size sorts last
+    # because it cannot be compared, not because it is worst (N-02).
+    rows.sort(key=lambda r: (r["demand_per_listing"] is None,
+                             -(r["demand_per_listing"] or 0)))
+
+    # --- may this pool be ranked at all? -------------------------------------------
+    pool = [{"key": r["term"], "demand": r["volume"], "supply": r["supply"],
+             **({"intent": r["cvr"]} if r.get("cvr") is not None else {})}
+            for r in rows if r["volume"] and r["supply"]]
+    rankable, ranked = None, None
+    if len(pool) >= MIN_POOL_SIZE:
+        v = can_discriminate(pool)
+        rankable = {"ok": v.ok, "reason": v.reason,
+                    "dimensions": list(v.dimensions or ()), "spread": v.spread}
+        if v.ok:
+            try:
+                scored = score_pool(pool, pool_id=f"compare:{len(pool)}")
+                ranked = [{"term": s.key, "score": round(s.score, 4),
+                           "confidence": round(s.confidence, 3),
+                           "missing": list(s.missing),
+                           "explain": explain(s)} for s in scored]
+            except PoolTooSmall as e:
+                rankable["reason"] = f"{rankable['reason']} — but {e}"
+    else:
+        rankable = {"ok": False, "dimensions": [], "spread": None,
+                    "reason": f"only {len(pool)} term(s) came back measured; below "
+                              f"{MIN_POOL_SIZE} a percentile carries no information"}
+
+    return _result({
+        "mode": mode, "terms": wanted, "rows": rows,
+        "ranked": ranked,
+        "rankable": rankable,
+        "coverage": coverage,
+        "spent": {"private_requests_upper_bound": spent,
+                  "basis": "bound — results-data caches 7 days and chart-series 30, "
+                           "so a repeat costs nothing and the true count may be 0"},
+        "floors": {
+            "min_pool_to_score": MIN_POOL_SIZE,
+            "min_pool_for_intent": MIN_POOL_FOR_INTENT,
+            "measured_terms": len(measured),
+            "terms_with_usable_cvr": len(cvrs),
+            "terms_with_cvr_zero": len(zero_cvrs),
+            "cvr_reference_median": pool_median,
+            "intent_state": (
+                "not_checked — cheap mode carries no CVR at any price; re-run with "
+                "mode=full to judge whether these searchers buy"
+                if mode == "cheap" else
+                f"judged against the median of {len(cvrs)} measured CVRs"
+                if pool_median else
+                f"NOT judged — only {len(cvrs)} term(s) carry a usable CVR "
+                f"(under {MIN_POOL_FOR_INTENT})"
+                + (f", and {len(zero_cvrs)} returned exactly 0, which is a reporting "
+                   f"floor rather than a measured rate and is excluded" if zero_cvrs
+                   else "")
+                + ". There is no reference, so the gate refuses rather than ranking "
+                  "against noise. Add more terms to the batch to build one."),
+        },
+        # Every row is a valid drill target, and the drill returns rows of this
+        # same shape. That is the loop the operator asked for: compare a list,
+        # take any row, get its sub-niches ranked, take any of THOSE, repeat.
+        "drill_next": "Any `term` in `rows` can be opened into its SUB-NICHES with "
+                      "keyword_crawl(operation='drill', seed=<term>). That returns "
+                      "rows in this same shape, each drillable again — including "
+                      "the walls, whose children are sometimes not walls.",
+        "note": "Sorted by demand-per-listing (D-31), never volume. The headline "
+                "`verdict` is the WORSE of the gates, not an average. `ranked` is "
+                "null when the dimensions cannot separate the pool — a real answer "
+                "(N-01), not a failure. cvr is RELATIVE only: compare it between "
+                "these terms, never read it as orders (D-43). "
+                "`volume` is a ~30-DAY figure in BOTH modes so the ratio means the "
+                "same thing either way — read `volume_basis`. In cheap mode "
+                "`volume_annual` is the 12-month total and must NEVER be divided by "
+                "`supply`, which is a point-in-time count. "
+                "⚠️ `supply` is a BROAD-match count — Etsy returns ~39,000 results "
+                "for a 4-word phrase and publishes no exact-match count. So the "
+                "ratio is CONSERVATIVE on long-tail terms: read `phrase_words`, and "
+                "do not conclude a neighbourhood is saturated from a list of "
+                "multi-word expansions.",
+    })
