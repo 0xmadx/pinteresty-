@@ -198,7 +198,7 @@ def etsy_public(
     if blocked:
         return blocked
 
-    from etsy.api.public.api import EtsyPublicAPI
+    from etsy.api.public.api import EtsyPublicAPI, listing_age
     api = EtsyPublicAPI()
 
     if operation == "search":
@@ -228,6 +228,7 @@ def etsy_public(
             "tags": data.get("tags"), "breadcrumb": data.get("breadcrumb"),
             "product_type": data.get("product_type"),
             "listed_on": data.get("listed_on"),
+            "age": listing_age(data.get("listed_on")),
             "broadened_queries": broadened,
             "broadened_count": None if broadened is None else len(broadened),
             "basis": "measured", "cache": "30 days — the cheapest call here",
@@ -235,7 +236,11 @@ def etsy_public(
                     "product_type decides which margin floor applies (D-22); it is "
                     "read from HTML markers, so a blocked page yields None rather "
                     "than 'physical'. "
-                    "`listed_on` is the listing's real age — the honeymoon signal. "
+                    "⚠️ `listed_on` RESETS ON AUTO-RENEWAL — measured on a listing "
+                    "with 7,700 reviews showing today's date. Read `age` for the "
+                    "honest version: a LOWER bound, with honeymoon=null when the "
+                    "review count contradicts a young-looking date. Never restate "
+                    "`listed_on` as the listing's age. "
                     "`broadened_queries` is ETSY's own expansion of this listing, not "
                     "the seller's tags: a term there but not in `tags` is Etsy's "
                     "synonym layer, which is what distinguishes it from a genuine "

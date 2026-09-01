@@ -309,18 +309,19 @@ class MarketDatabase:
             # when the listing was created. Calling it `listed_at` would invent a fact,
             # and a wrong age makes every velocity built on it wrong.
             #
-            # ⚠️ CORRECTED 2026-09-01. This said "Etsy does not publish a creation
-            # date", full stop. That is true of the SHOP GRID — where it was measured —
-            # and FALSE of the listing page, which carries `Listed on Aug 29, 2026` in
-            # its og:description. A limit of the surface we happened to be reading got
-            # written down as a limit of the platform, and it closed off honeymoon
-            # detection for the project's life.
+            # ⚠️ REFINED 2026-09-01, and the original conclusion still stands. This
+            # said "Etsy does not publish a creation date on the shop page". The
+            # listing page DOES carry `Listed on Sep 1, 2026` in og:description and in
+            # the body — but that date RESETS ON AUTO-RENEWAL, measured on a listing
+            # with 7,700 reviews reporting that very day. So Etsy publishes a date,
+            # and it is not a creation date.
             #
-            # `api.parse_listed_on()` reads it now, off HTML already fetched and cached
-            # 30 days. `first_seen_at` keeps its honest meaning; a real listing age is a
-            # separate, better-founded field, and `competitor_tracker.observed_age_days`
-            # (which returns `age_is_bounded` for anything but a first sighting) is
-            # correct code that was built on this now-obsolete assumption.
+            # `api.parse_listed_on()` reads it and `api.listing_age()` reports it as a
+            # LOWER BOUND, returning honeymoon=None when the review count contradicts a
+            # young-looking date. `first_seen_at` therefore keeps its meaning and its
+            # value: for a listing we watched appear, our own sighting is the better
+            # evidence. `competitor_tracker.observed_age_days` (which returns
+            # `age_is_bounded` for anything but a first sighting) remains correct.
             trend_cols = {row[1] for row in
                           cursor.execute("PRAGMA table_info(trend_observations)")}
             for column, decl in [

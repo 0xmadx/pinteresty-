@@ -16,6 +16,22 @@ MIN_LISTING_PAGE_BYTES = 50_000
 
 # Etsy has used several wordings for the cart badge and adds more. Each is tried; if
 # the page is healthy and NONE match, that is a parser alert, never an absence.
+#
+# ⚠️ PROBED 2026-09-01, and the answer was NO. Listing 1864690497 — 7,700 reviews,
+# ranked page one for `personalized gift`, a 707KB fully-rendered page — carries
+# NEITHER a cart count NOR a "bought in the past 24 hours" badge in its server-side
+# HTML. Favourites are there (`54,148 favorites`, linked to that listing's own
+# favoriters page, so listing-level and not the shop's total). The cart count the
+# operator saw lives on `/cart/?show_cart=<id>`, reached by ADDING TO CART.
+#
+# That is not reachable here: SessionManager claims a freshly shuffled profile per
+# request (session_manager.py -> cookie_vault random.shuffle), so an add and a read
+# run as two different buyer identities and the second sees an empty cart. Session
+# affinity would mean extending the access layer, which is forbidden.
+#
+# The patterns stay — they cost nothing, older listings may still render the badge,
+# and the canary below distinguishes "no badge" from "reworded badge" if Etsy ever
+# puts it back.
 _CART_PATTERNS = (
     r"[Ii]n\s+([\d,]+)\s+(?:people[’']s\s+)?carts?",
     r"([\d,]+)\s+(?:people\s+)?(?:have\s+)?(?:this\s+)?in\s+(?:their\s+)?carts?",
@@ -43,17 +59,26 @@ def _first_int(html, patterns):
 
 
 def parse_listed_on(html):
-    """`Listed on Aug 29, 2026` -> `2026-08-29`. None when the page does not say.
+    """`Listed on Sep 1, 2026` -> `2026-09-01`. None when the page does not say.
 
-    ⚠️ `core/database.py` records the belief "Etsy does not publish a creation date".
-    That is TRUE of the shop grid, which is where it was measured, and FALSE of the
-    listing page — the date sits in `og:description` and again in the body. Listing
-    age is the honeymoon signal, and it has been one regex away from HTML this system
-    already fetches and caches for 30 days.
+    ⚠️⚠️ **THIS IS NOT THE CREATION DATE. It resets on renewal.** Measured 2026-09-01
+    on listing 1864690497 (KvYshopUS), which carries **7,700 reviews** and reports
+    `Listed on Sep 1, 2026` — that day. Etsy listings auto-renew roughly every four
+    months and the displayed date moves with the renewal, so a four-year-old
+    best-seller and a genuinely new listing print the same string.
+
+    Read as an age, this number would have called that listing brand new. It is the
+    exact shape of failure this project exists to prevent, and the reason the field is
+    reported with `age_days_lower_bound` and a renewal flag rather than as "age" —
+    see `listing_age()`.
+
+    `core/database.py` was still half right for the wrong reason: it said Etsy does not
+    publish a creation date. It does not — but the reason is renewal, not the absence
+    of a date on the page, and the date IS on the page and is worth having.
 
     Returns an ISO date so it sorts and subtracts. A date that does not parse returns
     None rather than today, because "we could not read it" and "it is new" are the two
-    readings a honeymoon check must never confuse.
+    readings this must never confuse.
     """
     from datetime import datetime
     m = re.search(r"Listed on\s+([A-Z][a-z]{2})\s+(\d{1,2}),\s*(\d{4})", html or "")
@@ -63,6 +88,61 @@ def parse_listed_on(html):
         return datetime.strptime(f"{m.group(1)} {m.group(2)} {m.group(3)}",
                                  "%b %d %Y").date().isoformat()
     return None
+
+
+# Above this, a listing that claims to be days old is claiming something its review
+# count contradicts — reviews accrue over months, not hours. Deliberately low: the
+# point is to catch an obvious contradiction, not to model review velocity.
+RENEWAL_REVIEW_THRESHOLD = 20
+
+
+def listing_age(listed_on, review_count=None, now=None):
+    """Turn a displayed listing date into an age claim honest about renewal.
+
+    The date only ever establishes that the listing is **at least** this old, so the
+    output is a LOWER BOUND, never an age. Where the review count contradicts a
+    young-looking date, the bound is reported as uninformative rather than quietly
+    passed on as a honeymoon signal.
+
+    `honeymoon` is therefore three-valued and never a bare boolean:
+      True   — young AND nothing contradicts it
+      False  — old enough that it plainly is not in a honeymoon
+      None   — the date says young and the reviews say otherwise: RENEWED, unknown
+    """
+    from datetime import date, datetime
+    if not listed_on:
+        return {"listed_on": None, "age_days_lower_bound": None, "honeymoon": None,
+                "basis": "unmeasured",
+                "note": "no date on the page — not the same as a new listing"}
+
+    today = now or date.today()
+    try:
+        parsed = datetime.strptime(listed_on, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return {"listed_on": listed_on, "age_days_lower_bound": None,
+                "honeymoon": None, "basis": "unparseable"}
+
+    days = (today - parsed).days
+    looks_new = days <= 90
+    contradicted = looks_new and (review_count or 0) >= RENEWAL_REVIEW_THRESHOLD
+
+    if contradicted:
+        return {
+            "listed_on": listed_on, "age_days_lower_bound": days,
+            "review_count": review_count, "honeymoon": None,
+            "basis": "renewal_suspected",
+            "note": f"date says {days}d old but the listing carries {review_count} "
+                    f"reviews — Etsy resets this on auto-renewal, so the true age is "
+                    f"UNKNOWN and certainly greater. Not a honeymoon candidate.",
+        }
+    return {
+        "listed_on": listed_on, "age_days_lower_bound": days,
+        "review_count": review_count, "honeymoon": looks_new,
+        "basis": "derived",
+        "note": "a LOWER bound — Etsy resets this date on auto-renewal, so the "
+                "listing is at least this old and may be far older. Nothing here "
+                "can prove a listing is new; it can only fail to contradict it.",
+    }
 
 
 def parse_listing_live(html, listing_id=None):

@@ -18,9 +18,10 @@ healthy page where NOTHING matched is reported as a parser alert, never as an ab
 Run:  python -m etsy.api.public.test_listing_page
 """
 import sys
+from datetime import date
 
-from etsy.api.public.api import (MIN_LISTING_PAGE_BYTES, parse_listed_on,
-                                 parse_listing_live)
+from etsy.api.public.api import (MIN_LISTING_PAGE_BYTES, RENEWAL_REVIEW_THRESHOLD,
+                                 listing_age, parse_listed_on, parse_listing_live)
 
 PASS = FAIL = 0
 
@@ -58,6 +59,54 @@ def main():
     check("a malformed month is refused rather than guessed",
           parse_listed_on("Listed on Xyz 40, 2026") is None)
     check("tolerates None", parse_listed_on(None) is None)
+
+    # --- THE RENEWAL TRAP -----------------------------------------------------------
+    #
+    # Measured live 2026-09-01 on listing 1864690497 (KvYshopUS): 7,700 reviews, and
+    # the page says `Listed on Sep 1, 2026` — that day, in og:description AND in the
+    # body. Etsy auto-renews listings roughly every four months and the displayed date
+    # moves with the renewal, so a four-year-old best-seller and a genuinely new
+    # listing print the identical string.
+    #
+    # Read as an age this would have called that listing brand new. The parser was
+    # correct; the MEANING was wrong, which is the harder half and the reason this
+    # block exists.
+    print("\nlisting_age — the date resets on renewal")
+    today = date(2026, 9, 1)
+
+    renewed = listing_age("2026-09-01", review_count=7700, now=today)
+    check("a same-day date with 7,700 reviews is NOT called new",
+          renewed["honeymoon"] is None, renewed)
+    check("it is named as suspected renewal, not as an age",
+          renewed["basis"] == "renewal_suspected", renewed["basis"])
+    check("and the note says the true age is unknown and greater",
+          "UNKNOWN" in renewed["note"])
+
+    fresh = listing_age("2026-08-25", review_count=0, now=today)
+    check("a young date with no reviews may still be a honeymoon candidate",
+          fresh["honeymoon"] is True, fresh)
+    check("but its age is a LOWER bound, never an age",
+          fresh["age_days_lower_bound"] == 7 and "LOWER bound" in fresh["note"])
+
+    old = listing_age("2024-01-10", review_count=3, now=today)
+    check("an old date is plainly not a honeymoon", old["honeymoon"] is False)
+    check("the bound still counts the days", old["age_days_lower_bound"] == 965, old)
+
+    # honeymoon must be tri-state. A bare boolean would have to pick a side for the
+    # renewed case, and either choice is a claim the data does not support.
+    check("honeymoon is three-valued: True / False / None-for-unknown",
+          {renewed["honeymoon"], fresh["honeymoon"], old["honeymoon"]} == {None, True, False})
+
+    check("no date at all is unmeasured, NOT 'not a honeymoon'",
+          listing_age(None)["basis"] == "unmeasured"
+          and listing_age(None)["honeymoon"] is None)
+    check("an unparseable date is refused rather than coerced",
+          listing_age("last Tuesday")["basis"] == "unparseable")
+    # A young date with a handful of reviews is genuinely ambiguous; the threshold is
+    # deliberately low so the answer is "unknown" rather than a flattering "new".
+    check("even a modest review count contradicts a same-week date",
+          listing_age("2026-08-30", review_count=RENEWAL_REVIEW_THRESHOLD,
+                      now=today)["honeymoon"] is None)
 
     # --- the volatile trio ----------------------------------------------------------
     print("\nlisting_live — the wordings")
