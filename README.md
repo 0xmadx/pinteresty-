@@ -76,13 +76,6 @@ Runs whatever readings are due. Already registered as a daily Windows task
 (`EtsyScrapperDaily`, 07:00) via `run_scheduler.cmd`.
 
 ```bash
-.venv/Scripts/python.exe -m etsy.server.app
-```
-**Optional** read server — the interactive app live at `http://127.0.0.1:8100/`,
-plus `POST /api/analyze/{term}` to measure a keyword on demand. Not required; the
-static `etsy/data/ui/*.html` and the MCP tools work with no server.
-
-```bash
 .venv/Scripts/python.exe -m etsy.analytics.learn
 ```
 Did past predictions come true? Refuses to tune below 10 launches.
@@ -97,7 +90,7 @@ Re-audits which Etsy SERP filters can be believed. **9 of 12 currently cannot.**
 ```bash
 .venv/Scripts/python.exe -m core.test_graph_db
 ```
-One of **57 offline suites** — 1,531 assertions, no network required.
+One of **50 offline suites** — 1,347 assertions, no network required.
 
 `pinterest/tests/` holds 5 further suites that are **live** (their docstrings say so):
 they call the real Pinterest API, so their counts move with session state and they
@@ -115,17 +108,18 @@ go quiet when the vault is empty. The offline 58 are the gate.
                   └───────┬───────┘
                           │
      core/         session vault (Redis) · cache · run log · guards
-     mcp_server/   18 read-only tools for Claude / Antigravity
-     etsy/server/  optional FastAPI read API + live analysis (D-42)
+     mcp_server/   read-only tools for Claude / Antigravity — THE interface (D-52)
 ```
+
+There is no UI and no web server. The operator works through an agent, so the
+agent's surface is the product — see `docs/MCP.md`.
 
 | Directory | Holds |
 |---|---|
 | `etsy/api/{public,private,printify}/` | the three clients. `parse_*` functions own the wire format. |
 | `etsy/analytics/` | every judgement: profit, gaps, sourcing, scoring, LEARN |
 | `etsy/engines/` | the pipelines that string them together |
-| `etsy/ui/` | the screens + `app_data.py`, the one read layer (D-41) |
-| `etsy/server/` | optional FastAPI read API (D-42) — `run_server.cmd` |
+| `etsy/ui/` | **`app_data.py` only** — the one read layer (D-41), consumed by MCP. The screens that used to live here were deleted (D-52); the package name is kept so no import moves. |
 | `core/` | sessions, database, cache, scheduler, guards, settings |
 | `pinterest/` | the Pinterest tier — `endpoints/` (client + full wire reference), `pipelines/` (the Etsy-facing joins), and **`products/`: 8 standalone Pinterest tools with their own CLI and 54 live checks** (`pinterest/products/README.md`), which import nothing from Etsy or `core/` |
 | `mcp_server/` | the agent-facing surface — 18 tools, wired by `.mcp.json` |
@@ -167,7 +161,7 @@ go quiet when the vault is empty. The offline 58 are the gate.
 inverses · survivor bound · gap analysis with a filter-trust gate and working
 demand-in-bracket · sourcing and lead time · POD costing · scoring with a
 discrimination check · scheduler running daily · verdict change log · LEARN
-scaffold · 18 MCP tools · the interactive app · the optional read server.
+scaffold · 18 MCP tools — the interface (D-52).
 
 **Thin:** the data. Trend, listing and shop observations accumulate daily;
 keyword history covers 8 watched terms; **0 launches**. The machine is built and has
@@ -192,7 +186,6 @@ check before trusting a verdict that sits close to one.
 |---|---|
 | `docs/ONBOARDING.md` | **start here** — what is true, what is a trap, what to read |
 | `docs/MCP.md` | tutorial: wiring the MCP server into Claude / Antigravity, and where DeepSeek belongs |
-| `docs/UI_GUIDE.md` | tutorial: the three UI tiers — static screens, interactive app, live server |
 | `ROADMAP.md` | what's missing today, and design notes for a future listed-MCP/SaaS version |
 | `docs/VAULT_SEPARATION.md` | why this project and `pinterest-apify` no longer share a Redis, and the retired mirror that bridged the gap along the way |
 | `docs/SESSION_LAYER_FIX.md` | the four session-layer gaps and how they were closed |

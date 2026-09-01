@@ -73,24 +73,24 @@ calendar. It's also registered to run automatically every morning at 07:00 once
 `run_scheduler.cmd` is set up as a Windows scheduled task (see `README.md`), but
 running it manually now gets you today's data immediately.
 
-## 7. Look at it
+## 7. Look at it — wire up your agent (this is the interface)
 
-Open `etsy/data/ui/index.html` in a browser — no server needed. This is the home
-screen: what to list, when, and why. It gets rebuilt by every scheduler run.
+**There is no web UI.** The HTML screens and the optional read server were
+deleted on 2026-09-01 (D-52) — they were built once, never revisited, and the
+server had no callers. You read this system by *asking it*, through an MCP
+client (Claude Code, Claude Desktop, Antigravity).
 
-## 8. Optional — wire up an AI agent (Claude Code, Antigravity)
+Follow **`docs/MCP.md`**. One thing to know before you do: the project's
+`.mcp.json` hardcodes an absolute path to wherever it was originally cloned.
+**If your clone lives somewhere else, edit that path first** — otherwise it
+fails quietly (an empty result that looks like "no data yet," not a clear error).
 
-If you want to ask an agent questions like "what should I list this week" in
-plain conversation, follow `docs/MCP.md`. One thing to know before you do: the
-project's `.mcp.json` hardcodes an absolute path to wherever it was originally
-cloned. **If your clone lives somewhere else, edit that path first** — otherwise
-it fails quietly (an empty result that looks like "no data yet," not a clear
-error).
+Then ask it `vault_status` first, and `calendar` for what to list this week.
 
 ## What's next
 
-- **`README.md`** — the full command reference and what each screen answers.
+- **`README.md`** — the full command reference.
 - **`docs/ONBOARDING.md`** — real traps this project has already hit, so you
   don't rediscover them the hard way.
-- **`docs/UI_GUIDE.md`** — the three ways to look at the data (static screens,
-  the interactive app, the optional live server) and when to reach for each.
+- **`docs/MCP.md`** — the whole agent surface, and where DeepSeek is allowed to
+  touch the system.

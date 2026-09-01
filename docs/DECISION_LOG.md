@@ -1403,3 +1403,68 @@ places now, not silently dropped.
 re-dated) — `similar_search_terms`/`market_gap_recommendations` confirmed still
 empty/null, `daily_stats` confirmed present with real data. All 57 offline suites
 pass (docs-only change, no code touched).
+
+## D-52 — The UI is deleted. MCP is the interface.
+
+**Date:** 2026-09-01. **Supersedes D-42** (the read server). **D-41 survives** and
+matters more, not less — see below.
+
+**Context.** The operator asked for the MCP surface to be opened up and the UI
+removed, saying plainly what they were struggling with: *"finding winning products
+and searching large data."* They work through an agent, not a browser.
+
+**The evidence was one-sided.** Three independent measurements, none of them
+opinions about taste:
+
+| | |
+|---|---|
+| Every UI file's git history | created 2026-08-19/20, **never touched again** — 12 days of zero iteration in a repo edited daily |
+| `etsy/server/app.py` callers | **zero**, anywhere in the codebase (traced 2026-08-26 during an API audit) |
+| MCP's reach into the system | **~34 of 455 public callables — 7.5%**; Pinterest's 97 callables at **0%** |
+
+So the maintained surface and the used surface were inverted: 3,483 lines and 202
+test assertions rendering HTML for one person who reads the system by asking an
+agent, while the agent could reach a fourteenth of it.
+
+**Chosen.** Deleted the 7 page renderers, `etsy/server/`, `run_server.cmd`, the
+`etsy-server` Docker service, `docs/UI_GUIDE.md`, and the generated
+`etsy/data/ui/`. Kept `etsy/ui/app_data.py` — the one read layer (D-41), now with
+MCP as its *only* consumer, which is why D-41 is reinforced rather than
+superseded: there is no second screen left to notice a wrong number.
+
+**The dependency that was easy to miss.** `market_page.py` looked like pure
+presentation — its name, its docstring, and 215 of its 239 lines were the Market
+screen. But `gather()` (24 lines) was a DB-only read function called by **both**
+`app_data.build_shops()` and the MCP `tracked_market` tool. Deleting the file
+wholesale would have broken a live tool. Moved into `app_data.py` as
+`gather_shops()`, and given the first test coverage it has ever had.
+
+**A real test bug found while extracting.** `test_app.py` seeded two
+`record_trend` rows without an explicit `collected_at`, letting each take the wall
+clock — and `build_pinterest` returns only rows matching `MAX(collected_at)`. When
+the two inserts straddled a second boundary the moment disappeared and the suite
+died on an `IndexError`; it passed on rerun, which is the worst way for a test to
+fail. Production was never affected (`trends_bridge` passes one shared timestamp
+per run — verified: 97 rows share it). Fixed with an explicit stamp. This is
+exactly the trap `etsy-pipeline-work` names: never mix a wall clock with fixed
+data in one test.
+
+**Two capability losses, both deliberate.** (1) `POST /api/analyze/{term}` measured
+a keyword *and stored it*; the MCP `analyze_keyword` measures without storing
+(verified). Read-only is the MCP invariant, so "measure and persist" belongs to the
+scheduler — add the term to the watch list and the daily sweep picks it up.
+(2) `blueprint_page.gather()` composed live demand + tag consensus into a listing
+draft and has no MCP equivalent; it is to be ported to an `analyze` operation
+rather than lost.
+
+**The scheduler kept both UI-touching jobs.** `job_discover` and `job_calendar`
+each do real data work and only rendered at the tail — `job_calendar` still
+recomputes moments and writes `verdict_log` rows daily, which is what makes
+"christmas flipped to list-now on the 16th" answerable at all. Only the last few
+lines of each were removed.
+
+**Verified:** 50 offline suites, **1,347 assertions**, 0 failures (was 57/1,531;
+−202 from the 8 deleted suites, +18 from the new `test_app_data.py`). A real MCP
+stdio round trip passes 19/19, and `tracked_market` was invoked directly through
+the rewired path (2 shops returned) rather than merely imported. `job_calendar()`
+was run for real and returned 5 moments with `list_now: [halloween, thanksgiving]`.

@@ -207,10 +207,41 @@ def build_calendar(db_path=DB_PATH, lead_weeks=6, now=None):
     } for r in rows]
 
 
+def gather_shops(db_path=DB_PATH):
+    """Assemble the per-shop competitor data from the database. No live calls.
+
+    Moved here from `etsy/ui/market_page.py` when the UI was deleted (D-52). It
+    was the one read-layer function living in a presentation file: both
+    `build_shops()` below and the MCP `tracked_market` tool called it, so it had
+    to survive even though the Market screen around it did not.
+    """
+    from core.database import MarketDatabase
+    from core.settings_store import load
+    from etsy.analytics import competitor_tracker as ct
+
+    db = MarketDatabase(db_path)
+    shops = load().shop_names()
+    out = []
+    for shop in shops:
+        latest = db.latest_shop_observation(shop)
+        history = db.get_shop_history(shop)
+        bound = None
+        if history:
+            last = history[-1]
+            if last.get("basis") == "below_resolution":
+                bound = last.get("sales_per_day_upper")
+            elif last.get("sales_per_day") is not None:
+                bound = last.get("sales_per_day")
+        ranked = ct.rank_by_outcome(db, shop)
+        matched = [r for r in ranked if r.get("matched_term")]
+        out.append({"shop": shop, "latest": latest, "rate_bound": bound,
+                    "matched": matched})
+    return out
+
+
 def build_shops(db_path=DB_PATH):
     """Competitor tracking: shops and their listings matching a watched term."""
-    from etsy.ui import market_page
-    data = market_page.gather(db_path)
+    data = gather_shops(db_path)
     out = []
     for d in data:
         out.append({

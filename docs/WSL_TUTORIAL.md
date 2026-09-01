@@ -212,12 +212,9 @@ diagram in section 2 is actually working end to end.
 .venv/bin/python -m core.scheduler --once
 ```
 
-Then open the result — from the WSL terminal you can jump straight to it in
-your Windows browser:
-
-```bash
-explorer.exe etsy/data/ui/index.html
-```
+That writes today's readings into the database. **There is nothing to open in a
+browser** — the HTML screens were deleted on 2026-09-01 (D-52). You read the
+results by asking an agent, which is what the next section wires up.
 
 ---
 
@@ -266,7 +263,7 @@ Ubuntu if unsure). Full tool list and usage: `docs/MCP.md`.
 
 ## What's next
 
-Once `vault_status` is green and you've seen `index.html` render — you're set
+Once `vault_status` is green and your agent can call the MCP tools — you're set
 up. From here, `README.md` and `docs/ONBOARDING.md` are the same documents a
 Windows setup would point you to; nothing about using the system day-to-day
 differs based on where it's installed.

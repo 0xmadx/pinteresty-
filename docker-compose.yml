@@ -1,4 +1,4 @@
-# Four services, two of which are the access layer and are not to be edited casually.
+# Three services, one of which is the access layer and is not to be edited casually.
 #
 #   SERVICE          CONTAINER           ROLE                                  EDIT?
 #   redis            scraper-redis       THE VAULT (db 0), the only database   no
@@ -14,7 +14,8 @@
 #                                        extension, writes them to db 0.       — do not edit
 #   python-scraper   python-scraper      Idle exec container for running       yes
 #                                        pipelines inside Docker.
-#   etsy-server      etsy-server         Optional FastAPI read server (D-42).  yes
+#
+# (A fourth, `etsy-server`, was deleted 2026-09-01 with the UI — see D-52.)
 #
 # The names look inconsistent and are deliberately left alone: `go-api` is quoted
 # in core/preflight.py and core/vault_status.py error text ("docker compose up -d
@@ -51,8 +52,8 @@ services:
     environment:
       # db 0 — was the shared vault; pinterest-apify moved to its own Redis
       # (port 6380) on 2026-08-25, so this is now this project's alone, and
-      # the python-scraper/etsy-server services below read this same db
-      # directly (D-49) rather than a mirrored copy.
+      # the python-scraper service below reads this same db directly (D-49)
+      # rather than a mirrored copy.
       - REDIS_URL=redis://redis:6379/0
       - API_KEY=super_secret_key_123
     depends_on:
@@ -77,34 +78,10 @@ services:
     networks:
       - scraper_network
 
-  # The optional read server (etsy/server/app.py, D-42). NOT part of the access
-  # layer — it only reads the database and, on POST /api/analyze, makes an
-  # OUTBOUND call to Etsy/Printify using sessions the vault already holds. It
-  # does not touch cookie_server_go or the Chrome extension's write path.
-  #
-  # HOST=0.0.0.0 below is the container's OWN interface, not the host's — a
-  # process inside Docker must bind 0.0.0.0 to be reachable through the port
-  # mapping at all. The safety knob is the port mapping itself: it is pinned to
-  # 127.0.0.1 on the HOST, so this container is exactly as exposed as running
-  # `run_server.cmd` directly (D-42's "no auth" warning still applies — only
-  # widen this to "8100:8100" if you deliberately want it on the LAN).
-  etsy-server:
-    build:
-      context: .
-    container_name: etsy-server
-    command: python -m etsy.server.app
-    ports:
-      - "127.0.0.1:8100:8100"
-    environment:
-      - REDIS_URL=redis://redis:6379/0
-      - HOST=0.0.0.0
-      - PORT=8100
-    depends_on:
-      - redis
-    volumes:
-      - .:/app
-    networks:
-      - scraper_network
+  # The `etsy-server` service (FastAPI read server, D-42) stood here until
+  # 2026-09-01. Deleted with the whole UI (D-52): it had zero callers anywhere in
+  # the codebase, and the agent reaches the same read layer through MCP without a
+  # daemon, a port, or the standing "no auth" caveat this block used to carry.
 
 volumes:
   redis_data:

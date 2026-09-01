@@ -673,8 +673,8 @@ def tracked_market() -> dict:
     least that fast. Both tracked shops are stars (B-01): this shows what winners
     do, not what works.
     """
-    from etsy.ui import market_page
-    data = market_page.gather()
+    from etsy.ui.app_data import gather_shops
+    data = gather_shops()
     return _ok({
         "shops": [{
             "shop": d["shop"],

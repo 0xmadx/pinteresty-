@@ -90,7 +90,7 @@ Four checks, in this order:
 
 1. **Does the function exist?** A capability is real when it is a function, not a
    paragraph. Count functions.
-2. **Does a test cover it?** 1,531 assertions across 57 offline suites (the 5
+2. **Does a test cover it?** 1,347 assertions across 50 offline suites (the 5
    live pinterest suites are separate and vary run to run). A test
    that fails in a way you did not predict has found a real bug — twice this week.
 3. **What does the wire say?** The vault is usually green; probing is faster and
@@ -112,8 +112,8 @@ Printify) · profit gate with per-type margin floors and a weekly capacity ceili
 gap analysis gated on filter trust · sourcing, origin sampling and lead time ·
 POD costing · scoring with a discrimination check · request cache · run log ·
 scheduler running daily · verdict change log · vault separation · LEARN
-scaffold · 18 MCP tools (`docs/MCP.md`) · the interactive app and optional read
-server (`docs/UI_GUIDE.md`).
+scaffold · 18 MCP tools (`docs/MCP.md`) — **the interface**. The HTML screens
+and the FastAPI read server were deleted 2026-09-01 (D-52).
 
 **Empty or thin — and this is the real constraint:**
 
@@ -174,7 +174,6 @@ never estimates COGS, volume, price or CVR. See `docs/MCP.md`.
 1. `README.md` — what it is, how to run it
 2. this file — what is true and what is a trap
 3. `docs/HOW_WE_WORK.md` — the three seats and the loop
-4. `docs/UI_GUIDE.md` — the three UI tiers, and which one to actually open
 5. `docs/MCP.md` — wiring an agent (Claude Code/Antigravity) to the system
 6. `docs/architecture/09_build_plan.md` — what is being built next
 7. `docs/market_map/` — per-platform endpoints and what each signal is worth

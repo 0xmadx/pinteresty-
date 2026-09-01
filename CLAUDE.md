@@ -81,8 +81,8 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 
 ```bash
 # Full verification — run before every commit
-.venv/Scripts/python.exe -m core.test_graph_db          # + the other 56 suites
-# 57 OFFLINE suites, 1,531 assertions, no network required.
+.venv/Scripts/python.exe -m core.test_graph_db          # + the other 49 suites
+# 50 OFFLINE suites, 1,347 assertions, no network required.
 # ⚠️ pinterest/tests/ holds 5 more that are LIVE — their own docstrings say
 # "Live verification". They hit real Pinterest, their assertion counts VARY
 # with session state, and they print no summary when the vault is down. Never
@@ -201,10 +201,8 @@ account costs the business.
 | **`similar_search_terms` and `market_gap_recommendations` are EMPTY** | Recorded earlier as free unread signals. Probed 2026-08-15 on `felt garland`, `mom necklace`, `christmas ornament`: all returned `total_results_count: 0` and a null gap block. The keys are in the schema; Etsy returns nothing in them. **Do not build on them.** |
 | **`locationQuery` is not a filter** | It returns a *broader* result set than the search it filters. On `monogrammed waffle weave towel` (10,011 unfiltered) Germany returned 28,271 and seven countries summed to **1116%** of the market they claim to partition. Origin share is **not obtainable from the SERP** — use `sourcing.sample_origins()`, which reads each listing's declared origin and can see countries Etsy's list omits (it found a Turkish seller). `delivery_days` was checked the same way and **is** sound: monotonic, cumulative, never above total. |
 | **`organic_listing_ids` was ALWAYS empty** | Parser bug fixed 2026-08-20. The regex demanded `"result_count"` within 200 chars of the array; the real neighbours are `bucket_id`/`user_id`. It returned `[]` on every page for the project's life — silently, because an empty list is plausible for a page with no results. Now 39–51 ranked ids, which also unblocks rank tracking. |
-| **The UI is `etsy/data/ui/index.html`** | One entry point (`etsy.ui.home`) links the Calendar, Discover and per-term Cockpit screens, with a blockers-first digest. All generated files reading the database — no server, no read API. Refreshed daily by the calendar job. |
-| **The optional server is `etsy/server/app.py`** | FastAPI over the same read layer (`app_data`) plus `POST /api/analyze/{term}` for live analysis of a typed keyword. Opt-in (`run_server.cmd`), 127.0.0.1 by default (D-42). The scheduler + static files remain the no-daemon default. |
-| **The interactive app is `etsy/data/ui/app.html`** | One self-contained page over the daily snapshot: six tabs, sortable/filterable tables, search, sparklines, Etsy + Pinterest. Everything reads THROUGH `etsy/ui/app_data.py`, the one read layer a future FastAPI server would also consume (D-41). |
-| **Two screens exist** | `etsy.ui.calendar_page` (home, + `.ics`) and `etsy.ui.cockpit_page` (one candidate, with page-one saturation joined in). Generated files, not a server — no read API exists, so a SPA would have nothing to call. |
+| **There is no UI. MCP is the interface.** (D-52, 2026-09-01) | The 7 HTML screens and the FastAPI read server were deleted. They were built in a 2-day burst on 2026-08-19/20 and never touched again; the server had **zero callers** anywhere in the codebase. The operator works through an agent, so the agent's surface is the product. |
+| **`etsy/ui/app_data.py` survives, and matters more now** | The one read layer (D-41) — MCP is its only consumer, so there is no second screen to notice a wrong number. `gather_shops()` was moved into it from the deleted `market_page.py`; both `build_shops()` and the `tracked_market` tool call it. Covered by `etsy/ui/test_app_data.py`. |
 | **Demand and competition are separate tables** | `keyword_observations` (private demand, market-wide) and `keyword_competition` (public page-one saturation, a ~9-listing sample with intervals). Joined only at read time in the Cockpit — never merged, or a saturation of 6 gets divided by 1.4M listings. |
 | **Buy the sample when it matters** | `listing_sample.py` opens ranked listing pages at 1 request each; n=25 made free shipping decisive where 6 cards could not. `LISTING_SAMPLE` defaults to 0 — 200 requests is the operator's call (D-37). |
 | **A page-one share is ~9 listings, not a market share** | `card_saturation` recovers the dimensions the filter audit took away by counting card fields, then attaches a Wilson interval and **withholds** any bracket whose bounds straddle a threshold. **0 of 6 does not establish an empty bracket** — the true share could be 39% (D-36). |
@@ -230,7 +228,6 @@ account costs the business.
 |---|---|
 | `docs/ONBOARDING.md` | **start here for a fresh session** — what is true, what is a trap |
 | `docs/MCP.md` | **tutorial**: wiring the MCP server (18 tools) into Claude Code/Desktop/Antigravity, the tool table, troubleshooting, and where DeepSeek is allowed to touch the system |
-| `docs/UI_GUIDE.md` | **tutorial**: the three UI tiers (static screens, interactive app, live server) — what each is for, how to launch it, when to reach for which |
 | `ROADMAP.md` | what's still missing (single-operator scope) + design-only notes for a future listed-MCP/SaaS version — read before assuming multi-tenancy is a small change |
 | `docs/architecture/09_build_plan.md` | **what we are building and in what order** |
 | `docs/HOW_WE_WORK.md` | **the operating model** — the three seats, the loop, which lens fires when. Read first. |
@@ -281,7 +278,7 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. 57 offline suites, 1,531 assertions (+5 live
+request cache · run log · guards. 50 offline suites, 1,347 assertions (+5 live
 pinterest suites that need a session).
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
@@ -292,11 +289,8 @@ inverses (`etsy/analytics/pod_costing.py`) · Printify client
 (`etsy/api/printify/`) · LEARN outcome capture (`etsy/analytics/learn.py`) ·
 verdict change log (`etsy/analytics/verdict_log.py`) · vault separation
 (`core/vault_mirror.py`, since retired — D-49) · session-layer hardening ·
-**the Calendar screen** (`etsy/ui/calendar_page.py`, + `.ics` export) ·
 saturation recovered from listings (`etsy/analytics/card_saturation.py`) ·
-**MCP tools** (`mcp_server/`) · the read server (`etsy/server/app.py`) ·
-the interactive app (`etsy/ui/app_page.py`) · a Docker service for the read
-server (`docker-compose.yml`, `etsy-server`) · the intent gate
+**MCP tools** (`mcp_server/`) · the intent gate
 (`etsy/analytics/discover.py::confirm_intent`, D-43) · Pinterest momentum as a
 third axis (`etsy/analytics/momentum.py`, D-44) · Etsy's own seasonal curve,
 recovered from a response every caller discarded (`etsy/analytics/seasonality.py`,
@@ -313,7 +307,21 @@ this project now reads db 0 directly, live, everywhere (D-49). MCP gained an
 equivalent before — see D-50. That engine's `run()` also silently returned
 `None` on its success path (only ever called from its own CLI, which just
 read the JSON file it wrote); now returns the payload directly.
-**1,531 assertions** across 57 offline suites, plus 5 live pinterest suites.
+
+**Removed 2026-09-01 — the UI (D-52).** All 7 HTML screens, the FastAPI read
+server, `run_server.cmd` and the `etsy-server` Docker service are deleted.
+Evidence: built in a 2-day burst 2026-08-19/20 and **never touched again**; the
+server had **zero callers**. `etsy/ui/app_data.py` survives as the one read layer
+(D-41) with MCP as its only consumer, and absorbed `gather_shops()` from the
+deleted `market_page.py` — the one read-layer function that had been living in a
+presentation file, called by both `build_shops()` and the `tracked_market` tool.
+**MCP is the interface now**; the expansion of its surface is the work that
+follows. Also fixed while extracting: `test_app.py` seeded two trend rows with
+wall-clock timestamps and `build_pinterest` returns only `MAX(collected_at)`, so
+the suite failed whenever the two inserts straddled a second — a real race, hidden
+because it passed on rerun. Production was never affected (`trends_bridge` passes
+one shared timestamp per run).
+**1,347 assertions** across 50 offline suites, plus 5 live pinterest suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

@@ -429,8 +429,6 @@ def job_discover():
 
     winnable = sum(1 for r in db.latest_discovered(2000)
                    if r.get("verdict") in ("winnable", "contested"))
-    from etsy.ui import discover_page
-    page = discover_page.write()
     return {"seeds": len(seeds), "candidates_stored": stored,
             "winnable_or_contested": winnable,
             # Terms the ratio gate would have promoted and the intent gate caught.
@@ -442,7 +440,7 @@ def job_discover():
             "momentum_checked": len(survivors),
             "momentum_known": len(momentum_index),
             "rising": rising, "fading": fading, "momentum_note": momentum_note,
-            "failed": failed, "page": page}
+            "failed": failed}
 
 
 def job_competition_sweep():
@@ -536,19 +534,12 @@ def job_calendar():
                     "demand_per_listing": best.get("demand_per_listing")},
             basis="derived from measured takeoff dates and keyword observations",
             note=row["reason"])
-    # Render the home screen from the same rows that were just judged, rather than
-    # rebuilding it — two renders of one morning's data must not disagree.
-    from etsy.ui import calendar_page, home
-    written = calendar_page.write(rows=rows)
-    # The home index and a cockpit per watched term, so the whole UI is one fresh
-    # surface after this job rather than scattered pages of different ages.
-    ui = home.write()
-
+    # The HTML/ics render used to happen here. Deleted with the UI (D-52) — the
+    # judging above is the real work and it still runs daily, which is what makes
+    # "christmas flipped to list-now on the 16th" answerable via verdict_history.
     urgent = [r["moment"] for r in rows if r["state"] == "list_now"]
     return {"moments": len(rows), "list_now": urgent,
-            "actionable": [r["moment"] for r in rows if r["actionable"]],
-            "page": written["html"], "ics": written["ics"],
-            "home": ui["index"], "cockpits_refreshed": ui["cockpits"]}
+            "actionable": [r["moment"] for r in rows if r["actionable"]]}
 
 
 def job_pinterest_bridge():
