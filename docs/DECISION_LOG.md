@@ -601,7 +601,8 @@ a vault of 20 working profiles as "0 usable". A diagnostic that cries wolf is wo
 than none.
 
 **Related, same commit:** `session_manager.classify()` now separates
-`rate_limited` / `malformed` / `auth_expired` / `blocked`. Only the last two evict,
+`rate_limited` / `malformed` / `auth_expired` / `blocked`. Only the last two were
+meant to evict,
 so neither Etsy throttling nor a bug in our own request can retire the seller
 account — the old code evicted on 429.
 
@@ -2224,3 +2225,47 @@ module is not in mcp_server*. It now matches import syntax only — the same fal
 positive `test_preflight` hit on a prose mention of `vault_mirror.py`, which is
 twice now that a naive substring check has flagged the documentation of a rule as
 a violation of it.
+
+---
+
+## D-65 — the 429 guard was written, tested, and never wired
+
+**2026-09-01.** A full-system audit checked whether `session_manager.classify()`
+is actually called. It is not. Repo-wide, the only references are its own
+definition and a docstring; there are **zero production call sites**, and the
+same is true of `EVICTABLE`.
+
+The live request loop still reads:
+
+```python
+is_blocked = response.status_code in (401, 403, 429) and (
+    "datadome" in response.text.lower() or ... or response.status_code == 429)
+if is_blocked:
+    ...
+    self.vault.mark_invalid(platform, account["profile_id"])
+```
+
+and `mark_invalid` sets `is_valid=0` **and** removes the profile from the
+`valid_profiles` set. So an Etsy throttle — a normal, expected, transient
+response — retires the profile. On `etsy_private` that profile is the operator's
+own seller account, the one asset D-29 calls unreplaceable.
+
+**Three documents asserted the opposite**: `CLAUDE.md`'s hard-won-facts table
+(*"429 no longer burns a session… neither Etsy throttling nor a bug in our own
+request can retire the seller account"*), this log, and
+`session_manager.py:100`'s own docstring (*"Failover is no longer 'any
+401/403/429 burns the profile' — see classify()"*). A docstring inside the very
+function whose behaviour it misdescribes.
+
+**The docs are corrected here; the CODE IS NOT.** `core/session_manager.py` is
+access layer, and Rule 6 forbids an agent from extending it. The one-line change
+— route the branch through `classify()` and evict only on `auth_expired` /
+`blocked` — is the operator's to make, or to explicitly delegate.
+
+**The general lesson, and it is the same one as D-62.** A guard that is written
+and tested reads exactly like a guard that is *wired*. The unit tests passed the
+whole time, because they test `classify()` directly — they never asserted that
+anything calls it. Coverage of a function is not coverage of a path. The audit
+found this by grepping for call sites, which is a check no test in this repo
+performs.
+

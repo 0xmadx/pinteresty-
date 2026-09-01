@@ -195,8 +195,12 @@ class GridAnalyticsPipeline:
             
             listing_stats = velocity_database.get(str(lid), {})
             recent_dates = listing_stats.get("recent_dates", [])
-            favorites = listing_stats.get("favorites", 0)
-            in_cart = listing_stats.get("in_cart", 0)
+            # None, not 0: both are THRESHOLD-GATED badges, so an absent one
+            # means below Etsy's display threshold, never "nobody wants this"
+            # (N-02). listing_api returns None for exactly this reason and a
+            # `, 0` default here would throw that distinction away again.
+            favorites = listing_stats.get("favorites")
+            in_cart = listing_stats.get("in_cart")
             
             parsed_dates = [parse_date(d) for d in recent_dates if parse_date(d)]
             if parsed_dates:
@@ -226,7 +230,7 @@ class GridAnalyticsPipeline:
                 "velocity": velocity_score,
                 "days_since_last_review": days_since_last,
                 "favorites": favorites,
-                "in_cart": listing_stats.get("in_cart", 0),
+                "in_cart": listing_stats.get("in_cart"),
                 "daily_sales": daily_sales,
                 "daily_views": daily_views,
                 "scarcity_stock": listing_stats.get("scarcity_stock"),
@@ -283,6 +287,11 @@ class GridAnalyticsPipeline:
                     badge_present=bool(res.get("demand_signals")),
                     demand_signals=res.get("demand_signals", []),
                     total_reviews=res.get("total_reviews"),
+                    # Parsed at :146-147 and dropped here until 2026-09-01, because
+                    # record_listing had no parameter for them while the columns
+                    # existed and claimed a meaning nothing delivered.
+                    in_cart=res.get("in_cart"),
+                    favorites=res.get("favorites"),
                 )
                 saved += 1
             except Exception as e:

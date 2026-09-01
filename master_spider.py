@@ -56,9 +56,8 @@ def run_master_spider(keywords, max_workers=3, max_depth=2, max_nodes=50, deep_d
     """
     Executes the MasterNicheFinder concurrently across a list of keywords.
     """
-    # Wait for at least 3 profiles before we even start the engine
     config = ScraperConfig()
-    wait_for_minimum_profiles(config, platform="etsy", min_profiles=3)
+    wait_for_minimum_profiles(config, platform="etsy", min_profiles=1)
 
     print(f"\n=======================================================")
     print(f"🕸️  STARTING MASTER SPIDER CONCURRENT CRAWL")

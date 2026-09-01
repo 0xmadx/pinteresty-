@@ -183,6 +183,14 @@ class SingleListingPipeline:
             # An empty signal list means no urgency badge was rendered, which is why the
             # daily_* fields are 0 — not evidence that nothing sold.
             badge_present=bool(demand_signals),
+            # Both were parsed above and then dropped on the floor here, because
+            # record_listing had no parameter for them — while the columns existed and
+            # a comment beside them claimed a NULL meant "below Etsy's display
+            # threshold". Every NULL actually meant "never written". They are
+            # threshold-gated badges, so listing_api returns None (not 0) when Etsy
+            # rendered nothing, and that None is the honest value to store.
+            in_cart=in_cart,
+            favorites=favorites,
             demand_signals=demand_signals,
             total_reviews=exact_review_count,
         )

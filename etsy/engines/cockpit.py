@@ -194,8 +194,19 @@ def build(keyword, db_path=DB_PATH, product_type=profit.PERSONALIZED,
                   "cvr_basis": latest.get("cvr_source"),
                   "price_low": price, "price_high": latest.get("median_price_high"),
                   "readings": len(rows), "trend": _trend(rows)}
+        # ⚠️ `listings` is the PRIVATE market-wide count — keyword_observations
+        # .competition, written source="etsy_private" by every writer (scheduler,
+        # private_blueprint, private_scoring_pipeline). It is NOT the public SERP
+        # total. Until 2026-09-01 the renderer printed it under a header reading
+        # "ETSY PUBLIC — competition": the number was correct and the provenance
+        # claim was false, on a panel the operator reads to decide what to list.
+        #
+        # `demand_per_listing` deliberately stays private ÷ private: both halves
+        # share one population, which is what D-31 intends. Substituting the public
+        # count would mix denominators and look like a correctness fix.
         supply = {"basis": "measured", "measured_at": latest["collected_at"],
                   "listings": supply_n,
+                  "listings_source": "etsy_private",
                   "demand_per_listing": round(ratio, 4) if ratio else None,
                   "is_wall": (ratio is not None and ratio < WALL_RATIO),
                   "competition": _competition(db_path, keyword)}
@@ -287,12 +298,15 @@ def read(state):
 
     s = state["supply"]
     out.append("")
-    out.append("  ETSY PUBLIC — competition")
+    out.append("  ETSY PRIVATE — market-wide supply & winnability")
     if s["basis"] == "measured":
         wall = "  <- WALL, you cannot rank here" if s["is_wall"] else ""
         out.append(f"    {s['listings']:,} listings · "
                    f"{s['demand_per_listing']:.3f} demand per listing{wall}")
         comp = s.get("competition") or {}
+        if comp.get("decisive") or comp.get("median_delivery"):
+            out.append("")
+            out.append("  ETSY PUBLIC — page-one competition (a ~9-listing sample)")
         for d in comp.get("decisive", []):
             out.append(f"      {d['dimension']}={d['value']}: {d['share']:.0%} of "
                        f"page one ({d['low']:.0%}–{d['high']:.0%})")

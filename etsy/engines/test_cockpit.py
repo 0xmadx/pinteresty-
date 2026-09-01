@@ -49,8 +49,12 @@ def seed(path):
                       price_high=22.0, collected_at="2026-08-19T12:00:00+00:00")
     # A page-one competition reading: one dimension decisive, others withheld, and
     # far more ranked ids than were sampled.
+    # ⚠️ DELIBERATELY DIFFERENT from the private `competition` above (1,405,731).
+    # They were identical, so a renderer that printed the private number under a
+    # public header — which is exactly what happened — could not be caught by any
+    # assertion. Two sources must carry two values or the test proves nothing.
     db.record_keyword_competition(
-        "christmas ornament", total_results=1405731, organic_sample=6,
+        "christmas ornament", total_results=1398402, organic_sample=6,
         ranked_ids_count=41,
         saturation={
             "quality|star_seller": {"share": 1.0, "low": 0.61, "high": 1.0,
@@ -74,7 +78,13 @@ def main():
     s = cockpit.build("christmas ornament", db_path=path, now=NOW)
     check("Pinterest answers when", s["timing"]["basis"] == "measured", s["timing"])
     check("Etsy Private answers demand", s["demand"]["volume"] == 25477)
-    check("Etsy Public answers competition", s["supply"]["listings"] == 1405731)
+    # This used to read "Etsy Public answers competition" — pinning the mislabel.
+    # supply.listings is the PRIVATE market-wide count; the public page-one sample
+    # lives under supply.competition.
+    check("Etsy Private answers market-wide supply", s["supply"]["listings"] == 1405731)
+    check("and it SAYS which source that is", s["supply"]["listings_source"] == "etsy_private")
+    check("the public page-one sample is a separate key, not merged into it",
+          isinstance(s["supply"].get("competition"), dict))
     check("and they are separate keys, never pre-blended",
           {"timing", "demand", "supply"} <= set(s))
 

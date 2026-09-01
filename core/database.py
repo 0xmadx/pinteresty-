@@ -391,9 +391,14 @@ class MarketDatabase:
                 # the fetch had been raising AttributeError on line one since it was
                 # written, so nobody noticed the columns were missing.
                 #
-                # ⚠️ NULL here means Etsy rendered no badge, which means BELOW ITS
-                # DISPLAY THRESHOLD — never zero (N-02), exactly as `badge_present`
-                # already disambiguates for daily_sales.
+                # ⚠️ NULL means one of TWO things and the caller must know which:
+                # "we fetched and Etsy rendered no badge" (below its display
+                # threshold — never zero, N-02) or "nothing ever wrote this row's
+                # value". Between 2026-09-01 and the same day's fix it was ALWAYS the
+                # second, because `record_listing` had no parameters for these three
+                # columns while this comment asserted the first. Writers must pass
+                # them explicitly; `parse_listing_live` reports `*_present` beside
+                # each value for exactly this reason.
                 ("in_cart", "INTEGER"),
                 ("favorites", "INTEGER"),
                 # When the listing went live, read from the listing page's
@@ -520,7 +525,8 @@ class MarketDatabase:
                        sales_lifetime_est=None, sales_30d_est=None, sales_basis="unspecified",
                        estimated_views=None, views_basis="unspecified", velocity_score=None,
                        daily_sales=None, daily_views=None, scarcity_stock=None,
-                       badge_present=None, demand_signals=None, total_reviews=None):
+                       badge_present=None, demand_signals=None, total_reviews=None,
+                       in_cart=None, favorites=None, listed_on=None):
         """Append one observation of a listing. Never overwrites.
 
         Two things the old schema could not express, both of which produced numbers that
@@ -533,6 +539,20 @@ class MarketDatabase:
         `badge_present` disambiguates zero: daily_sales=0 means "no urgency badge on the
         page" far more often than it means "sold nothing today", and downstream code
         branched on `> 0` as though those were the same.
+
+        ⚠️ `in_cart` / `favorites` / `listed_on` were added as COLUMNS on 2026-09-01 and
+        this function had no parameters for them, so nothing could ever write them. The
+        migration comment claimed a NULL meant "below Etsy's display threshold (N-02)"
+        while every NULL actually meant "never fetched" — and `etsy_public(listing_live)`
+        was simultaneously teaching the agent to read that same NULL as below-threshold.
+        One value, two surfaces, opposite meanings: the failure mode this project exists
+        to prevent, written into the schema. The parameters exist now.
+
+        Their own N-02 rule still holds and is stricter than it looks: `in_cart` and
+        `favorites` are THRESHOLD-GATED badges, so a listing that renders no badge is
+        *below the threshold*, never zero. Pass None, never 0. `listed_on` is Etsy's
+        displayed date and RESETS ON AUTO-RENEWAL — store it, but read it through
+        `api.listing_age()`, which returns a lower bound rather than an age.
         """
         collected_at = collected_at or datetime.now(timezone.utc).isoformat(timespec="seconds")
         if isinstance(demand_signals, (list, dict)):
@@ -544,14 +564,14 @@ class MarketDatabase:
                     sales_lifetime_est, sales_30d_est, sales_basis,
                     estimated_views, views_basis, velocity_score,
                     daily_sales, daily_views, scarcity_stock, badge_present,
-                    demand_signals, total_reviews
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    demand_signals, total_reviews, in_cart, favorites, listed_on
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (listing_id, collected_at, shop_name, price,
                   sales_lifetime_est, sales_30d_est, sales_basis,
                   estimated_views, views_basis, velocity_score,
                   daily_sales, daily_views, scarcity_stock,
                   None if badge_present is None else int(bool(badge_present)),
-                  demand_signals, total_reviews))
+                  demand_signals, total_reviews, in_cart, favorites, listed_on))
             conn.commit()
         return collected_at
 
