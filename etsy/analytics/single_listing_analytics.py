@@ -85,7 +85,7 @@ class SingleListingPipeline:
             
         # 3. Scrape Reviews for Velocity
         print(f"\n[PHASE 3] Fetching Review Velocity...")
-        recent_dates = get_recent_reviews(self.listing_id, public_api=self.api, shop_id=shop_id, csrf_token=csrf)
+        recent_dates = get_recent_reviews(self.listing_id, public_api=self.api, target_shop_id=shop_id, csrf_token=csrf)
         total_reviews = len(recent_dates) # We don't have the exact listing review count unless we parse it. We'll use shop ratio against something, or just use velocity.
         
         # 4. Calculate final stats & Exact Estimation

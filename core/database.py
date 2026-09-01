@@ -306,10 +306,21 @@ class MarketDatabase:
             # does this listing have" — the shape of every expensive bug here.
             #
             # `first_seen_at` is named for what it is: the first time WE looked, not
-            # when the listing was created. Etsy does not publish a creation date on the
-            # shop page, so "listed 3 weeks ago" is only true of listings we watched
-            # appear. Calling it `listed_at` would invent a fact, and a wrong age makes
-            # every velocity built on it wrong.
+            # when the listing was created. Calling it `listed_at` would invent a fact,
+            # and a wrong age makes every velocity built on it wrong.
+            #
+            # ⚠️ CORRECTED 2026-09-01. This said "Etsy does not publish a creation
+            # date", full stop. That is true of the SHOP GRID — where it was measured —
+            # and FALSE of the listing page, which carries `Listed on Aug 29, 2026` in
+            # its og:description. A limit of the surface we happened to be reading got
+            # written down as a limit of the platform, and it closed off honeymoon
+            # detection for the project's life.
+            #
+            # `api.parse_listed_on()` reads it now, off HTML already fetched and cached
+            # 30 days. `first_seen_at` keeps its honest meaning; a real listing age is a
+            # separate, better-founded field, and `competitor_tracker.observed_age_days`
+            # (which returns `age_is_bounded` for anything but a first sighting) is
+            # correct code that was built on this now-obsolete assumption.
             trend_cols = {row[1] for row in
                           cursor.execute("PRAGMA table_info(trend_observations)")}
             for column, decl in [
@@ -374,6 +385,20 @@ class MarketDatabase:
                 # Not plain `basis`: the table already has sales_basis and views_basis,
                 # and a bare `basis` beside them would read as "the row's basis".
                 ("sighting_basis", "TEXT"),
+                # The volatile demand trio (2026-09-01). `in_cart` and `favorites` had
+                # no column at all, so even a working fetch had nowhere to land — and
+                # the fetch had been raising AttributeError on line one since it was
+                # written, so nobody noticed the columns were missing.
+                #
+                # ⚠️ NULL here means Etsy rendered no badge, which means BELOW ITS
+                # DISPLAY THRESHOLD — never zero (N-02), exactly as `badge_present`
+                # already disambiguates for daily_sales.
+                ("in_cart", "INTEGER"),
+                ("favorites", "INTEGER"),
+                # When the listing went live, read from the listing page's
+                # og:description. See the corrected note above `first_seen_at`: the
+                # claim that Etsy does not publish this was true only of the shop grid.
+                ("listed_on", "TEXT"),
             ]:
                 if column not in observed:
                     cursor.execute(

@@ -12,8 +12,14 @@ def get_listing_data(listing_id, public_api):
     - in_cart_count
     """
     url = f"https://www.etsy.com/listing/{listing_id}"
-    resp = public_api.session.request("GET", url, headers=public_api.headers, cookies=public_api.cookies)
-    
+    # `cookies=public_api.cookies` was here and EtsyPublicAPI has no `cookies`
+    # attribute — an AttributeError on the first line of every call, swallowed by the
+    # bare except in master_listing_analyzer, so four analytics modules have been dead
+    # for the project's life while appearing to run. The SessionManager injects the
+    # profile's own cookies anyway; passing them was never needed.
+    resp = public_api.session.request("GET", url, headers=public_api.headers,
+                                      platform="etsy")
+
     if resp.status_code != 200:
         print(f"[-] Failed to fetch listing {listing_id}. Status: {resp.status_code}")
         return None
@@ -31,26 +37,19 @@ def get_listing_data(listing_id, public_api):
     if name_match:
         shop_name = name_match.group(1)
         
-    # 2. Extract Favorites
-    favorites = 0
-    # Usually looks like "1,234 favorites" or "12 favorites"
-    fav_match = re.search(r'([\d,]+)\s+favorites?', html, re.IGNORECASE)
-    if fav_match:
-        try:
-            favorites = int(fav_match.group(1).replace(',', ''))
-        except ValueError:
-            pass
-            
-    # 3. Extract In Cart
-    in_cart = 0
-    # Usually looks like "In 20 people's carts"
-    cart_match = re.search(r'in\s+([\d,]+)\s+people[\'’]s\s+carts?', html, re.IGNORECASE)
-    if cart_match:
-        try:
-            in_cart = int(cart_match.group(1).replace(',', ''))
-        except ValueError:
-            pass
-            
+    # 2/3. Favourites and cart count — threshold-gated badges, so absent means BELOW
+    # THE DISPLAY THRESHOLD, never zero (N-02). These used to default to 0, which
+    # turned "Etsy did not render a badge" into "nobody wants this". The single
+    # `people's carts` wording also missed Etsy's current `In 136 carts`.
+    #
+    # Parsing lives in `api.parse_listing_live` so there is ONE set of patterns and
+    # one canary, shared with the live reader that MCP can actually reach.
+    from etsy.api.public.api import parse_listing_live
+    live = parse_listing_live(html, listing_id=listing_id)
+    favorites = live["favorites"]
+    in_cart = live["in_cart"]
+
+
     # Extract CSRF token (useful for reviews endpoint)
     csrf_token = None
     csrf_match = re.search(r'<meta name="csrf(?:_nonce|-token)" content="([^"]+)"', html)

@@ -38,7 +38,7 @@ class SentimentAnalyticsPipeline:
         print(f"[+] Shop ID: {shop_id}, CSRF Valid: {bool(csrf)}")
         
         print(f"\n[PHASE 2] Fetching Deep Dive Reviews...")
-        reviews = get_review_details(self.listing_id, public_api=self.api, shop_id=shop_id, csrf_token=csrf)
+        reviews = get_review_details(self.listing_id, public_api=self.api, target_shop_id=shop_id, csrf_token=csrf)
         print(f"[+] Extracted {len(reviews)} reviews for text analysis.")
         
         print(f"\n[PHASE 3] Analyzing Customer Pain Points...")

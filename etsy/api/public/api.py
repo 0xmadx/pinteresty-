@@ -9,6 +9,105 @@ from core.session_manager import SessionManager
 from core.settings import ScraperConfig
 from etsy.analytics import product_type
 
+# A page this small is an interstitial, a challenge or an error — not a listing. Every
+# parser below refuses it rather than reporting "no badges found", because an empty
+# read of a blocked page is the shape that quietly writes zeroes into the database.
+MIN_LISTING_PAGE_BYTES = 50_000
+
+# Etsy has used several wordings for the cart badge and adds more. Each is tried; if
+# the page is healthy and NONE match, that is a parser alert, never an absence.
+_CART_PATTERNS = (
+    r"[Ii]n\s+([\d,]+)\s+(?:people[’']s\s+)?carts?",
+    r"([\d,]+)\s+(?:people\s+)?(?:have\s+)?(?:this\s+)?in\s+(?:their\s+)?carts?",
+)
+_FAVORITES_PATTERNS = (
+    r"([\d,]+)\s+favorites?\b",
+    r"([\d,]+)\s+people\s+(?:have\s+)?favorited",
+)
+# "23 bought in the past 24 hours" / "23 sold in the last 24 hours".
+_BOUGHT_PATTERNS = (
+    r"([\d,]+)\s+(?:bought|sold)\s+in\s+the\s+(?:past|last)\s+24\s+hours",
+)
+
+
+def _first_int(html, patterns):
+    """First pattern that matches wins; None when none do. Never 0 as a fallback."""
+    for pattern in patterns:
+        m = re.search(pattern, html or "")
+        if m:
+            try:
+                return int(m.group(1).replace(",", ""))
+            except ValueError:
+                continue
+    return None
+
+
+def parse_listed_on(html):
+    """`Listed on Aug 29, 2026` -> `2026-08-29`. None when the page does not say.
+
+    ⚠️ `core/database.py` records the belief "Etsy does not publish a creation date".
+    That is TRUE of the shop grid, which is where it was measured, and FALSE of the
+    listing page — the date sits in `og:description` and again in the body. Listing
+    age is the honeymoon signal, and it has been one regex away from HTML this system
+    already fetches and caches for 30 days.
+
+    Returns an ISO date so it sorts and subtracts. A date that does not parse returns
+    None rather than today, because "we could not read it" and "it is new" are the two
+    readings a honeymoon check must never confuse.
+    """
+    from datetime import datetime
+    m = re.search(r"Listed on\s+([A-Z][a-z]{2})\s+(\d{1,2}),\s*(\d{4})", html or "")
+    if not m:
+        return None
+    with soft_parse("listing.listed_on"):
+        return datetime.strptime(f"{m.group(1)} {m.group(2)} {m.group(3)}",
+                                 "%b %d %Y").date().isoformat()
+    return None
+
+
+def parse_listing_live(html, listing_id=None):
+    """Cart count, favourites and the 24h bought badge — the volatile trio.
+
+    Threshold-gated, every one of them: Etsy renders these only above some level, so
+    a missing badge is *below the threshold*, never zero (N-02). Each value is None
+    unless read, with a `*_present` boolean beside it so a consumer can tell "we
+    looked and there was no badge" from "we never looked".
+    """
+    html = html or ""
+    healthy = len(html) >= MIN_LISTING_PAGE_BYTES
+    if not healthy:
+        # Refuse rather than report three absences from a page that is not a listing.
+        return {"listing_id": listing_id, "basis": "page_too_small",
+                "bytes": len(html), "in_cart": None, "favorites": None,
+                "bought_24h": None,
+                "note": f"page under {MIN_LISTING_PAGE_BYTES} bytes — blocked or an "
+                        f"interstitial, not a quiet listing. Nothing is claimed."}
+
+    in_cart = _first_int(html, _CART_PATTERNS)
+    favorites = _first_int(html, _FAVORITES_PATTERNS)
+    bought = _first_int(html, _BOUGHT_PATTERNS)
+
+    # The canary. A healthy page where nothing matched is far more likely to be a
+    # reworded badge than three simultaneously quiet signals — and a silent regex
+    # failure is indistinguishable from a quiet listing, which is precisely the
+    # failure mode this project exists to prevent.
+    alert = healthy and in_cart is None and favorites is None and bought is None
+    return {
+        "listing_id": listing_id, "basis": "measured", "bytes": len(html),
+        "in_cart": in_cart, "in_cart_present": in_cart is not None,
+        "favorites": favorites, "favorites_present": favorites is not None,
+        "bought_24h": bought, "bought_24h_present": bought is not None,
+        "parser_alert": alert,
+        "note": ("Page loaded fine and NOT ONE known badge wording matched. Suspect a "
+                 "reworded badge before believing this listing is quiet — check the "
+                 "HTML and widen the patterns."
+                 if alert else
+                 "Absent = below Etsy's display threshold, NOT zero (N-02). "
+                 "bought_24h is an upper bound on a single day and must not be x30'd "
+                 "into a month without clamping against the shop's measured rate."),
+    }
+
+
 class EtsyPublicAPI:
     def __init__(self, cache=None):
         self.config = ScraperConfig()
@@ -163,10 +262,19 @@ class EtsyPublicAPI:
         return result if result["total_results"] is not None or result["cards"] else None
 
     def get_listing_data(self, listing_id):
-        """Scrapes a public listing page to extract Tags and Breadcrumb.
+        """Scrapes a public listing page: tags, breadcrumb, type, age, broadened queries.
 
         TTL_LISTING_TAGS (30 days): a seller's tags and category rarely change, so this
         is the cheapest thing in the system to reuse.
+
+        ⚠️ **Everything here must be slow-moving or immutable.** Volatile numbers — the
+        cart count, favourites, today's badge — belong in `get_listing_live()`, which
+        never caches. A month-old cart count served as current is a freshness bug that
+        looks exactly like a fresh reading.
+
+        Cache key is versioned (`_v2`). Adding a field without bumping it would leave
+        30-day-old entries returning None for the new keys, and a *measured* value
+        reading as *unmeasured* is N-02 inverted — just as wrong, and harder to spot.
         """
         def _fetch():
             url = f"https://www.etsy.com/listing/{listing_id}"
@@ -184,6 +292,12 @@ class EtsyPublicAPI:
                 # were being discarded with the rest of the page. D-22 makes this
                 # mandatory: type decides the margin floor a candidate is judged against.
                 "product_type": product_type.detect_from_html(html).get("product_type"),
+                # Etsy's own broadened/expanded query set for this listing — see the
+                # tag block below. None until proven otherwise, never [] (N-02).
+                "broadened_queries": None,
+                # When the listing went live. This is the honeymoon signal, and it is
+                # on HTML we were already paying for.
+                "listed_on": parse_listed_on(html),
             }
 
             # 1. Extract Breadcrumb from LD+JSON
@@ -206,9 +320,47 @@ class EtsyPublicAPI:
                     data = json.loads(script.string)
                     if data.get('spec_name') == 'Listzilla_ApiSpecs_Tags_Landing':
                         tags = data.get('args', {}).get('click_queries', [])
-                        # The first 13 are usually the actual tags, the rest are broadened matches
+                        # Etsy allows 13 tags, so the first 13 are the seller's own.
                         result['tags'] = tags[:13]
+                        # The TAIL is Etsy's own broadened/expanded queries for this
+                        # listing — what the marketplace thinks it is also about. It
+                        # was being truncated away. It is the thing that separates a
+                        # genuine accidental keyword (Etsy ranks a listing for a term
+                        # its seller never claimed) from Etsy's synonym layer merely
+                        # doing its job, and those need different responses.
+                        result['broadened_queries'] = tags[13:]
             return result
 
-        return self.cache.get_or_fetch(f"public_listing_{listing_id}", TTL_LISTING_TAGS,
-                                       _fetch, source="etsy_public")
+        # _v2: `listed_on` and `broadened_queries` were added 2026-09-01. Reusing the
+        # old key would serve 30-day-old entries that lack them, and their absence
+        # would read as "this listing has no date" rather than "this blob predates the
+        # field".
+        return self.cache.get_or_fetch(f"public_listing_v2_{listing_id}",
+                                       TTL_LISTING_TAGS, _fetch, source="etsy_public")
+
+    def get_listing_live(self, listing_id):
+        """The volatile demand signals: cart count, favourites, today's badge.
+
+        Deliberately a SEPARATE call from `get_listing_data` even though it reads the
+        same page, because these move hourly and tags do not. `TTL_LIVE = 0` — never
+        cached, exactly as `core/request_cache.py` intended when it named the tier
+        "stock, 'N in cart', today's badge".
+
+        ⚠️ **Every number here is threshold-gated: Etsy renders these badges only above
+        some level.** So a missing badge means *below the display threshold*, never
+        zero (N-02), and every field is None-by-default with a `*_present` flag beside
+        it. `derivations.py` documents the same trap for `daily_sales`: a 0 there means
+        "no badge rendered" far more often than it means "nothing sold", and treating
+        the two alike manufactures a dead listing or a runaway one.
+
+        ⚠️ If the page loads and NONE of the known wordings match, that is reported as
+        `parser_alert`, not as an absence. Etsy rewords these badges, and a reworded
+        badge failing silently to `None` is indistinguishable from a genuinely quiet
+        listing — the single most dangerous shape in this codebase.
+        """
+        url = f"https://www.etsy.com/listing/{listing_id}"
+        resp = self.session.request("GET", url, headers=self.headers, platform="etsy")
+        if resp.status_code != 200:
+            return {"listing_id": listing_id, "basis": "fetch_failed",
+                    "status": resp.status_code}
+        return parse_listing_live(resp.text, listing_id=listing_id)

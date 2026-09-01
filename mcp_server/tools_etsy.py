@@ -39,8 +39,11 @@ _PRIVATE_DOC = (
 
 _PUBLIC_DOC = (
     "search: the SERP — total supply, ranked ids, ~12 cards. "
-    "listing: one listing's 13 tags + breadcrumb + product type, 30-day cache, the "
-    "cheapest call here. shop_metrics/shop_listings: a competitor shop, tracked or "
+    "listing: 13 tags + breadcrumb + product type + listed_on (age/honeymoon) + "
+    "Etsy's own broadened queries; 30-day cache, the cheapest call here. "
+    "listing_live: cart count, favourites, 24h bought badge — NEVER cached, all "
+    "threshold-gated so absent means below the threshold, not zero. "
+    "shop_metrics/shop_listings: a competitor shop, tracked or "
     "not. All use a replaceable buyer session — unlimited, no seller-account risk."
 )
 
@@ -184,10 +187,11 @@ def etsy_public(
     page: int = 1,
 ) -> dict:
     """Competition truth — who ranks, what they tag. Buyer session: unlimited, safe."""
-    need = {"search": term, "listing": listing_id,
+    need = {"search": term, "listing": listing_id, "listing_live": listing_id,
             "shop_metrics": shop, "shop_listings": shop}.get(operation)
     if not need:
-        arg = {"search": "term", "listing": "listing_id"}.get(operation, "shop")
+        arg = {"search": "term", "listing": "listing_id",
+               "listing_live": "listing_id"}.get(operation, "shop")
         return _fail(f"operation '{operation}' needs `{arg}`")
 
     blocked = _preflight(("etsy",))
@@ -218,15 +222,38 @@ def etsy_public(
 
     if operation == "listing":
         data = api.get_listing_data(listing_id) or {}
+        broadened = data.get("broadened_queries")
         return _ok({
             "operation": operation, "listing_id": listing_id,
             "tags": data.get("tags"), "breadcrumb": data.get("breadcrumb"),
             "product_type": data.get("product_type"),
+            "listed_on": data.get("listed_on"),
+            "broadened_queries": broadened,
+            "broadened_count": None if broadened is None else len(broadened),
             "basis": "measured", "cache": "30 days — the cheapest call here",
             "note": "The 13 tags are what this listing actually ranks on. "
                     "product_type decides which margin floor applies (D-22); it is "
                     "read from HTML markers, so a blocked page yields None rather "
-                    "than 'physical'.",
+                    "than 'physical'. "
+                    "`listed_on` is the listing's real age — the honeymoon signal. "
+                    "`broadened_queries` is ETSY's own expansion of this listing, not "
+                    "the seller's tags: a term there but not in `tags` is Etsy's "
+                    "synonym layer, which is what distinguishes it from a genuine "
+                    "accidental keyword. Both are None on a cached blob predating "
+                    "2026-09-01 only if the cache key was not bumped — it was.",
+        })
+
+    if operation == "listing_live":
+        live = api.get_listing_live(listing_id)
+        return _ok({
+            "operation": operation, **live,
+            "cache": "NEVER cached (TTL_LIVE) — these move hourly",
+            "guidance": "⚠️ Every number here is THRESHOLD-GATED: Etsy renders the "
+                        "badge only above some level. `in_cart: null` with "
+                        "`in_cart_present: false` means below the display threshold, "
+                        "NOT zero (N-02). If `parser_alert` is true the page loaded "
+                        "and no known wording matched — report that as a parser "
+                        "problem, never as a quiet listing.",
         })
 
     from core.shop_scraper import ShopScraper

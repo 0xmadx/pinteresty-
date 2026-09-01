@@ -139,7 +139,7 @@ class GridAnalyticsPipeline:
                 csrf_token = listing_data.get('csrf_token')
                 
                 print(f"  -> Fetching Reviews for Listing: {lid}")
-                recent_dates = get_recent_reviews(lid, public_api=self.api, shop_id=shop_id, csrf_token=csrf_token)
+                recent_dates = get_recent_reviews(lid, public_api=self.api, target_shop_id=shop_id, csrf_token=csrf_token)
                 
             velocity_database[str(lid)] = {
                 "recent_dates": recent_dates,

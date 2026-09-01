@@ -69,7 +69,8 @@ EtsyPrivateOp = Literal[
 
 EtsyPublicOp = Literal[
     "search",         # the SERP: supply, ranked ids, ~12 cards
-    "listing",        # 13 tags + breadcrumb + product type, 30-day cache
+    "listing",        # tags + breadcrumb + type + age + Etsy's own query expansion
+    "listing_live",   # cart / favourites / 24h badge — volatile, NEVER cached
     "shop_metrics",   # a competitor shop's totals
     "shop_listings",  # a competitor shop's inventory
 ]

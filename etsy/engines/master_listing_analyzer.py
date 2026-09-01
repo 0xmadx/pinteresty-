@@ -1,5 +1,6 @@
 import re
 import argparse
+import traceback
 
 
 from etsy.analytics.single_listing_analytics import SingleListingPipeline
@@ -37,30 +38,37 @@ class MasterListingAnalyzer:
             
         print(f"[*] Extracted Target Listing ID: {self.listing_id}")
         
-        # 1. Run Financials (Single Listing Pipeline)
-        print("\n[>>>] INITIATING PHASE 1: FINANCIAL INTELLIGENCE [<<<]")
-        try:
-            financial_pipeline = SingleListingPipeline(self.listing_id)
-            financial_pipeline.run()
-        except Exception as e:
-            print(f"[-] Financial Pipeline Failed: {e}")
-            
-        # 2. Run Sentiment (DeepSeek AI Review Pipeline)
-        print("\n[>>>] INITIATING PHASE 2: CUSTOMER SENTIMENT & AI FLAWS [<<<]")
-        try:
-            sentiment_pipeline = SentimentAnalyticsPipeline(self.listing_id)
-            sentiment_pipeline.run()
-        except Exception as e:
-            print(f"[-] Sentiment Pipeline Failed: {e}")
-            
-        # 3. Run SEO (Reverse-Engineer Tags & Materials)
-        print("\n[>>>] INITIATING PHASE 3: SEO REVERSE-ENGINEERING [<<<]")
-        try:
-            seo_pipeline = SEOAnalyticsPipeline(self.listing_id)
-            seo_pipeline.run()
-        except Exception as e:
-            print(f"[-] SEO Pipeline Failed: {e}")
-            
+        # Each phase is caught so one failure does not abort the other two — but the
+        # catch used to print a bare one-line message and move on, and that is how an
+        # AttributeError on the FIRST LINE of listing_api.get_listing_data went
+        # unnoticed for the project's life. All three phases raised it. All three
+        # printed "Failed: 'EtsyPublicAPI' object has no attribute 'cookies'" among a
+        # wall of banner output, and the run reported itself complete.
+        #
+        # A pipeline that fails must look like a failure, so: the traceback is printed,
+        # the failures are collected, and the summary states them at the end where the
+        # reader is actually looking.
+        failures = []
+        for label, phase, pipeline_cls in (
+                ("FINANCIAL INTELLIGENCE", 1, SingleListingPipeline),
+                ("CUSTOMER SENTIMENT & AI FLAWS", 2, SentimentAnalyticsPipeline),
+                ("SEO REVERSE-ENGINEERING", 3, SEOAnalyticsPipeline)):
+            print(f"\n[>>>] INITIATING PHASE {phase}: {label} [<<<]")
+            try:
+                pipeline_cls(self.listing_id).run()
+            except Exception as e:
+                traceback.print_exc()
+                failures.append(f"PHASE {phase} ({label}): {type(e).__name__}: {e}")
+                print(f"[-] PHASE {phase} FAILED — {type(e).__name__}: {e}")
+
+        if failures:
+            print("\n" + "!" * 89)
+            print(f"  {len(failures)} of 3 PHASES FAILED — the report below is INCOMPLETE")
+            for f in failures:
+                print(f"    - {f}")
+            print("!" * 89)
+
+
         # 4. Master Report
         print("\n=========================================================================================")
         print(f"                     X-RAY COMPLETE: {self.listing_id}")
