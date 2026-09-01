@@ -231,6 +231,7 @@ account costs the business.
 | `ROADMAP.md` | what's still missing (single-operator scope) + design-only notes for a future listed-MCP/SaaS version — read before assuming multi-tenancy is a small change |
 | `docs/architecture/09_build_plan.md` | **what we are building and in what order** |
 | `docs/HOW_WE_WORK.md` | **the operating model** — the three seats, the loop, which lens fires when. Read first. |
+| `docs/SEO_LAYER_AUDIT.md` | ⚠️ **the current defect list and build order** (2026-09-01). Four live wrong-number bugs, what is already built and merely unreachable, and Part 2b: the plausible gaps that did NOT survive attack. Read before proposing SEO/ranking/batch work. |
 | `docs/market_map/` | **the shared knowledge base** — `reference/` (params, payloads, verified per platform) + `analysis/` (what each is worth, and the combinations). Read before planning data work. |
 | `pinterest/products/README.md` | ⚠️ **easy to miss — 8 standalone Pinterest products** (keyword_research · content_calendar · ad_targeting · market_intel · history · audience · moodboard · alerts), their own CLI, 54 live checks. Nothing here imports Etsy or `core/`. This is where `category_demographics` and `editorial_content` are actually used, and it was invisible from this file until 2026-09-01. |
 | `pinterest/pipelines/README.md` | the Etsy-facing Pinterest tier — the joins (`trends_bridge`, `pin_graph_pipeline`), as opposed to `products/` which stands alone |
