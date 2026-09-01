@@ -1877,3 +1877,66 @@ real waste across three commits (auto-generated titles, then five oversized
 descriptions). It was raised at the point it stopped finding fat and started
 cutting warnings, which is the right moment to move a budget and the only honest
 reason to.
+
+## D-59 — the two Etsy tiers, and `daily_stats` finally has a consumer
+
+**Date:** 2026-09-01.
+
+**Two tools, not one, on purpose.** `etsy_private` and `etsy_public` could have
+been a single tool with a `tier` parameter. They are separate so the tier is
+visible **at the call site** rather than buried in an argument: D-29 is the rule
+that costs the most to break, and `etsy_private(...)` in a transcript reads as
+spending the irreplaceable account in a way `etsy(tier="private", ...)` does not.
+
+**`daily_stats` now has its first consumer.** D-51 found it — a day-by-day volume
+series with a 7-day rolling average riding free on *every* `results_data` call,
+parsed by nothing in the project's life. It is a materially different instrument
+from `chart_series`: **daily over ~3 weeks** rather than monthly over a year, so
+it answers "is this moving NOW" where the other answers "when does it peak
+annually." For a calendar-first product that is the sharper question.
+
+Verified live: `mom necklace` → 30 daily points, peak **Aug 18 at 540**, range
+133–540, each with its rolling average. Free, on a call the system already makes.
+
+`similar_keywords` gets the same `iterations=3` cap as the crawl (D-57), for the
+same reason: the CLI's 10 is for a human who chose to wait.
+
+### The public session was burned mid-verification, and the system behaved correctly
+
+While smoke-testing `etsy_public`, the buyer profile took a **403** from Etsy.
+The observable sequence:
+
+```
+Request blocked or unauthorized: 403 on profile profile_p5ewxsodn
+🚫 [Vault] Marked profile_p5ewxsodn on etsy as INVALID. Removed from rotation.
+⏳ [Vault] No usable 'etsy' profile. Waiting up to 120s...
+   -> VaultEmpty
+```
+
+**Every layer did its job.** `session_manager.classify()` read the 403 as
+`blocked` rather than as a rate limit or a bug in our own request, and evicted —
+which is exactly D-35's design, and exactly what must NOT happen for a 429.
+Preflight had passed legitimately: the pool was healthy when the tool was called
+and the block happened mid-request, which no gate can pre-empt. The seller
+account was untouched (2 usable throughout) — the tier separation held under a
+real failure, not just in principle.
+
+**Verification, in the order it actually happened.** `etsy_private` verified
+first: `daily_stats` → 30 daily points, peak Aug 18 at 540; `results_data` →
+11,141 volume / 381,511 supply / CVR 0.000303 / 17 competitor cards.
+`etsy_public` could NOT be verified at that moment — its session had just been
+evicted — and was written up as unverified rather than assumed, on the grounds
+that "the code path looks like the others" is an argument and not a measurement.
+
+The extension re-synced minutes later and it was then verified properly:
+`search('felt garland')` → 29,334 total, 12 cards (all organic), **46 ranked
+listing ids**, 20 pages; `listing` → `physical`, 13 tags, breadcrumb
+`Home & Living > Home Decor > Wall Decor`.
+
+Two things that run confirms beyond the tool working. The **46 ranked ids
+against 12 rendered cards** is the D-PS-2 fix still holding — that list was
+empty for the project's entire life until the 2026-08-20 regex fix, and it is
+what makes rank tracking possible at all. And **20 pages** against a system that
+only ever reads page one is the pagination gap quantified: 19 pages of
+competitors this surface cannot see, which the tool now says out loud rather
+than leaving as silence.

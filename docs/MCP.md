@@ -12,7 +12,7 @@ becoming a source of numbers.
 .venv/Scripts/python.exe -m mcp_server.server
 ```
 
-Speaks stdio. **22 read-only tools**, four of which group 35 operations between them. You do not run this command yourself in
+Speaks stdio. **24 read-only tools**, six of which group 44 operations between them. You do not run this command yourself in
 normal use — the MCP client (Claude Code, Claude Desktop, Antigravity) launches
 it as a subprocess on demand, over stdio. Run it by hand only to sanity-check it
 starts, or when writing/debugging a new tool.
@@ -55,7 +55,7 @@ for t in tools: print(' ', t.name)
 "
 ```
 
-22 tools should print. If Claude Code / Antigravity shows a different count
+24 tools should print. If Claude Code / Antigravity shows a different count
 after adding the server, the client is pointed at a stale `cwd` or a different
 Python (not the venv) — check the command path first.
 
@@ -90,6 +90,8 @@ Python (not the venv) — check the command path first.
 | `pinterest_research` | **11 operations** — composed research: expansion, audience skew, merchant share, movement | **live** (2 are local-only) |
 | `keyword_crawl` | recursive seed expansion → the winnable pockets. **SPENDS THE SELLER ACCOUNT**, hard-capped | **live, seller-tier** |
 | `analyze` | **7 operations** — winnability, intent, seasonality, saturation, freshness, filter trust, discriminability | local, free |
+| `etsy_private` | **5 operations** — results_data, daily_stats, chart_series, similar_keywords, trending | **live, SELLER tier** |
+| `etsy_public` | **4 operations** — search, listing, shop_metrics, shop_listings | **live**, buyer session |
 | `deep_dive_keyword` | full BFS crawl + gap/sourcing arbitrage on a seed — slow, dozens of requests | **live, expensive** |
 | `filter_trust_report` | which Etsy SERP filters can be believed, which silently lie | local |
 | `profit_verdict` | go/no-go on one unit, with the reason it failed | local |
@@ -250,6 +252,7 @@ bounded **120-second wait** before it raises.
 | `tools_pinterest_research.py` | composed research over `pinterest/products/` — 11 operations |
 | `tools_crawl.py` | recursive keyword discovery — the only seller-tier tool, hard-capped |
 | `tools_analyze.py` | the judgements — DB-backed or pure, no network, no preflight |
+| `tools_etsy.py` | the two Etsy tiers, kept as separate tools so D-29 is visible at the call site |
 | `server.py` | wiring + `main()` only — no tool definitions |
 
 ⚠️ **Adding a tool module means adding its import to `server.py`.** Those imports

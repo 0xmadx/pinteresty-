@@ -90,7 +90,7 @@ Re-audits which Etsy SERP filters can be believed. **9 of 12 currently cannot.**
 ```bash
 .venv/Scripts/python.exe -m core.test_graph_db
 ```
-One of **52 offline suites** — 1,415 assertions, no network required.
+One of **52 offline suites** — 1,416 assertions, no network required.
 
 `pinterest/tests/` holds 5 further suites that are **live** (their docstrings say so):
 they call the real Pinterest API, so their counts move with session state and they
@@ -122,7 +122,7 @@ agent's surface is the product — see `docs/MCP.md`.
 | `etsy/ui/` | **`app_data.py` only** — the one read layer (D-41), consumed by MCP. The screens that used to live here were deleted (D-52); the package name is kept so no import moves. |
 | `core/` | sessions, database, cache, scheduler, guards, settings |
 | `pinterest/` | the Pinterest tier — `endpoints/` (client + full wire reference), `pipelines/` (the Etsy-facing joins), and **`products/`: 8 standalone Pinterest tools with their own CLI and 54 live checks** (`pinterest/products/README.md`), which import nothing from Etsy or `core/` |
-| `mcp_server/` | the agent-facing surface — 22 tools reaching 53 capabilities, wired by `.mcp.json` |
+| `mcp_server/` | the agent-facing surface — 24 tools reaching 62 capabilities, wired by `.mcp.json` |
 | `cookie_server_go/`, `chrome_extension/` | **the access layer.** Read, never extend. |
 | `config/` | `settings.json`, `filter_trust.json`, scheduler state |
 | `docs/` | see `docs/ONBOARDING.md` first |
@@ -161,7 +161,7 @@ agent's surface is the product — see `docs/MCP.md`.
 inverses · survivor bound · gap analysis with a filter-trust gate and working
 demand-in-bracket · sourcing and lead time · POD costing · scoring with a
 discrimination check · scheduler running daily · verdict change log · LEARN
-scaffold · 22 MCP tools — the interface (D-52), Pinterest included (D-55/D-56).
+scaffold · 24 MCP tools — the interface (D-52), Pinterest included (D-55/D-56).
 
 **Thin:** the data. Trend, listing and shop observations accumulate daily;
 keyword history covers 8 watched terms; **0 launches**. The machine is built and has

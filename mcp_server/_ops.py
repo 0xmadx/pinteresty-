@@ -48,6 +48,21 @@ ResearchOp = Literal[
     "history",          # rank history / longevity, local archive, no network
 ]
 
+EtsyPrivateOp = Literal[
+    "results_data",      # volume, supply, CVR, prices + 20 competitor cards, one call
+    "daily_stats",       # the DAILY curve riding free on that same call (D-51)
+    "chart_series",      # the 12-month seasonal curve (D-45)
+    "similar_keywords",  # Etsy's own LLM expansion, each edge pre-sized
+    "trending",          # rising terms per taxonomy id, no quota cost
+]
+
+EtsyPublicOp = Literal[
+    "search",         # the SERP: supply, ranked ids, ~12 cards
+    "listing",        # 13 tags + breadcrumb + product type, 30-day cache
+    "shop_metrics",   # a competitor shop's totals
+    "shop_listings",  # a competitor shop's inventory
+]
+
 AnalyzeOp = Literal[
     "winnability",   # demand-per-listing — the ranking number (D-31)
     "intent",        # CVR vs the pooled median — RELATIVE only (D-43)
