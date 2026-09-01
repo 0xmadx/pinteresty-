@@ -20,6 +20,74 @@ class SessionDown(RuntimeError):
     """
 
 
+# `chart-series-data` accepts a LIST of terms and silently returns only the FIRST
+# THREE. Not an error, not a warning — the response is a well-formed 200 carrying a
+# subset, in request order.
+#
+# Measured 2026-09-01, and reproducible from stored data without a live call:
+# `core/scheduler.py` has passed all 11 watched terms daily since the sweep was
+# written, and `keyword_seasonality` holds exactly three of them — `felt garland`,
+# `birthday crown`, `felt flower`, which are terms 1, 2 and 3 of that list. The
+# other eight have never had a seasonal curve. `mom necklace` is term 4, and its
+# December peak is cited in CLAUDE.md as a headline finding from a run that must
+# have asked for it separately.
+#
+# This is the project's defining failure mode in its purest form: every number in
+# the response was correct, and the set of numbers was wrong.
+MAX_CHART_TERMS = 3
+
+
+def chunk_terms(terms, size=MAX_CHART_TERMS):
+    """Split a term list into request-sized groups. Pure — no I/O.
+
+    Split out from the fetching for the same reason `rank_tracker.find_rank` is: the
+    arithmetic here is easy to get subtly wrong and impossible to notice, because an
+    off-by-one drops a term into silence rather than raising.
+    """
+    terms = [t for t in (terms if isinstance(terms, (list, tuple)) else [terms]) if t]
+    size = max(1, int(size or 1))
+    return [terms[i:i + size] for i in range(0, len(terms), size)]
+
+
+def merge_chart_responses(responses, requested=None, failed_chunks=0):
+    """Fold several `chart-series-data` responses into one. Pure — no I/O.
+
+    Concatenates `series` and `term_summaries` so the existing parsers work on the
+    merged result unchanged and no caller has to learn that chunking happened.
+
+    Two merge rules are deliberate:
+
+    * `is_last_bucket_partial` folds with **any()**. The chunks are issued seconds
+      apart on the same `days`, so they agree in practice — but if they ever
+      disagreed, marking the curve partial is the direction that refuses to be read
+      as a collapse. Losing the flag is the failure that matters (D-45).
+    * `granularity` takes the first non-null and does not attempt to reconcile a
+      disagreement, because a mixed-granularity merge is not a curve and should be
+      visible as an oddity rather than averaged into plausibility.
+
+    `_requested` and `_failed_chunks` ride along so `chart_coverage()` can separate
+    three states the raw response cannot: Etsy omitted a term, we never asked for it,
+    or the request for it failed.
+    """
+    responses = [r for r in (responses or []) if isinstance(r, dict)]
+    merged = {
+        "series": [],
+        "term_summaries": [],
+        "is_last_bucket_partial": any(
+            bool(_pick(r, "is_last_bucket_partial", "isLastBucketPartial", default=False))
+            for r in responses),
+        "granularity": next(
+            (g for g in (_pick(r, "granularity") for r in responses) if g), None),
+        "_requested": list(requested or []),
+        "_failed_chunks": int(failed_chunks),
+    }
+    for r in responses:
+        merged["series"].extend(_pick(r, "series", default=[]) or [])
+        merged["term_summaries"].extend(
+            _pick(r, "term_summaries", "termSummaries", default=[]) or [])
+    return merged
+
+
 def _money(value):
     """"$17.10" -> 17.10. None when there is no number to read.
 
@@ -192,9 +260,18 @@ def parse_chart_series(chart):
     partial month, not a real low. That flag rides on every returned curve so no
     consumer can miss it.
 
-    ⚠️ **Terms Etsy cannot size are OMITTED, not zeroed.** Asked for four terms, the
-    response carried three; `linen apron` was simply absent. A missing term is
-    unmeasured (N-02) and callers get no entry rather than an empty curve.
+    ⚠️ **A term can be missing for three different reasons.** Use `chart_coverage()`
+    to tell them apart — this parser only reports what came back.
+
+    ⚠️ **DISPUTED CLAIM, recorded here so it is not repeated as fact.** This docstring
+    used to state: *"Asked for four terms, the response carried three; `linen apron`
+    was simply absent"*, offered as a verified example of N-02. That is very probably
+    wrong. The endpoint truncates at `MAX_CHART_TERMS = 3` positionally, so a
+    four-in / three-out result **is the ceiling**, and `linen apron` sat at exactly
+    the cut. It has propagated into `docs/market_map/reference/etsy_private.md`.
+    Re-probe `linen apron` ALONE against a green vault to settle it. It is left
+    marked disputed rather than rewritten, because replacing one unverified claim
+    with another is the same mistake in the other direction.
     """
     chart = chart or {}
     partial = bool(_pick(chart, "is_last_bucket_partial", "isLastBucketPartial",
@@ -216,6 +293,63 @@ def parse_chart_series(chart):
             out[term] = {"points": points, "last_is_partial": partial,
                          "granularity": _pick(chart, "granularity", default=None)}
     return out
+
+
+def chart_coverage(chart):
+    """Which requested terms actually came back, and why the rest did not.
+
+    The bug this exists to prevent lived for the project's life: a term absent from
+    the response was read as *"Etsy cannot size this term"* (unmeasured, N-02) when
+    in fact **we never asked** — `get_chart_series` sent 11 and the endpoint answered
+    the first 3. One collapsed state hiding two very different claims, and the
+    optimistic reading was published on the MCP surface as a finding about the market.
+
+    Three states, kept apart:
+
+      `returned`      Etsy answered for this term
+      `omitted`       we asked, the request succeeded, Etsy sent nothing back.
+                      THIS is N-02 unmeasured — and only this.
+      `not_asked`     the term was never in any successful request
+      `failed_chunks` how many chunks errored. While this is > 0, `omitted` cannot
+                      be trusted as unmeasured: a term in a failed chunk looks
+                      identical to one Etsy declined to size.
+
+    `requested` is empty for a response that did not come through `get_chart_series`
+    (a stored fixture, say). Then only `returned` is knowable, and the other buckets
+    are reported as unknown rather than guessed at.
+    """
+    chart = chart or {}
+    returned = []
+    for entry in _pick(chart, "series", default=[]) or []:
+        term = _pick(entry, "search_term", "searchTerm")
+        if term and term not in returned:
+            returned.append(term)
+
+    requested = list(chart.get("_requested") or [])
+    failed = int(chart.get("_failed_chunks") or 0)
+    if not requested:
+        return {"requested": [], "returned": returned, "omitted": None,
+                "not_asked": None, "failed_chunks": failed,
+                "basis": "returned_only",
+                "note": "No request list on this response, so a term's absence cannot "
+                        "be attributed. Absence here is not evidence of anything."}
+
+    missing = [t for t in requested if t not in returned]
+    return {
+        "requested": requested, "returned": returned,
+        # Everything asked-for-and-succeeded but not returned. When a chunk failed we
+        # cannot say which bucket its terms belong to, so we say so instead of
+        # splitting them on a guess.
+        "omitted": missing if not failed else None,
+        "not_asked": [],
+        "failed_chunks": failed,
+        "basis": "measured" if not failed else "partial",
+        "note": ("Missing terms are UNMEASURED (N-02) — Etsy was asked and sent "
+                 "nothing back." if not failed else
+                 f"{failed} chunk(s) failed, so a missing term may be unmeasured OR "
+                 f"simply un-fetched. Do not read absence as a market fact until the "
+                 f"failed chunks are retried."),
+    }
 
 
 def edge_term(edge):
@@ -286,31 +420,62 @@ class EtsyPrivateAPI:
                                        TTL_METERED, _fetch, source="etsy_private")
 
     def get_chart_series(self, terms, days=365):
-        """Fetches the time-series chart data.
+        """Fetches the time-series chart data, chunked so no term is silently dropped.
 
         ⚠️ Callers historically read ONLY `term_summaries` from this response and threw
         `series` away — a free 12-month volume curve per term, on every call the whole
         project has ever made. Use `parse_chart_series()` to get it (D-45).
+
+        ⚠️ **The endpoint answers only the first `MAX_CHART_TERMS` (3) terms** and says
+        nothing about the rest — a well-formed 200 carrying a subset. Everything above
+        the cut was lost in silence for the project's life; see the constant for the
+        evidence. This method now chunks, issues one request per group and merges, so
+        the caller passes whatever list it has and gets an answer for all of it.
+
+        **Cost, so it is not a surprise:** N terms cost `ceil(N / 3)` requests. The 11
+        watched terms are 4 requests, not 1. That is the price of the other 8 curves.
+
+        A failed chunk does **not** silently shrink the answer — it is counted, and
+        `chart_coverage()` refuses to call the terms in it unmeasured.
 
         `include_trendline` is left False deliberately: probed 2026-08-20 against
         `christmas ornament`, True and False return byte-identical key structures. The
         flag does nothing on this endpoint, so setting it would only imply it did.
         """
         url = f"https://www.etsy.com/api/v3/ajax/bespoke/shop/{{shop_id}}/marketplace-insights/chart-series-data"
-        payload = {
-            "search_terms": terms if isinstance(terms, list) else [terms],
-            "days": days,
-            "include_trendline": False,
-            "include_wow_data": True,
-            "include_search_volume": True,
-            "include_avg_total_listings": True
-        }
-        
-        resp = self.session.request("POST", url, headers=self.headers, platform="etsy_private", data=json.dumps(payload))
-        if resp.status_code == 200:
-            return resp.json()
-        print(f"[-] chart-series-data failed: {resp.status_code}")
-        return None
+        requested = [t for t in (terms if isinstance(terms, list) else [terms]) if t]
+        responses, failed = [], 0
+
+        for group in chunk_terms(requested):
+            payload = {
+                "search_terms": group,
+                "days": days,
+                "include_trendline": False,
+                "include_wow_data": True,
+                "include_search_volume": True,
+                "include_avg_total_listings": True
+            }
+            resp = self.session.request("POST", url, headers=self.headers,
+                                        platform="etsy_private",
+                                        data=json.dumps(payload))
+            if resp.status_code == 200:
+                responses.append(resp.json())
+                continue
+            # 401/403 is the session, not the endpoint, and it will be true of every
+            # remaining chunk — fail loudly rather than returning a partial answer that
+            # looks like Etsy declining to size 8 terms.
+            if resp.status_code in (401, 403):
+                raise SessionDown(
+                    f"chart-series-data returned {resp.status_code} — seller session "
+                    f"stale or absent. Is the browser + extension running? Check: "
+                    f"python -m core.vault_status")
+            failed += 1
+            print(f"[-] chart-series-data failed for {group}: {resp.status_code}")
+
+        if not responses:
+            return None
+        return merge_chart_responses(responses, requested=requested,
+                                     failed_chunks=failed)
 
     def get_similar_keywords(self, keyword, max_retries=10, iterations=10):
         """Enqueues an LLM keyword job multiple times to extract a massive, deduplicated list of edges.

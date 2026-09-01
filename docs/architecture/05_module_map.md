@@ -112,7 +112,7 @@ welded to I/O inside a pipeline class. There is no `profit.py`, no `scoring.py`,
 | `etsy/engines/master_listing_analyzer.py` | 95 | exists |
 | `etsy/engines/ssr_graph_pipeline.py` | 123 | exists — **depends on the dead Private tier** |
 | `etsy/engines/private_recursive_spider.py` | 99 | exists — **dead tier** |
-| `etsy/engines/private_comparison.py` | 59 | exists — **dead tier** |
+| ~~`etsy/engines/private_comparison.py`~~ | — | **DELETED 2026-09-01.** A second, wronger answer to the batch-comparison question: silent `keywords[:3]`, `None → 0` on volume and supply (N-02), `ratio = 0` when supply was missing (so unmeasured sorted as worst), ranked by volume ÷ listings with no CVR (D-43's exact error), printed a 🏆 WINNER, returned `None`, and had no CLI entry point. Nothing imported it. |
 | `etsy/engines/private_scoring_pipeline.py` | 178 | **broken** — imports `src.services.executor` (missing) |
 | `etsy/engines/private_blueprint.py` | 103 | parses ✅ (fixed mid-pass) — still **non-functional**: depends on the dead Private tier |
 | `etsy/generators/listing_generator.py` | 246 | exists — **depends on the dead Private tier** |

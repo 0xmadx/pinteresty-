@@ -62,9 +62,9 @@ def etsy_private(
     if blocked:
         return blocked
 
-    from etsy.api.private.api import (EtsyPrivateAPI, SessionDown,
-                                      parse_chart_series, parse_results_data,
-                                      parse_term_summaries)
+    from etsy.api.private.api import (MAX_CHART_TERMS, EtsyPrivateAPI, SessionDown,
+                                      chart_coverage, parse_chart_series,
+                                      parse_results_data, parse_term_summaries)
     api = EtsyPrivateAPI()
     try:
         if operation in ("results_data", "daily_stats"):
@@ -96,15 +96,26 @@ def etsy_private(
             terms = [t.strip() for t in term.split(",") if t.strip()]
             raw = api.get_chart_series(terms, days=days)
             curves = parse_chart_series(raw)
+            # Etsy answers only 3 terms per request; the client chunks and merges, so
+            # `terms` above is genuinely what was asked. Until 2026-09-01 it was not:
+            # the note here told the agent that a missing term meant Etsy could not
+            # size it, when 8 of 11 had simply never been requested. Coverage now
+            # carries the distinction instead of prose asserting one reading.
+            coverage = chart_coverage(raw)
             return _ok({
                 "operation": operation, "terms": terms, "days": days,
                 "summaries": parse_term_summaries(raw),
                 "curves": curves, "returned": len(curves),
-                "basis": "measured",
+                "coverage": coverage,
+                "requests_spent": -(-len(terms) // MAX_CHART_TERMS),
+                "basis": coverage.get("basis", "measured"),
                 "note": "⚠️ The LAST bucket is the current month counted SO FAR — "
-                        "judging on it manufactures a collapse. Terms Etsy cannot "
-                        "size are OMITTED, not zeroed: requested > returned means "
-                        "unmeasured (N-02).",
+                        "judging on it manufactures a collapse (D-45). "
+                        "For a missing term read `coverage`, never `returned` alone: "
+                        "`omitted` is Etsy declining to size it (UNMEASURED, N-02), "
+                        "while `failed_chunks > 0` means it may simply never have been "
+                        "fetched. Those are different claims and only the first is a "
+                        "fact about the market.",
             })
 
         if operation == "similar_keywords":

@@ -86,16 +86,33 @@ with no use here. None of these belong in `parse_results_data`.
 `POST .../marketplace-insights/chart-series-data`
 `{search_terms:[...], days, include_trendline:false, include_wow_data:true, include_search_volume:true, include_avg_total_listings:true}`
 
-Pass a LIST of terms → a 12-month time series for EACH, in one call. The "cycle diagram".
+Pass a LIST of terms → a 12-month time series for EACH. The "cycle diagram".
+
+🚨 **THE ENDPOINT ANSWERS ONLY THE FIRST 3 TERMS.** Positionally, silently, with a
+well-formed 200. Measured 2026-09-01. This page previously said *"pass a LIST"* and
+stated **no maximum**, which is how the scheduler came to send 11 terms every day and
+store 3 — terms 1, 2 and 3, every run, for the life of the job. `MAX_CHART_TERMS = 3`
+now lives in `etsy/api/private/api.py` and `get_chart_series` **chunks and merges**,
+so callers may pass any number of terms. Cost is `ceil(N / 3)` requests.
 
 - `series[].points[]` = `{timestamp, label "Sep 2025", value}` — 12 monthly points.
   **Now parsed** by `parse_chart_series()` (D-45) — read the `series` block, not just
   `term_summaries`. `is_last_bucket_partial` rides on every curve: the final point is
   the current month counted so far, and reading it naively manufactures a false
-  collapse. Terms Etsy cannot size are **omitted from `series`, not zeroed** (N-02).
+  collapse.
+- **A missing term has three possible causes, and they are not interchangeable.** Use
+  `chart_coverage()`: `omitted` (asked, request succeeded, Etsy sent nothing — this
+  and only this is N-02 unmeasured), vs `failed_chunks > 0` (may never have been
+  fetched), vs never requested at all.
+
+  ⚠️ **DISPUTED, pending a re-probe.** This page and the parser docstring both cited
+  *"asked for four terms, `linen apron` came back absent"* as a worked example of
+  N-02. With a measured positional ceiling of exactly 3, a four-in / three-out result
+  **is the ceiling** and `linen apron` sat on the cut. Treat it as unresolved — probe
+  `linen apron` ALONE before repeating either reading.
 - `term_summaries[]` = per-term `{search_volume, avg_total_listings, wow_data}` —
   read via `parse_term_summaries()`.
-- **Multi-term compare** in one call (pass 2+ terms → 2+ series).
+- **Multi-term compare**: up to 3 per request; the client chunks above that.
 - Verified: "mom necklace" peaks Nov–Dec (Christmas) + April (pre-Mother's Day);
   `christmas ornament` peaks Nov at 93× its trough.
 - **This is the calendar's engine, from Etsy alone.** No Pinterest needed for

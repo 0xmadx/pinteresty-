@@ -264,10 +264,20 @@ def job_keyword_sweep():
         except Exception as e:
             failed.append({"term": term, "why": f"{type(e).__name__}: {e}"})
 
-    # --- Etsy's own seasonal curve, one BATCHED call for every term (D-45) ---------
-    # chart-series-data takes the whole watch list at once, and its `series` block
-    # carries a 12-month volume curve per term that every caller in this repo used to
-    # discard. One request buys the second seasonal source JOIN 1 needs.
+    # --- Etsy's own seasonal curve, for EVERY term (D-45) --------------------------
+    # chart-series-data's `series` block carries a 12-month volume curve per term that
+    # every caller in this repo used to discard. This is the second seasonal source
+    # JOIN 1 needs.
+    #
+    # ⚠️ This was ONE request and was wrong. The endpoint answers only the first 3
+    # terms of the list it is given, silently, so this job passed 11 terms daily and
+    # stored 3 — `felt garland`, `birthday crown`, `felt flower` — every run since it
+    # was written. The other 8 had no seasonal curve at all, including `mom necklace`,
+    # whose December peak CLAUDE.md cites as a headline finding.
+    #
+    # `get_chart_series` now chunks, so the cost here is ceil(len(terms)/3) requests —
+    # 4 for the current watch list, not 1. That is the price of the other 8 curves and
+    # it is worth paying.
     seasonal = {}
     try:
         from etsy.api.private.api import parse_chart_series

@@ -41,7 +41,7 @@
 | `private_blueprint.py` | **single-keyword deep dive** — settled | **[was wrong]** the "1000-keyword crawler" description is false; docstring and single-row write both confirm one keyword. ⚠️ **P-3 live**: `:96` defaults CVR to 0.02 without setting `cvr_source`. |
 | `master_niche_finder.py` (W9) | crawl → score → deep dive → profit gate | **[was wrong]** — labelled "composition". It is **not**: 3 direct API calls, **zero** sub-pipeline instantiations, and it owns the BFS crawl, the scoring call and the D-01 profit gate. ⚠️ **N-01**: scores on demand+supply only, which cannot discriminate. |
 | `private_recursive_spider.py` (W7) | related-searches graph + LLM edges | LLM hallucination (docs' own note) |
-| `private_comparison.py` (W6) | bulk keyword demand/supply compare | — |
+| ~~`private_comparison.py`~~ (W6) | bulk keyword demand/supply compare | **DELETED 2026-09-01** — truncated to 3 keywords in silence, scored `None` as `0`, and ranked with no CVR. The real batch comparison is being built on `scoring.score_pool`. |
 | `ssr_graph_pipeline.py` (W6.5) | backend niche scoring | — |
 
 ### Generator (`etsy/generators/`)
