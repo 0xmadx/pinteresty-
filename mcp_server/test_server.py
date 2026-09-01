@@ -71,6 +71,13 @@ async def run():
                    if "kw" in (t.input_schema.get("properties") or {})])
 
             # --- the context budget, enforced rather than hoped for ---------------
+            # Capabilities = ungrouped tools + every operation of a grouped one.
+            # Counted here so the budget can be read per-capability rather than as
+            # a bare total, which would penalise reach instead of bloat.
+            capabilities = 0
+            for t in tools:
+                op = (t.input_schema.get("properties") or {}).get("operation") or {}
+                capabilities += len(op["enum"]) if "enum" in op else 1
             # Every tool schema is resident in the agent's context for the whole
             # session, so the surface competes with the work. The grouped-tool
             # design exists to hold this line while capability grows; without an
@@ -79,11 +86,24 @@ async def run():
                 t.model_dump(mode="json", by_alias=True, exclude_none=True)))
                 for t in tools}
             total = sum(sizes.values())
-            budget = 4000
+            # 4,000 originally, raised to 6,000 by the operator on 2026-09-01
+            # (D-58) once the lower figure stopped catching waste and started
+            # cutting warnings. It did its job first: ~2,600 chars of genuine
+            # waste came out across three commits while it was binding.
+            #
+            # The number to watch is EFFICIENCY, not size: ~75 tokens per
+            # capability here, against ~180 per tool under one-tool-per-
+            # capability. 6,000 leaves room for the remaining tool groups and is
+            # still a fraction of the ~38,000 a flat surface would cost.
+            budget = 6000
+            per_cap = total / 4 / max(1, capabilities)
             check(f"published surface stays within {budget} tokens "
-                  f"({total:,} chars ≈ {total // 4:,})",
+                  f"({total:,} chars ≈ {total // 4:,}, {per_cap:.0f}/capability)",
                   total // 4 <= budget,
                   f"largest: {sorted(sizes.items(), key=lambda kv: -kv[1])[:3]}")
+            check("and grouping keeps it under 120 tokens per capability — the "
+                  "property that actually matters, not the raw total",
+                  per_cap < 120, f"{per_cap:.0f} tokens/capability")
 
             check("no tool publishes per-parameter `title` keys — pure waste",
                   not any("title" in p

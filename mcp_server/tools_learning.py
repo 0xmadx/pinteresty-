@@ -80,17 +80,11 @@ def tracked_shops() -> dict:
 @mcp.tool()
 @_guarded
 def verdict_history(subject: str) -> dict:
-    """Has this verdict changed, and which inputs moved underneath it?
-
-    "It changed from watch to list-now" is not actionable; "supply grew 40% while
-    volume held" is. Reports what moved and by how much, ranked by relative change,
-    and explicitly does NOT attribute cause — several inputs usually move together
-    and nothing here can isolate them.
-
-    An input that was measured before and is unmeasured now comes back as
-    `became_unmeasured`, never as a fall to zero: a scraper that broke overnight
-    looks exactly like a market that collapsed.
-    """
+    """Has this verdict changed, and which inputs moved under it? "Supply grew 40%
+    while volume held" is actionable; "watch → list-now" is not. Ranks what moved,
+    and does NOT attribute cause — inputs move together and nothing here isolates
+    them. An input measured before and unmeasured now returns `became_unmeasured`,
+    never a fall to zero: a broken scraper looks exactly like a collapsed market."""
     from etsy.analytics import verdict_log
     state = verdict_log.explain(subject)
     return _ok({"state": state, "findings": verdict_log.read(state),

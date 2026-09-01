@@ -82,7 +82,7 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 ```bash
 # Full verification — run before every commit
 .venv/Scripts/python.exe -m core.test_graph_db          # + the other 51 suites
-# 52 OFFLINE suites, 1,413 assertions, no network required.
+# 52 OFFLINE suites, 1,415 assertions, no network required.
 # ⚠️ pinterest/tests/ holds 5 more that are LIVE — their own docstrings say
 # "Live verification". They hit real Pinterest, their assertion counts VARY
 # with session state, and they print no summary when the vault is down. Never
@@ -227,7 +227,7 @@ account costs the business.
 | File | Answers |
 |---|---|
 | `docs/ONBOARDING.md` | **start here for a fresh session** — what is true, what is a trap |
-| `docs/MCP.md` | **tutorial**: wiring the MCP server (21 tools; three group 28 operations) into Claude Code/Desktop/Antigravity, the tool table, troubleshooting, and where DeepSeek is allowed to touch the system |
+| `docs/MCP.md` | **tutorial**: wiring the MCP server (22 tools; four group 35 operations) into Claude Code/Desktop/Antigravity, the tool table, troubleshooting, and where DeepSeek is allowed to touch the system |
 | `ROADMAP.md` | what's still missing (single-operator scope) + design-only notes for a future listed-MCP/SaaS version — read before assuming multi-tenancy is a small change |
 | `docs/architecture/09_build_plan.md` | **what we are building and in what order** |
 | `docs/HOW_WE_WORK.md` | **the operating model** — the three seats, the loop, which lens fires when. Read first. |
@@ -278,7 +278,7 @@ single screenshot would have caught.
 
 **Working:** all three API clients · profit gate · survivor bound · gap analysis ·
 scoring with discrimination check · freshness floor · tag mining · term join ·
-request cache · run log · guards. 52 offline suites, 1,413 assertions (+5 live
+request cache · run log · guards. 52 offline suites, 1,415 assertions (+5 live
 pinterest suites that need a session).
 
 **Added 2026-08-19:** the calendar (`etsy/engines/calendar_engine.py`) ·
@@ -321,7 +321,7 @@ wall-clock timestamps and `build_pinterest` returns only `MAX(collected_at)`, so
 the suite failed whenever the two inserts straddled a second — a real race, hidden
 because it passed on rerun. Production was never affected (`trends_bridge` passes
 one shared timestamp per run).
-**1,413 assertions** across 52 offline suites, plus 5 live pinterest suites.
+**1,415 assertions** across 52 offline suites, plus 5 live pinterest suites.
 
 **The clock now runs.** `run_scheduler.cmd` is registered as the Windows task
 `EtsyScrapperDaily` (07:00). The first Pinterest bridge run wrote 84 trend

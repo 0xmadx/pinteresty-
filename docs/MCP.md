@@ -12,7 +12,7 @@ becoming a source of numbers.
 .venv/Scripts/python.exe -m mcp_server.server
 ```
 
-Speaks stdio. **21 read-only tools**, three of which group 28 operations between them. You do not run this command yourself in
+Speaks stdio. **22 read-only tools**, four of which group 35 operations between them. You do not run this command yourself in
 normal use — the MCP client (Claude Code, Claude Desktop, Antigravity) launches
 it as a subprocess on demand, over stdio. Run it by hand only to sanity-check it
 starts, or when writing/debugging a new tool.
@@ -55,7 +55,7 @@ for t in tools: print(' ', t.name)
 "
 ```
 
-21 tools should print. If Claude Code / Antigravity shows a different count
+22 tools should print. If Claude Code / Antigravity shows a different count
 after adding the server, the client is pointed at a stale `cwd` or a different
 Python (not the venv) — check the command path first.
 
@@ -89,6 +89,7 @@ Python (not the venv) — check the command path first.
 | `pinterest` | **15 operations** — the raw audience/timing/momentum surface. See below | **live** |
 | `pinterest_research` | **11 operations** — composed research: expansion, audience skew, merchant share, movement | **live** (2 are local-only) |
 | `keyword_crawl` | recursive seed expansion → the winnable pockets. **SPENDS THE SELLER ACCOUNT**, hard-capped | **live, seller-tier** |
+| `analyze` | **7 operations** — winnability, intent, seasonality, saturation, freshness, filter trust, discriminability | local, free |
 | `deep_dive_keyword` | full BFS crawl + gap/sourcing arbitrage on a seed — slow, dozens of requests | **live, expensive** |
 | `filter_trust_report` | which Etsy SERP filters can be believed, which silently lie | local |
 | `profit_verdict` | go/no-go on one unit, with the reason it failed | local |
@@ -179,9 +180,22 @@ pockets has told you the neighbourhood is a wall all the way down. Measured on
 ### The context budget is a test, not a hope
 
 Every tool's schema is resident in the agent's context for the whole session, so
-the surface competes with the actual work. `test_server.py` asserts the total
-stays **under 4,000 tokens** and fails the build otherwise — currently **15,369
-chars ≈ 3,842 tokens for 20 tools reaching 44 capabilities**.
+the surface competes with the actual work. `test_server.py` enforces **two**
+limits and fails the build on either:
+
+| Limit | Now |
+|---|---|
+| total ≤ **6,000 tokens** | 15,965 chars ≈ **3,991** |
+| ≤ **120 tokens per capability** | **75** |
+
+The per-capability figure is the one that matters. A flat total penalises reach
+rather than bloat; efficiency is the property grouping actually buys — 75 tokens
+per capability here against ~180 per tool under one-tool-per-capability.
+
+The ceiling was 4,000 until 2026-09-01. It earned that: while binding it forced
+out ~2,600 chars of genuine waste across three commits. It was raised once it
+stopped finding fat and started cutting warnings — deliberately, on the record
+(D-58), rather than nudged each time it bound.
 
 Two things keep it there. Grouping is the big one. The other:
 `_plumbing.strip_schema_titles()` removes Pydantic's auto-generated
@@ -235,6 +249,7 @@ bounded **120-second wait** before it raises.
 | `tools_pinterest.py` | audience, timing, momentum — 15 operations |
 | `tools_pinterest_research.py` | composed research over `pinterest/products/` — 11 operations |
 | `tools_crawl.py` | recursive keyword discovery — the only seller-tier tool, hard-capped |
+| `tools_analyze.py` | the judgements — DB-backed or pure, no network, no preflight |
 | `server.py` | wiring + `main()` only — no tool definitions |
 
 ⚠️ **Adding a tool module means adding its import to `server.py`.** Those imports

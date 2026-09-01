@@ -48,6 +48,16 @@ ResearchOp = Literal[
     "history",          # rank history / longevity, local archive, no network
 ]
 
+AnalyzeOp = Literal[
+    "winnability",   # demand-per-listing — the ranking number (D-31)
+    "intent",        # CVR vs the pooled median — RELATIVE only (D-43)
+    "seasonality",   # peak/trough from Etsy's own 12-month curve (D-45)
+    "saturation",    # page-one share, brackets withheld when inconclusive (D-36)
+    "freshness",     # how old is every reading for this term
+    "filter_trust",  # which SERP filters may be believed at all (D-32)
+    "discriminate",  # CAN this pool be ranked, or would a score be noise (N-01)
+]
+
 CrawlOp = Literal[
     "crawl",        # recursive best-first expansion + the winnable pockets
     "expand_seed",  # one level only, cheaper

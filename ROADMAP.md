@@ -146,7 +146,7 @@ seriously, split the product along that line first.
    or one noisy user burns another tenant's session budget. `deep_dive_keyword`
    (D-50) is the sharpest version of this problem — dozens of requests and
    several minutes per call, not one or two.
-4. **A tool manifest**: the 21 tools already carry docstrings good enough to
+4. **A tool manifest**: the 22 tools already carry docstrings good enough to
    double as a listing description (`vault_status` — "Can this system make
    live calls right now? Check FIRST" — is already written for an unfamiliar
    reader, not just this operator). Minimal extra work here.

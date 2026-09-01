@@ -57,16 +57,11 @@ def cockpit(keyword: str, product_type: str = "personalized",
 @mcp.tool()
 @_guarded
 def discover(limit: int = 40) -> dict:
-    """The ranked candidate POOL — terms the operator has not typed.
-
-    Watched terms expanded into their long-tail neighbourhoods and ranked by
-    demand-per-listing, NOT search volume (D-31). Read `verdict`: only `winnable`
-    and `contested` are worth a look; a `wall` is supply overwhelming demand
-    however large its traffic. `moment` names a seasonal deadline when the term has
-    one. These are where to look, not what to make — the Cockpit checks each.
-
-    Reads the stored discover_sweep, so it is fast and empty until that job runs.
-    """
+    """The ranked candidate POOL — terms the operator never typed, expanded from
+    watched seeds and ranked by demand-per-listing, NOT volume (D-31). Only
+    `winnable`/`contested` are worth a look; a `wall` is supply swamping demand
+    however big its traffic. Where to LOOK, not what to make — cockpit checks each.
+    Reads the stored sweep, so it is empty until that job runs."""
     # Through app_data — the one read layer every view is supposed to share
     # (D-41). This used to query MarketDatabase directly, its own second
     # implementation of "what counts as discovered" that could silently drift

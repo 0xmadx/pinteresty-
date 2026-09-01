@@ -1800,3 +1800,80 @@ at 449–529 because what they carry is worth the bytes, and the test does not
 police them individually. The **total** is what is enforced, and that is the
 honest arrangement — a per-tool rule nobody meets is worse than no rule, and the
 budget is the constraint that actually matters to an agent's context.
+
+## D-58 — `analyze`: the judgements, free and offline
+
+**Date:** 2026-09-01.
+
+**Context.** The expensive tools fetch; nothing let an agent *decide* without
+spending. `analyze` is seven operations that read the local database or are pure
+arithmetic — **no network, no session, no preflight** — so reasoning is never
+rationed. That separation is the point: thinking should not compete with a
+request budget.
+
+Every operation is one of the system's refuse-rather-than-guess functions:
+`winnability` returns the **ratio** not a score (D-31), `intent` compares CVR
+**between** terms and never as units (D-43), `saturation` withholds brackets
+whose interval straddles a threshold (D-36), `discriminate` refuses to rank when
+the dimensions cannot separate the pool (N-01), and every one of them can answer
+`unmeasured` — which is a real answer here, not a failure (N-02).
+
+**Live, it immediately produced a compound finding neither half gives alone:**
+`mom necklace` is a **wall** at 0.035 demand-per-listing *and* converts at
+**0.448×** the pooled median CVR. Winnable-looking traffic, weak intent, and
+unrankable supply — three independent readings agreeing.
+
+### Two bugs the smoke test caught that reading signatures would not have
+
+**1. `measured_cvrs()` returns a dict, not a list.** Iterating it bare yields the
+keyword *strings*, which reach `_median` and crash on `str / int`. Mine, not the
+project's — and invisible until the operation was actually called, because the
+signature says nothing about it. Fixed with `.values()`.
+
+**2. `can_discriminate()` returns a NamedTuple**, which JSON-serialises to a bare
+array: `[true, "single dimension…", ["supply"], null]`. Every field name is lost
+on the wire, so a consumer would have to know the positional order to read its own
+answer. Converted to an explicit dict. This is a general hazard for this surface —
+**any dataclass or NamedTuple crossing the MCP boundary loses its field names
+silently**, and the payload still looks plausible.
+
+### The budget is now genuinely binding
+
+Adding `analyze` pushed the surface to 4,117 tokens; trimming `analyze`'s own
+operation doc plus `verdict_history` (529 → ~380) and `discover` (520 → ~380)
+brought it to **15,965 chars ≈ 3,991 tokens** — under 4,000 by **nine tokens**,
+with 22 tools reaching 53 capabilities.
+
+That margin is the finding. The ceiling has now forced out **~2,600 chars of
+genuine waste across three commits** (auto-generated titles, then three bloated
+descriptions, then two more) and has stopped finding fat. The next tool will
+exceed it, and the remaining descriptions carry warnings worth their bytes.
+
+**This was put to the operator rather than quietly relaxed**, with the efficiency
+argument on the record: 53 capabilities at 3,991 tokens is ~75 tokens each,
+against ~180 per tool under the old one-tool-per-capability design — a 2.4× gain.
+
+**Decision: raise the ceiling to a flat 6,000** (operator's call). It leaves room
+for the remaining tool groups without further trimming and is still under a
+quarter of what ~150 flat tools would cost.
+
+**A second assertion was added so the raise does not remove the discipline.** A
+flat total penalises *reach* rather than *bloat* — a tool that adds 12 useful
+operations looks identical to one that adds 12 paragraphs of prose. So the suite
+now checks both:
+
+| Limit | Now |
+|---|---|
+| total ≤ 6,000 tokens | **3,991** |
+| ≤ 120 tokens per capability | **75** |
+
+The per-capability figure is the one that actually measures whether grouping is
+still doing its job. If a future tool pushes the total up while efficiency holds,
+that is reach being bought honestly; if efficiency degrades, something is bloating
+regardless of what the total says.
+
+**The 4,000 figure was not wrong** — while binding it forced out ~2,600 chars of
+real waste across three commits (auto-generated titles, then five oversized
+descriptions). It was raised at the point it stopped finding fat and started
+cutting warnings, which is the right moment to move a budget and the only honest
+reason to.
