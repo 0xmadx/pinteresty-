@@ -469,9 +469,18 @@ def job_competition_sweep():
     thin from crowded — `card_saturation` says so per dimension. The ranked-id
     count is stored alongside so the Cockpit can show how much a deeper sample
     (listing_sample) could tighten it.
+
+    Since 2026-09-01 it also stores WHO ranked and where, via
+    `GraphDB.record_serp_ranks` — one row per listing into `rank_observations`. That
+    is the same page, no extra request: previously the ordered ids were reduced to
+    `ranked_ids_count` and discarded, so this daily job produced a count that could
+    never become a series. A competitor climbing 40 -> 8 is a labelled example of
+    what Etsy rewards, produced by someone else's launch at no risk to us, and it is
+    the one outcome dataset here that our own model did not select (B-04).
     """
     import urllib.parse
     from core.database import MarketDatabase
+    from core.graph_db import GraphDB
     from core.settings_store import load
     from etsy.analytics import card_saturation, sourcing
     from etsy.api.public.api import EtsyPublicAPI
@@ -511,6 +520,21 @@ def job_competition_sweep():
                 saturation={f"{d}|{v}": m for (d, v), m in prof.items()},
                 delivery_bands=[{"band": b, "share": sh} for b, sh in bands],
                 median_delivery=sourcing.median_band(dprofile))
+
+            # WHO ranked, and where — not just how many. `ranked_ids_count` above is a
+            # count, and a count cannot become a series: this job fetched a fully
+            # ranked SERP every day and threw the order away, so a year of sweeps
+            # could not reconstruct one competitor's climb. Zero extra requests; the
+            # page is already in hand. A rank series cannot be backfilled, so every
+            # day this did not run is permanently missing.
+            try:
+                GraphDB().record_serp_ranks(term, serp)
+            except Exception as e:
+                # The competition reading above is already stored and is this job's
+                # main product. Losing the rank rows should not lose the sweep, but it
+                # must not pass silently either.
+                failed.append({"term": term,
+                               "why": f"serp_ranks: {type(e).__name__}: {e}"})
             recorded.append(term)
         except Exception as e:
             failed.append({"term": term, "why": f"{type(e).__name__}: {e}"})

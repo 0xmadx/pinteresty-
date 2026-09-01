@@ -132,11 +132,17 @@ class GraphDB:
                     page INTEGER,
                     is_ad BOOLEAN,
                     competitor_count INTEGER,
+                    shop_name TEXT,
+                    card_rendered INTEGER,
                     PRIMARY KEY (listing_id, term_id, observed_at)
                 )
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_rank_obs "
                          "ON rank_observations(listing_id, observed_at)")
+            # The competitor series is read BY TERM ("who ranked here, over time"),
+            # which the listing-keyed index above cannot serve.
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_rank_obs_term "
+                         "ON rank_observations(term_id, observed_at)")
 
             # The other half of the outcome. Rank is a proxy; this is the thing the
             # prediction was actually about. A listing can sit at rank 3 and sell
@@ -205,7 +211,16 @@ class GraphDB:
                          conn.execute("PRAGMA table_info(rank_observations)")}
             if "absolute_rank" not in rank_cols:
                 conn.execute("ALTER TABLE rank_observations ADD COLUMN absolute_rank INTEGER")
-                
+            # Competitor SERP sweeps (2026-09-01). `shop_name` is who ranked;
+            # `card_rendered` says whether we saw a card at all, which is the only
+            # thing that makes a NULL shop_name readable — see record_serp_ranks.
+            for column, decl in (("shop_name", "TEXT"),
+                                 ("card_rendered", "INTEGER")):
+                if column not in rank_cols:
+                    conn.execute(
+                        f"ALTER TABLE rank_observations ADD COLUMN {column} {decl}")
+
+
         # Ensure launches and rank_observations tables exist if migrating an older database
         # (This is mostly redundant with _init_db but protects against partial migrations)
         tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
@@ -521,7 +536,8 @@ class GraphDB:
             conn.commit()
 
     def record_rank(self, listing_id, term_id, rank, page=None, is_ad=False,
-                    competitor_count=None, observed_at=None, absolute_rank=None):
+                    competitor_count=None, observed_at=None, absolute_rank=None,
+                    shop_name=None, card_rendered=None):
         """Append one observation of where a listing ranked.
 
         `rank` is the ORGANIC position, `absolute_rank` the position among everything
@@ -530,6 +546,12 @@ class GraphDB:
         `rank=None` means "we looked and it was not in the results" — a measurement.
         Callers must not skip the write in that case; an absent row means "never
         checked", which is a different claim entirely.
+
+        ⚠️ There is deliberately **no foreign key to `launches`** (contrast
+        `record_launch_outcome`, which raises for an unlaunched listing). Rank is an
+        observation of the SERP, and the SERP is mostly other people — the competitor
+        series that `record_serp_ranks` writes is the unbiased half of the outcome
+        data, because their launches are independent of our model (B-04).
         """
         now = observed_at or _utcnow()
         with sqlite3.connect(self.db_path) as conn:
@@ -538,10 +560,11 @@ class GraphDB:
             conn.execute("""
                 INSERT OR REPLACE INTO rank_observations (
                     listing_id, term_id, observed_at, rank, absolute_rank,
-                    page, is_ad, competitor_count
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    page, is_ad, competitor_count, shop_name, card_rendered
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (listing_id, term_id, now, rank, absolute_rank, page, is_ad,
-                  competitor_count))
+                  competitor_count, shop_name,
+                  None if card_rendered is None else int(bool(card_rendered))))
             conn.commit()
 
     def record_launch_outcome(self, listing_id, sales=None, revenue=None, views=None,
@@ -626,6 +649,86 @@ class GraphDB:
             return None
         return self.launch_count(controls_only=True) / total
 
+    def record_serp_ranks(self, term, search_result, observed_at=None, page=1):
+        """Store WHO ranked for a term, at what position — one row per listing.
+
+        The thing this replaces: `job_competition_sweep` fetched a full ranked SERP
+        for every watched term daily, parsed every card correctly, and then persisted
+        `ranked_ids_count=len(organic_listing_ids)` — an integer. The 39-51 ordered
+        ids were discarded on every run, so a full year of sweeps could not
+        reconstruct a single competitor's rank series. A rank series cannot be
+        backfilled; each day not stored is gone.
+
+        Costs NOTHING extra — the page is already fetched for the saturation profile.
+
+        ⚠️ **The two populations must not be merged.** A SERP page gives us ~12
+        server-rendered cards (with shop names, prices, ad flags) and separately 39-51
+        `organic_listing_ids` in rank order. They have different sizes and different
+        position semantics; collapsing them into one `position` column is exactly the
+        unit-mixing that `card_saturation` exists to prevent. `find_rank` already
+        keeps them apart, so one row carries both flavours without mixing:
+
+            in cards AND organic ids   absolute_rank set, organic set, shop known
+            in cards only (an ad)      absolute_rank set, organic NULL, shop known
+            organic ids only (~13-51)  absolute_rank NULL, organic set, shop UNKNOWN
+
+        `card_rendered` exists for that third row. Without it a NULL `shop_name` is
+        ambiguous between "no card was rendered for this listing" and "a card was
+        rendered and we failed to read the shop" — two different claims, and only the
+        second is a bug.
+
+        ⚠️ **Only page one is ever requested.** A listing that falls to page 2 leaves
+        the series entirely, and one arriving from page 2 appears from nowhere. A
+        rank series here is bounded by the page, not by the market.
+
+        One shared `observed_at` for the whole sweep: two rows written a second apart
+        would otherwise straddle a timestamp and split a single reading in two.
+        """
+        # Local import: rank_tracker imports THIS module, so a top-level import here
+        # is a cycle. `find_rank` is pure and offline — the position arithmetic lives
+        # there and is not duplicated, because two copies of it would drift and only
+        # one of them would be tested.
+        from etsy.analytics.rank_tracker import find_rank
+
+        now = observed_at or _utcnow()
+        cards = (search_result or {}).get("cards") or []
+        organic_ids = [str(i) for i in
+                       (search_result or {}).get("organic_listing_ids") or []]
+
+        shop_by_id, rendered = {}, set()
+        for card in cards:
+            lid = card.get("listing_id")
+            if lid is None:
+                continue
+            lid = str(lid)
+            rendered.add(lid)
+            if card.get("shop_name"):
+                shop_by_id[lid] = card.get("shop_name")
+
+        # Union, cards first so page-one order is preserved for a reader scanning raw
+        # rows. dict.fromkeys dedupes without losing that order.
+        listing_ids = list(dict.fromkeys(
+            [str(c["listing_id"]) for c in cards if c.get("listing_id") is not None]
+            + organic_ids))
+
+        written = 0
+        for lid in listing_ids:
+            found = find_rank(search_result, lid)
+            self.record_rank(
+                lid, term,
+                rank=found["organic_rank"], absolute_rank=found["absolute_rank"],
+                page=page, is_ad=found["is_ad"],
+                competitor_count=found["competitor_count"],
+                observed_at=now,
+                shop_name=shop_by_id.get(lid),
+                card_rendered=lid in rendered)
+            written += 1
+
+        return {"term": term, "observed_at": now, "rows": written,
+                "cards": len(cards), "organic_ids": len(organic_ids),
+                "basis": "measured",
+                "note": "page 1 only — a listing beyond it is unobserved, not unranked"}
+
     def get_rank_history(self, listing_id):
         """Every rank observation for a listing, oldest first — the outcome curve."""
         with sqlite3.connect(self.db_path) as conn:
@@ -633,6 +736,29 @@ class GraphDB:
             return [dict(r) for r in conn.execute(
                 "SELECT * FROM rank_observations WHERE listing_id = ? ORDER BY observed_at",
                 (listing_id,))]
+
+    def get_term_rank_history(self, term_id, limit=None):
+        """Who ranked for one term, over time — the series the sweep was discarding.
+
+        Oldest first, so a reader walks the series forwards. This is the question the
+        listing-keyed `get_rank_history` cannot answer: *which shops hold this term,
+        and which are climbing.* A competitor going 40 -> 8 over six weeks is a
+        labelled example of what Etsy rewards, generated by someone else's launch at
+        no risk to us — and unlike our own launches, it is not selected by our own
+        model (B-04).
+
+        ⚠️ Two readings a day apart are the minimum for a direction. One row is a
+        position, not a trend, and the gap cannot be backfilled.
+        """
+        sql = ("SELECT * FROM rank_observations WHERE term_id = ? "
+               "ORDER BY observed_at, rank")
+        params = [term_id]
+        if limit:
+            sql += " LIMIT ?"
+            params.append(int(limit))
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            return [dict(r) for r in conn.execute(sql, params)]
 
     def prediction_vs_outcome(self):
         """Join each launch to its most recent rank observation.
