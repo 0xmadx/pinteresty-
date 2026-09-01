@@ -278,7 +278,14 @@ def compare(terms: str, mode: str = "cheap") -> dict:
 
     # --- the gates, in order, each able only to reject -----------------------------
     measured = [d for d in fetched.values() if d.get("volume")]
-    cvrs = [d["cvr"] for d in fetched.values() if d.get("cvr") is not None]
+    # Count CVRs the way `reference_median` counts them — TRUTHY, not just non-None.
+    # Etsy returns query_cvr as exactly 0 for some terms (see confirm_intent), and
+    # counting those made the payload contradict itself: `terms_with_cvr: 8` beside a
+    # null median that had refused because only 6 were usable. Two definitions of
+    # "has a CVR" in one response is how a reader stops trusting the floors.
+    cvrs = [d["cvr"] for d in fetched.values() if d.get("cvr")]
+    zero_cvrs = [d for d in fetched.values()
+                 if d.get("cvr") is not None and not d.get("cvr")]
     # reference_median refuses below MIN_POOL_FOR_INTENT rather than comparing
     # against noise — the same discipline as PoolTooSmall.
     pool_median = reference_median([], extra_cvrs=cvrs) if mode == "full" else None
@@ -363,7 +370,8 @@ def compare(terms: str, mode: str = "cheap") -> dict:
             "min_pool_to_score": MIN_POOL_SIZE,
             "min_pool_for_intent": MIN_POOL_FOR_INTENT,
             "measured_terms": len(measured),
-            "terms_with_cvr": len(cvrs),
+            "terms_with_usable_cvr": len(cvrs),
+            "terms_with_cvr_zero": len(zero_cvrs),
             "cvr_reference_median": pool_median,
             "intent_state": (
                 "not_checked — cheap mode carries no CVR at any price; re-run with "
@@ -371,9 +379,13 @@ def compare(terms: str, mode: str = "cheap") -> dict:
                 if mode == "cheap" else
                 f"judged against the median of {len(cvrs)} measured CVRs"
                 if pool_median else
-                f"NOT judged — under {MIN_POOL_FOR_INTENT} terms carry a CVR, so "
-                f"there is no reference and the gate refuses rather than ranking "
-                f"against noise"),
+                f"NOT judged — only {len(cvrs)} term(s) carry a usable CVR "
+                f"(under {MIN_POOL_FOR_INTENT})"
+                + (f", and {len(zero_cvrs)} returned exactly 0, which is a reporting "
+                   f"floor rather than a measured rate and is excluded" if zero_cvrs
+                   else "")
+                + ". There is no reference, so the gate refuses rather than ranking "
+                  "against noise. Add more terms to the batch to build one."),
         },
         "note": "Sorted by demand-per-listing (D-31), never volume. The headline "
                 "`verdict` is the WORSE of the gates, not an average. `ranked` is "

@@ -38,6 +38,11 @@ def check(label, ok, detail=""):
         print(f"  [FAIL] {label} {detail}")
 
 
+def td_min_intent():
+    from etsy.analytics.discover import MIN_POOL_FOR_INTENT
+    return MIN_POOL_FOR_INTENT
+
+
 def _row(rows, term):
     return next(r for r in rows if r["term"] == term)
 
@@ -217,6 +222,39 @@ def main():
           td._monthly_volume(None)[0] is None)
     check("and every row states the unit it was judged on",
           all(r.get("volume_basis") for r in ch["rows"]), ch["rows"][0])
+
+    # --- a CVR of 0 is NOT a measured rate ------------------------------------------
+    #
+    # Measured live 2026-09-01: `back70 sneakers` returns query_cvr EXACTLY 0 against
+    # 10,597 monthly searches (so does `back70 shoes`). A true zero on that traffic is
+    # not credible — it is a reporting floor or a withheld value, and from outside we
+    # cannot tell it from a real zero.
+    #
+    # Left alone, 0 passed confirm_intent's `is None` check, then 0/median = 0.0 fell
+    # under WEAK_INTENT_RATIO and the term was branded `weak` — REJECTED by the gate
+    # on a number nobody measured. N-02, at the point where it costs a niche.
+    print(chr(10) + "a zero CVR is a floor, not a rate")
+    ZED = dict(FULL)
+    ZED["floored term"] = {"volume": 10597, "supply": 4555, "cvr": 0}
+    td._compare_full = lambda terms: ({t: dict(ZED[t]) for t in terms}, None, len(terms))
+    z = td.compare(terms=",".join(ZED), mode="full")
+    zrow = _row(z["rows"], "floored term")
+    check("a zero CVR reads unmeasured, NOT weak — it must not reject the term",
+          zrow["intent"] == "unmeasured", zrow)
+    check("and it keeps its winnability verdict rather than being downgraded",
+          zrow["verdict"] == zrow["winnability"], zrow)
+    check("no ratio is invented from it", zrow["cvr_vs_pool"] is None)
+    check("the detail says floor/withheld, not 'these searchers do not buy'",
+          "floor" in (zrow["intent_detail"] or ""), zrow["intent_detail"])
+
+    # The payload used to contradict itself: terms_with_cvr counted non-None while
+    # reference_median counted truthy, so it reported 8 CVRs beside a null median.
+    check("zeros are counted separately from usable CVRs",
+          z["floors"]["terms_with_cvr_zero"] == 1
+          and z["floors"]["terms_with_usable_cvr"] == len(FULL) - 1, z["floors"])
+    check("and the two halves of the gate now agree on what counts",
+          (z["floors"]["cvr_reference_median"] is not None)
+          == (z["floors"]["terms_with_usable_cvr"] >= td_min_intent()), z["floors"])
 
     td._compare_cheap, td._compare_full, td._preflight = real
     print(f"\n{PASS} passed, {FAIL} failed")

@@ -193,6 +193,27 @@ def confirm_intent(data, pool_median_cvr):
         # branding it weak would reject real niches on a missing field.
         return {"verdict": "unmeasured", "cvr": None, "cvr_vs_pool": None,
                 "basis": "unmeasured", "detail": "no CVR returned for this term"}
+    if not cvr:
+        # A ZERO is present on the wire and is still not a rate. Measured 2026-09-01:
+        # `back70 sneakers` returns query_cvr EXACTLY 0 against 10,597 monthly
+        # searches, as does `back70 shoes`. A true zero conversion rate on that much
+        # traffic is not credible; it reads as a floor or a withheld value, and we
+        # cannot tell that apart from a real zero from the outside.
+        #
+        # Left alone it was worse than unhelpful: 0 passes the `is None` check above,
+        # then 0 / median = 0.0 lands under WEAK_INTENT_RATIO and the term is branded
+        # `weak` — REJECTED by the gate on a number nobody measured. That is N-02 at
+        # the point where it costs the operator a niche.
+        #
+        # `reference_median` already excluded zeros from the pool median (its
+        # `if c` filter), so the two halves of this gate now agree instead of one
+        # quietly discarding what the other scored.
+        return {"verdict": "unmeasured", "cvr": cvr, "cvr_vs_pool": None,
+                "basis": "cvr_zero",
+                "detail": "Etsy reported query_cvr as exactly 0. On a term with real "
+                          "search volume that is a reporting floor or a withheld "
+                          "value, not an observed rate — it is NOT evidence that "
+                          "these searchers do not buy (N-02)"}
     if not pool_median_cvr:
         return {"verdict": "unmeasured", "cvr": cvr, "cvr_vs_pool": None,
                 "basis": "pool_too_small",
