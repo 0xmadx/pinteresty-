@@ -84,6 +84,38 @@ def _guarded(fn):
     return wrapper
 
 
+def strip_schema_titles():
+    """Drop the auto-generated per-parameter `title` keys from every tool schema.
+
+    Pydantic emits `"title": "Category Id"` beside every property. It carries
+    nothing the property NAME does not already say, and it is published on every
+    tool in every session. Measured here: ~1,900 chars across the surface, which
+    is the difference between fitting the context budget and not.
+
+    Safe because validation does not read this. MCP validates arguments against a
+    separate `arg_model` built at registration; `list_tools()` reads
+    `info.parameters` live at call time, so editing it in place changes only what
+    is published. Verified: tools still execute and a bad enum value is still
+    rejected with the same error.
+
+    Deliberately does NOT touch `description` — that is the one channel an agent
+    reads to choose correctly, and it is where this server's guidance lives.
+    """
+    stripped = 0
+    for tool in mcp._tool_manager._tools.values():
+        props = (tool.parameters or {}).get("properties") or {}
+        for prop in props.values():
+            if isinstance(prop, dict) and prop.pop("title", None) is not None:
+                stripped += 1
+        # `$defs` entries carry their own titles too, when anything generates them.
+        for definition in (tool.parameters or {}).get("$defs", {}).values():
+            if isinstance(definition, dict):
+                for prop in (definition.get("properties") or {}).values():
+                    if isinstance(prop, dict) and prop.pop("title", None) is not None:
+                        stripped += 1
+    return stripped
+
+
 def _preflight(platforms=("etsy",)):
     """Refuse fast when the session pool is empty. It HANGS otherwise, not fails.
 

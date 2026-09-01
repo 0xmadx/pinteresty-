@@ -1664,3 +1664,53 @@ cleanly. Published surface now **14,633 chars ≈ 3,658 tokens** for 19 tools
 reaching 33 capabilities — still under the 4,000-token ceiling the plan set.
 MCP suite 30 → **40 assertions**, including that `operation` publishes as a
 top-level `enum` with no `$ref` and no `anyOf`.
+
+## D-56 — the context budget becomes a test, and it immediately failed
+
+**Date:** 2026-09-01.
+
+**Context.** Adding `pinterest_research` (11 composed operations over
+`pinterest/products/`) pushed the published surface to **4,120 tokens** — past
+the 4,000-token ceiling the phase plan had set. The plan's own words were "fail
+the phase if it exceeds that."
+
+**The temptation was to raise the ceiling**, since 4,120 is not obviously worse
+than 4,000. Rejected: a budget that moves whenever it binds is not a budget, and
+every tool schema is resident in the agent's context for the entire session, so
+this number competes directly with the work the agent is there to do. The
+grouped-tool design exists precisely to hold this line while capability grows.
+
+**Chosen: reclaim the space instead.** `_plumbing.strip_schema_titles()` removes
+Pydantic's auto-generated per-parameter `title` from every published schema —
+`"title": "Category Id"` beside a property already named `category_id`. It
+repeats the property name, on every tool, in every session.
+
+Measured: **15,369 chars ≈ 3,842 tokens**, down from 16,483 ≈ 4,120. **1,114
+chars reclaimed**, back under the ceiling with 20 tools reaching 44 capabilities.
+
+**Safe, and verified rather than assumed.** MCP validates arguments against a
+separate `arg_model` built at registration, and `list_tools()` reads
+`info.parameters` live at call time — so editing it in place changes only what is
+published. Confirmed after the change: tools still execute, and
+`pinterest(operation="not_a_real_op")` is still rejected with the identical
+`ToolError`. **`description` is deliberately never stripped** — that is the one
+channel an agent reads to choose correctly, and it is where this server's
+guidance lives.
+
+**The ceiling is now an assertion**, not a note in a plan: `test_server.py` sums
+every published schema and fails if the total exceeds 4,000 tokens, reporting the
+three largest tools so the next person knows where to look. A companion check
+asserts the titles stay stripped, and a third asserts the operation
+*descriptions* survived — a strip that took those with it would be invisible
+until an agent started choosing badly.
+
+**Also in this change:** `pinterest_research` skips preflight entirely for its
+two local operations (`alerts`, `history`). They read the local archive and need
+no Pinterest session, so gating them on one would refuse work that can plainly be
+done — verified live: `alerts` returned 45 events across 6 archived weeks with no
+session involved.
+
+And `alerts` states the difference between *no movement* and *not enough
+history*: with fewer than two archived weeks it returns a `finding` saying so,
+because an empty event list otherwise reads as "nothing changed" when the truth
+is "a diff needs two readings and cannot be backfilled."

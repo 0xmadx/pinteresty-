@@ -12,7 +12,7 @@ becoming a source of numbers.
 .venv/Scripts/python.exe -m mcp_server.server
 ```
 
-Speaks stdio. **19 read-only tools** (one of which groups 15 operations). You do not run this command yourself in
+Speaks stdio. **20 read-only tools**, two of which group 26 operations between them. You do not run this command yourself in
 normal use — the MCP client (Claude Code, Claude Desktop, Antigravity) launches
 it as a subprocess on demand, over stdio. Run it by hand only to sanity-check it
 starts, or when writing/debugging a new tool.
@@ -55,7 +55,7 @@ for t in tools: print(' ', t.name)
 "
 ```
 
-19 tools should print. If Claude Code / Antigravity shows a different count
+20 tools should print. If Claude Code / Antigravity shows a different count
 after adding the server, the client is pointed at a stale `cwd` or a different
 Python (not the venv) — check the command path first.
 
@@ -86,7 +86,8 @@ Python (not the venv) — check the command path first.
 | `analyze_keyword` | is there room in this niche — demand, supply, the ratio | **live** |
 | `sourcing_profile` | where sellers in this niche ship from, and how fast | **live** |
 | `cheap_competitors` | why the cheapest listings are cheap — origin of the price floor | **live** |
-| `pinterest` | **15 operations** in one tool — audience, timing and momentum. See below | **live** |
+| `pinterest` | **15 operations** — the raw audience/timing/momentum surface. See below | **live** |
+| `pinterest_research` | **11 operations** — composed research: expansion, audience skew, merchant share, movement | **live** (2 are local-only) |
 | `deep_dive_keyword` | full BFS crawl + gap/sourcing arbitrage on a seed — slow, dozens of requests | **live, expensive** |
 | `filter_trust_report` | which Etsy SERP filters can be believed, which silently lie | local |
 | `profit_verdict` | go/no-go on one unit, with the reason it failed | local |
@@ -129,9 +130,38 @@ pinterest(operation="moment_curve", term="halloween")
 pinterest(operation="category_top", event="SAVE")
 ```
 
-The 15 operations: `top_trends · metrics · related · prefix · demographics ·
-moments · moment_curve · categories · category_top · category_metrics ·
-category_demographics · top_products · etsy_competitors · featured · editorial`.
+`pinterest` — 15 raw operations: `top_trends · metrics · related · prefix ·
+demographics · moments · moment_curve · categories · category_top ·
+category_metrics · category_demographics · top_products · etsy_competitors ·
+featured · editorial`.
+
+`pinterest_research` — 11 composed ones: `expand · long_tail · neighbours ·
+sweep · audience · merchant_share · demand_table · classify · taxonomy_search ·
+alerts · history`.
+
+**Cost is declared per operation, because it varies by 12×:**
+
+| Operation | Requests |
+|---|---|
+| `expand` (depth 1) | **2** — and **zero `/metrics/`**; the series ride inside the two expansion responses. Best value on the surface. |
+| `long_tail` · `neighbours` · `demand_table` · `merchant_share` | 1 |
+| `sweep` (all interests) | **24**, ~15s wall clock at the client's 0.6s pacing |
+| `alerts` · `history` | **0** — local archive, and they skip preflight entirely since they need no session |
+
+### The context budget is a test, not a hope
+
+Every tool's schema is resident in the agent's context for the whole session, so
+the surface competes with the actual work. `test_server.py` asserts the total
+stays **under 4,000 tokens** and fails the build otherwise — currently **15,369
+chars ≈ 3,842 tokens for 20 tools reaching 44 capabilities**.
+
+Two things keep it there. Grouping is the big one. The other:
+`_plumbing.strip_schema_titles()` removes Pydantic's auto-generated
+`"title": "Category Id"` from every parameter — ~1,100 chars that repeat what the
+property name already says. Safe because MCP validates against a separate
+`arg_model`; verified that a bad enum value is still rejected identically.
+**Descriptions are never stripped** — that is the channel an agent reads to
+choose correctly.
 
 **Writing a grouped tool** — four rules, each with a measured reason:
 
@@ -165,7 +195,8 @@ bounded **120-second wait** before it raises.
 | `tools_economics.py` | does it pay (3) |
 | `tools_decide.py` | what should I list, and when (4) |
 | `tools_learning.py` | did it work (3) |
-| `tools_pinterest.py` | audience, timing, momentum — 15 operations in one tool |
+| `tools_pinterest.py` | audience, timing, momentum — 15 operations |
+| `tools_pinterest_research.py` | composed research over `pinterest/products/` — 11 operations |
 | `server.py` | wiring + `main()` only — no tool definitions |
 
 ⚠️ **Adding a tool module means adding its import to `server.py`.** Those imports

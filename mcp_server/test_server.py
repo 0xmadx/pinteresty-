@@ -70,6 +70,38 @@ async def run():
                   [t.name for t in tools
                    if "kw" in (t.input_schema.get("properties") or {})])
 
+            # --- the context budget, enforced rather than hoped for ---------------
+            # Every tool schema is resident in the agent's context for the whole
+            # session, so the surface competes with the work. The grouped-tool
+            # design exists to hold this line while capability grows; without an
+            # assertion it would drift back up one convenient tool at a time.
+            sizes = {t.name: len(json.dumps(
+                t.model_dump(mode="json", by_alias=True, exclude_none=True)))
+                for t in tools}
+            total = sum(sizes.values())
+            budget = 4000
+            check(f"published surface stays within {budget} tokens "
+                  f"({total:,} chars ≈ {total // 4:,})",
+                  total // 4 <= budget,
+                  f"largest: {sorted(sizes.items(), key=lambda kv: -kv[1])[:3]}")
+
+            check("no tool publishes per-parameter `title` keys — pure waste",
+                  not any("title" in p
+                          for t in tools
+                          for p in (t.input_schema.get("properties") or {}).values()
+                          if isinstance(p, dict)),
+                  [t.name for t in tools
+                   if any("title" in p for p in
+                          (t.input_schema.get("properties") or {}).values()
+                          if isinstance(p, dict))])
+
+            # Stripping titles must not have taken the descriptions with it —
+            # that is the one channel an agent reads to choose correctly.
+            check("but operation descriptions SURVIVE the strip",
+                  all("description" in by_name[n].input_schema["properties"]["operation"]
+                      for n in ("pinterest", "pinterest_research")),
+                  "an operation enum with no description is unusable")
+
             # --- the grouped-tool schema, as PUBLISHED over the wire ---------------
             op = by_name["pinterest"].input_schema["properties"]["operation"]
             check("operation publishes as a top-level enum, not anyOf",

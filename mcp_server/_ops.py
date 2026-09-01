@@ -34,6 +34,20 @@ PinterestOp = Literal[
     "editorial",              # the written trend stories
 ]
 
+ResearchOp = Literal[
+    "expand",           # seed -> long_tail + neighbours. 2 requests, ZERO /metrics/
+    "long_tail",        # prefix children of a seed
+    "neighbours",       # co-searched terms, need not share a word
+    "sweep",            # the discovery table across interests — 24 requests
+    "audience",         # age/gender per term, WITH the batch-relative skew
+    "merchant_share",   # who owns a category's outbound clicks
+    "demand_table",     # every category's growth + intent ratio, one request
+    "classify",         # free text -> category ids
+    "taxonomy_search",  # substring search over category names
+    "alerts",           # week-over-week movement, local archive, no network
+    "history",          # rank history / longevity, local archive, no network
+]
+
 # --- the three spellings of one idea ---------------------------------------------------
 # The same "upper prediction bound" ships under a different key on every endpoint
 # that has one. Normalising here means a consumer never has to know which

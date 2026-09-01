@@ -48,7 +48,7 @@ operator's OWN seller account (D-29). A buyer session costs a re-login to
 replace; that one costs the business. Tools that spend it say so in their
 docstring, and recursive/crawling tools must cap how much of it they can spend.
 """
-from mcp_server._plumbing import mcp
+from mcp_server._plumbing import mcp, strip_schema_titles
 
 # Imported for the side effect of registering their tools on `mcp`. They look
 # unused and are not — deleting one silently removes those tools from the server.
@@ -58,8 +58,15 @@ from mcp_server import (  # noqa: F401
     tools_learning,
     tools_opportunity,
     tools_pinterest,
+    tools_pinterest_research,
     tools_system,
 )
+
+
+# Every tool is now registered, so the published schemas can be trimmed once.
+# Runs at import rather than in main() so `list_tools()` is identical whether the
+# server is run as a subprocess or imported by a test.
+strip_schema_titles()
 
 
 def main():
