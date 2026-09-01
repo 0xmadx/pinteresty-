@@ -104,9 +104,32 @@ def _compare_cheap(terms):
                                       parse_chart_series, parse_term_summaries)
 
     api = EtsyPrivateAPI()
+    # TWO sweeps, and the second one is not optional.
+    #
+    # ⚠️ `avg_total_listings` is exactly what it says: the AVERAGE over the window
+    # requested. At days=365 it is a 12-month mean, while `volume` here is a single
+    # month — so dividing them mixes units the same way the annual-volume bug did,
+    # and that bug was fixed in the numerator only. Measured 2026-09-01, ratio of
+    # the 365-day figure to results-data's point-in-time count:
+    #
+    #     badge reel                    0.98      halloween badge reel        1.28
+    #     mom necklace                  1.41      halloween badge reel nurse  3.24
+    #
+    # At days=30 the same field matches results-data EXACTLY — 40391 vs 40391,
+    # 381511 vs 381511, 272331 vs 272331 — so a short window is a point-in-time
+    # count and a long one is not. The 3.24x case turned a term worth a second look
+    # into a wall.
+    #
+    # The curve still needs 365 days. So: supply from the 30-day sweep, curve and
+    # monthly volume from the 365-day one. Cost is 2*ceil(N/3) rather than
+    # ceil(N/3) — still well under full mode's N, and now the ratio is in one unit.
     raw = api.get_chart_series(terms, days=365)
     summaries = {s["keyword"]: s for s in parse_term_summaries(raw) if s.get("keyword")}
     curves = parse_chart_series(raw)
+
+    now_raw = api.get_chart_series(terms, days=30)
+    supply_now = {s["keyword"]: s.get("supply")
+                  for s in parse_term_summaries(now_raw) if s.get("keyword")}
 
     rows = {}
     for term in terms:
@@ -118,14 +141,25 @@ def _compare_cheap(terms):
             # `supply` is a point-in-time listing count — see _monthly_volume.
             "volume": monthly, "volume_basis": vbasis,
             "volume_annual": s.get("volume"),
-            "supply": s.get("supply"),
+            # Point-in-time, from the 30-day sweep — NOT s["supply"], which is the
+            # 12-month average and does not share a unit with a monthly volume.
+            "supply": supply_now.get(term),
+            "supply_avg_12mo": s.get("supply"),
+            # NOT `supply_basis` — that key already carries winnability's broad-match
+            # caveat (WHAT the number counts). This is WHICH WINDOW it came from. Two
+            # true statements about one number; collapsing them onto one key silently
+            # dropped this one.
+            "supply_window": ("point-in-time (chart_series days=30, verified identical "
+                              "to results-data)" if supply_now.get(term) is not None
+                              else "unmeasured — the 30-day sweep returned nothing"),
             "cvr": None,                      # not on this endpoint, ever
             "wow_change": s.get("wow_change"),
             "price_low": None, "price_high": None,
             "seasonality": se.profile(curve) if curve else
                            {"verdict": "unmeasured", "basis": "no_curve"},
         }
-    return rows, chart_coverage(raw), -(-len(terms) // 3)
+    # Both sweeps are chunked at 3, so the spend is double the single-sweep figure.
+    return rows, chart_coverage(raw), 2 * (-(-len(terms) // 3))
 
 
 def _compare_full(terms):
@@ -237,7 +271,11 @@ def compare(terms, mode="cheap", fetch_cheap=None, fetch_full=None,
             # is a BROAD-match count, so long-tail terms are pushed toward `wall` by
             # construction. Surfaced per row so the reader can weigh it.
             "phrase_words": len(term.split()),
+            # WHAT the count includes (broad match) and WHICH WINDOW it came from
+            # (point-in-time vs 12-month average) are different facts. Kept apart.
             "supply_basis": win.get("supply_basis"),
+            "supply_window": d.get("supply_window"),
+            "supply_avg_12mo": d.get("supply_avg_12mo"),
         }
         if mode == "full":
             row["page_one_median_price"] = d.get("page_one_median_price")

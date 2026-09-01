@@ -295,6 +295,52 @@ def main():
     check("and it runs with NO session and NO MCP at all",
           offline["ok"] and len(offline["rows"]) == 3, offline)
 
+    # --- the OTHER half of the unit bug ---------------------------------------------
+    #
+    # The annual-volume bug was fixed in the numerator and left in the denominator.
+    # `avg_total_listings` is an AVERAGE over the requested window: at days=365 it is
+    # a 12-month mean, at days=30 it matches results-data EXACTLY (measured: 40391 vs
+    # 40391, 381511 vs 381511, 272331 vs 272331). Dividing a ONE-month volume by a
+    # TWELVE-month average supply inflated supply by up to 3.24x and turned
+    # `halloween badge reel nurse` into a wall.
+    print(chr(10) + "cheap mode divides one unit by the same unit")
+    src = open("etsy/analytics/compare.py", encoding="utf-8").read()
+    check("cheap mode issues a SECOND sweep at days=30 for the supply",
+          "days=30" in src, [l for l in src.split(chr(10)) if "days=" in l][:4])
+    check("and the ratio uses that point-in-time count, not the 12-month average",
+          'supply_now.get(term)' in src)
+    check("the 12-month average is kept, clearly named, never divided",
+          '"supply_avg_12mo"' in src)
+    check("the spend reflects BOTH sweeps rather than under-reporting",
+          "2 * (-(-len(terms) // 3))" in src)
+
+    # An end-to-end check through the injected fetcher: the row that reaches the
+    # operator must carry the point-in-time supply and say so.
+    cheap_rows = {
+        "t": {"volume": 2633, "volume_basis": "last complete month (Aug 2026)",
+              "volume_annual": 31000, "supply": 40391, "supply_avg_12mo": 130966,
+              "supply_window": "point-in-time (chart_series days=30)", "cvr": None,
+              "seasonality": {"verdict": "seasonal", "basis": "measured"}},
+        "u": {"volume": 900, "supply": 300, "cvr": None,
+              "seasonality": {"verdict": "flat", "basis": "measured"}},
+    }
+    got = td.compare("t,u", mode="cheap",
+                     fetch_cheap=lambda terms: ({k: dict(cheap_rows[k]) for k in terms},
+                                                None, 2))
+    row = _row(got["rows"], "t")
+    check("the ratio is computed on the point-in-time supply",
+          row["demand_per_listing"] == round(2633 / 40391, 3), row)
+    check("...which is 3.2x better than the 12-month average would have given",
+          row["demand_per_listing"] > round(2633 / 130966, 3))
+    check("and the row states WHICH WINDOW the supply came from",
+          "point-in-time" in (row.get("supply_window") or ""), row.get("supply_window"))
+    # Two true statements about one number. Collapsing them onto one key dropped the
+    # window silently, which is how a 12-month average could pose as a live count.
+    check("...separately from WHAT the count includes (broad match)",
+          "broad match" in (row.get("supply_basis") or ""), row.get("supply_basis"))
+    check("and the 12-month average rides along, labelled, for comparison",
+          row.get("supply_avg_12mo") == 130966, row.get("supply_avg_12mo"))
+
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
 
