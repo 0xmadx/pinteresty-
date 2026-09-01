@@ -17,7 +17,8 @@ Run:  python -m etsy.analytics.test_discrimination
 """
 import sys
 
-from etsy.analytics.scoring import (can_discriminate, score_pool, shortlist)
+from etsy.analytics.scoring import (DIMENSIONS, can_discriminate, score_pool,
+                                    shortlist)
 
 PASS = FAIL = 0
 
@@ -130,6 +131,60 @@ def main():
           "profit" not in v.dimensions, f"got {v.dimensions}")
     check("so a pool that looks 3-dimensional is correctly judged on its real 2",
           v.ok is False, f"got {v.reason}")
+
+    # --- the MCP boundary renamed the pool out from under the scorer -----------------
+    #
+    # `build_discovered` labels its columns for a human reader (term / volume / cvr);
+    # `scoring.DIMENSIONS` labels them for the weighting (key / demand / intent).
+    # Nothing translated, so `can_discriminate` saw only the names that happened to
+    # collide and judged rankability on a fraction of the evidence.
+    #
+    # Measured on the live pool 2026-09-01, BEFORE the fix:
+    #     "single dimension 'supply' orders the pool"
+    # One dimension out of six, and nothing in the payload said so — because a missing
+    # dimension is a LEGITIMATE state (score_pool drops it and decays confidence), so a
+    # verdict computed on a sixth of the evidence looked exactly like a full one.
+    print()
+    from mcp_server.tools_analyze import _as_scoring_pool
+
+    discovery_rows = [
+        {"term": "felt garland", "volume": 900, "supply": 300, "cvr": 0.004,
+         "momentum": None, "verdict": "go", "seed": "felt"},
+        {"term": "birthday crown", "volume": 400, "supply": 900, "cvr": None,
+         "momentum": None, "verdict": "watch", "seed": "felt"},
+        {"term": "mom necklace", "volume": 1500, "supply": 90, "cvr": 0.009,
+         "momentum": None, "verdict": "go", "seed": "mom"},
+    ]
+    check("the RAW discovery row shares almost nothing with DIMENSIONS — this is the bug",
+          sorted(set(discovery_rows[0]) & set(DIMENSIONS)) == ["momentum", "supply"],
+          sorted(set(discovery_rows[0]) & set(DIMENSIONS)))
+
+    mapped = _as_scoring_pool(discovery_rows)
+    check("mapping gives every row the key score_pool identifies it by",
+          all(r.get("key") for r in mapped), mapped)
+    check("volume becomes demand and cvr becomes intent",
+          mapped[0]["demand"] == 900 and mapped[0]["intent"] == 0.004, mapped[0])
+
+    # The part that must NOT happen: filling a gap to make the pool look complete.
+    check("a None is dropped, never carried through as a value",
+          "intent" not in mapped[1], mapped[1])
+    check("profit is NOT synthesised — the discovery pool has no margin to report",
+          all("profit" not in r for r in mapped))
+    check("nor serp_difficulty", all("serp_difficulty" not in r for r in mapped))
+
+    before = can_discriminate(discovery_rows)
+    after = can_discriminate(mapped)
+    check("the unmapped pool is judged on strictly less than the mapped one",
+          len(after.dimensions or ()) > len(before.dimensions or ()),
+          f"{before.dimensions} -> {after.dimensions}")
+    check("and the mapped verdict actually reaches demand and intent",
+          {"demand", "intent"} <= set(after.dimensions or ()), after.dimensions)
+
+    # Presence is not coverage. On the live pool `cvr` is non-null in 3 rows of 1716,
+    # so "intent is available" would be true and badly misleading.
+    coverage = {d: sum(1 for r in mapped if r.get(d) is not None) for d in DIMENSIONS}
+    check("coverage counts rows, so a dimension present in one row cannot pose as full",
+          coverage["intent"] == 2 and coverage["demand"] == 3, coverage)
 
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0

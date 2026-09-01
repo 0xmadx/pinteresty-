@@ -216,20 +216,81 @@ def _filter_trust():
     })
 
 
+# `build_discovered` names its columns for a reader; `score_pool` names them for the
+# weighting. They are the same quantities under different labels, and nothing
+# translated between them — so `can_discriminate` saw only the two that happened to
+# collide (`momentum`, `supply`) and silently judged rankability on 2 of 6 dimensions.
+# Measured 2026-09-01: set(build_discovered()[0]) & set(DIMENSIONS) == {momentum, supply}.
+#
+# It did not raise, because a missing dimension is a legitimate state — score_pool
+# drops it from the weighting and decays confidence. So a verdict computed on a third
+# of the evidence was indistinguishable from one computed on all of it.
+_POOL_FIELDS = {"key": "term", "demand": "volume", "supply": "supply",
+                "momentum": "momentum", "intent": "cvr"}
+
+
+def _as_scoring_pool(rows):
+    """Rename discovery rows into the contract `scoring` actually reads.
+
+    `profit` and `serp_difficulty` are deliberately NOT synthesised. `build_discovered`
+    carries no margin (`verdict` is a string, not a number) and no SERP difficulty, and
+    inventing a placeholder would assert a measurement nobody made — the exact failure
+    every guard here exists to stop. score_pool already handles a genuinely absent
+    dimension correctly; it just has to be told the truth about which are present.
+    """
+    out = []
+    for r in rows or []:
+        mapped = {}
+        for target, source in _POOL_FIELDS.items():
+            value = r.get(source)
+            if value is not None:
+                mapped[target] = value
+        if mapped.get("key"):
+            out.append(mapped)
+    return out
+
+
 def _discriminate(db):
-    from etsy.analytics.scoring import can_discriminate
+    from etsy.analytics.scoring import DIMENSIONS, can_discriminate
     from etsy.ui.app_data import build_discovered
 
-    pool = build_discovered(limit=2000)
+    raw = build_discovered(limit=2000)
+    pool = _as_scoring_pool(raw)
     v = can_discriminate(pool)
     # can_discriminate returns a NamedTuple. Left alone it serialises to a bare
     # JSON array — ["true", "single dimension...", ["supply"], null] — and every
     # field name is lost on the wire, so the consumer has to know the positional
-    # order to read its own answer. Explicit dict instead.
+    # order to read its own answer. Explicit dict instead. (This is NOT the same
+    # object as `Scored`, which is a dataclass and does serialise with its names.)
     verdict = {"ok": v.ok, "reason": v.reason,
                "dimensions": list(v.dimensions or ()), "spread": v.spread}
+    # Presence alone would overstate the evidence. Measured on the live pool: `cvr`
+    # is non-null in 3 rows of 1716, so "intent is available" and "intent is measured
+    # across this pool" are wildly different claims, and a bare dimension list cannot
+    # tell them apart. Coverage is reported as a count so the reader can judge.
+    coverage = {d: sum(1 for row in pool if row.get(d) is not None)
+                for d in DIMENSIONS}
+    present = sorted(d for d, n in coverage.items() if n)
+    absent = sorted(d for d, n in coverage.items() if not n)
+    thin = sorted(d for d in present if coverage[d] < max(1, len(pool) // 10))
     return _ok({
         "operation": "discriminate", "pool_size": len(pool), "verdict": verdict,
+        # Which evidence the verdict actually rests on. Until 2026-09-01 this was
+        # unstated, and the answer was a SINGLE dimension: measured on the live pool
+        # the old verdict read "single dimension 'supply' orders the pool", because
+        # demand and intent were invisible under the discovery layer's column names.
+        "dimensions_available": present,
+        "dimensions_absent": absent,
+        "dimensions_coverage": coverage,
+        "dimensions_thin": thin,
+        "dimensions_note": (
+            "A dimension is absent when NOTHING in the pool carries a value for it — "
+            "never measured for these terms, not measured as poor (N-02). "
+            + (f"`{'`, `'.join(thin)}` is present but covers under 10% of the pool: "
+               f"treat a verdict resting on it as thin evidence, not a finding. "
+               if thin else "")
+            + "A verdict resting on fewer dimensions is weaker, not wrong."
+        ),
         "note": "Ask this BEFORE trusting any ranking. When the dimensions cannot "
                 "separate the pool, a score is noise wearing a number — the honest "
                 "output is a labelled filter, not an ordering (N-01).",
