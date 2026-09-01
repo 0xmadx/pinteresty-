@@ -48,6 +48,17 @@ ResearchOp = Literal[
     "history",          # rank history / longevity, local archive, no network
 ]
 
+HistoryOp = Literal[
+    "keyword",      # every demand reading for a term, oldest first
+    "trend",        # Pinterest readings, matched across the wording gap
+    "shop",         # a competitor's counter over time — the only MEASURED sales
+    "listing",      # one listing's readings
+    "rank",         # a listing's rank curve
+    "launches",     # what has been listed, with its prediction
+    "outcomes",     # did those predictions come true — the LEARN join
+    "calibration",  # ...and whether it can be trusted yet (B-04)
+]
+
 EtsyPrivateOp = Literal[
     "results_data",      # volume, supply, CVR, prices + 20 competitor cards, one call
     "daily_stats",       # the DAILY curve riding free on that same call (D-51)

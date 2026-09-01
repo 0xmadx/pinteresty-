@@ -1940,3 +1940,62 @@ what makes rank tracking possible at all. And **20 pages** against a system that
 only ever reads page one is the pagination gap quantified: 19 pages of
 competitors this surface cannot see, which the tool now says out loud rather
 than leaving as silence.
+
+## D-60 — time becomes readable, and the learning loop stops being invisible
+
+**Date:** 2026-09-01.
+
+**The append-only design finally has a consumer.** Every `*_observations` table
+carries `collected_at` in its primary key and is never overwritten (Rule 5) —
+a discipline the system has paid for since the beginning and, until now, nobody
+could spend: **no tool could read a series.** An agent could see that supply is
+381,511 and never that it grew 40% while volume held, which is the difference
+between a number and a finding.
+
+Live on first call: `mom necklace` has **9 demand readings** spanning 2026-08-19
+to 2026-08-27, and `shopflowerlane` has **7 shop readings yielding 23.9
+sales/day** — the only *measured* sales figure anywhere in this system, and it
+was unreachable.
+
+**The learning loop lives in a different database, which is why it had no
+consumer at all.** Launches, ranks and outcomes are in `GraphDB`
+(`etsy/data/graph/graph.db`); keyword and shop readings are in `MarketDatabase`.
+The existing `learn_status` tool reads only the latter — so
+`prediction_vs_outcome()`, *the one query the LEARN loop exists to answer*, was
+reachable by nothing.
+
+**`calibration` refuses, and names why.** On the current data it returns
+`can_calibrate: false` with two blockers: *0 launches recorded; calibration needs
+~10*, and *no launches, so the control ratio is unmeasured*. That is the honest
+output — the alternative is a confident model of noise.
+
+⚠️ **`control_ratio` is a gate, not a statistic.** Below ~0.1 (B-04) calibration
+measures the model against its own preferences: if every launch was something the
+model liked, "the model was right" is circular. `None` means nothing launched,
+which is a different claim from "no controls were run" — and the tool
+distinguishes them.
+
+**Three ambiguities the payloads resolve rather than leave to the reader:**
+
+* `latest_rank: null` is meaningless alone — `observations: 0` means never
+  checked, `> 0` means checked and not found. An untracked listing is not a
+  failed one.
+* A shop counter that did not move means "sold less than the counter can show"
+  (it is quantised at 100 for large shops), never zero.
+* **One reading is not a trend.** A single-row series returns "direction is
+  unknown rather than flat", because a delta needs two readings a day apart and
+  **cannot be backfilled** — a day the scheduler missed is gone permanently.
+
+`history(operation="trend")` matches across the Etsy/Pinterest wording gap and
+**refuses a near-match**: importing `cat collar`'s momentum for `dog collar`
+would be a wrong number wearing a right label. Verified — `christmas ornament`
+returned `matched_trend: null` rather than reaching for something close.
+
+**And the tool states the thing the operator most needs to hear.** With zero
+launches, `launches` returns: *"This is the binding constraint on the whole
+system: every verdict it produces is currently unfalsifiable, and no amount of
+further measurement changes that."* More tools do not fix it; a listing does.
+
+**25 tools, 70 capabilities, 4,743 tokens** — efficiency improved again to
+**68 tokens/capability** (from 72, from 75). Reach going up while cost per
+capability goes down is grouping doing exactly what it was chosen for.
