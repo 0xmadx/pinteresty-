@@ -57,6 +57,7 @@ from mcp_server import (  # noqa: F401
     tools_economics,
     tools_learning,
     tools_opportunity,
+    tools_pinterest,
     tools_system,
 )
 

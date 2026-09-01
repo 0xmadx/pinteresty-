@@ -70,6 +70,18 @@ async def run():
                   [t.name for t in tools
                    if "kw" in (t.input_schema.get("properties") or {})])
 
+            # --- the grouped-tool schema, as PUBLISHED over the wire ---------------
+            op = by_name["pinterest"].input_schema["properties"]["operation"]
+            check("operation publishes as a top-level enum, not anyOf",
+                  "enum" in op and "anyOf" not in op, list(op))
+            check("no $ref indirection — the options are inline",
+                  "$ref" not in json.dumps(op), op)
+            check("every operation is reachable (the enum is not truncated)",
+                  len(op["enum"]) >= 15, len(op.get("enum", [])))
+            check("operation is REQUIRED — a defaulted one lets an agent guess",
+                  "operation" in by_name["pinterest"].input_schema.get("required", []),
+                  by_name["pinterest"].input_schema.get("required"))
+
             # --- calling them, which is the only real proof --------------------------------
             print()
             for name, args, must_contain in [
@@ -203,6 +215,41 @@ def check_stdout_is_protected():
           failed.get("ok") is False and "boom" in failed.get("error", ""), failed)
 
 
+def check_grouped_tool_contract():
+    """A grouped tool must publish a real enum, and refuse before it spends.
+
+    The whole expansion rests on `operation` publishing as an inline JSON-schema
+    `enum`. Two ways that silently degrades, both measured on this SDK:
+    `Optional[Literal[...]]` collapses it into an `anyOf` with the enum buried a
+    level down, and an `Enum` subclass hoists into `$defs` behind a `$ref`. Either
+    still "works" while being worse for the agent, so it needs an assertion.
+
+    The second half is about cost: a call missing a required argument must be
+    refused from the arguments alone, BEFORE `_preflight` touches Redis and long
+    before a client is constructed — construction on an empty vault is a bounded
+    120-second wait.
+    """
+    from mcp_server import tools_pinterest as tp
+
+    src = pathlib.Path(REPO, "mcp_server", "tools_pinterest.py").read_text(encoding="utf-8")
+    val = src.index("_NEEDS_TERM and not term")
+    pre = src.index('_preflight(("pinterest",))')
+    check("argument refusals come BEFORE preflight, so a bad call costs nothing",
+          val < pre, f"validation at {val}, preflight at {pre}")
+    check("the client is constructed only after preflight",
+          pre < src.index("api = _client()"))
+
+    fn = tp.pinterest.__wrapped__
+    r = fn(operation="metrics")           # missing `term`
+    check("a missing required arg is a structured refusal, not an exception",
+          r.get("ok") is False and "needs `term`" in r.get("error", ""), r)
+    check("and the refusal names what would fix it", bool(r.get("fix")), r)
+
+    r2 = fn(operation="top_products")     # missing `category_id`
+    check("category operations refuse without a category_id",
+          r2.get("ok") is False and "category_id" in r2.get("error", ""), r2)
+
+
 def check_package_layout():
     """The split itself: every tool registers, and none went missing in the move.
 
@@ -223,6 +270,7 @@ def check_package_layout():
 
 def main():
     check_stdout_is_protected()
+    check_grouped_tool_contract()
     check_package_layout()
     check_one_read_layer()
     check_deep_dive_wiring()

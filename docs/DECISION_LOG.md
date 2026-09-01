@@ -1598,3 +1598,69 @@ returns `None`, which is indistinguishable from "no data" (N-02).
 **Verified:** `pinterest/endpoints/test_moment_metrics.py`, **21 offline
 assertions**, stubbing `_api_resource` with a deliberately DESCENDING fixture so
 the reversal is pinned rather than assumed.
+
+## D-55 — the grouped tool: 15 Pinterest operations for the price of two
+
+**Date:** 2026-09-01. The first tool of a second kind, and the pattern every
+future expansion follows.
+
+**Context.** Pinterest had **zero** MCP coverage — ~97 callables reachable by an
+agent only as a side effect of `calendar`/`cockpit` reading rows a scheduler job
+wrote days earlier. Exposing it one-tool-per-capability was the obvious move and
+the wrong one: measured, this server's tools average 718 chars of published
+schema, so 15 more would cost ~10,770 chars of context **before any work starts**,
+and would degrade tool choice besides.
+
+**Chosen: one tool, an `operation` enum.** `pinterest(operation=…)` reaches all
+15 capabilities for **1,705 chars** — an 84% saving on this slice.
+
+**The saving is not the enum.** Publishing 15 operation names as enum members is
+nearly free. What grouping avoids is paying the **~380-char per-tool envelope**
+(name, title, `type: object`, `required`, the `inputSchema` wrapper, and the
+repeated shared parameters `term`/`region`/`limit`) fifteen times instead of once.
+That is the whole mechanism, and it is why this scales.
+
+**Four contract rules, each with a measured reason** (SDK 2.0.0, pydantic 2.13):
+
+| Rule | Measured consequence of breaking it |
+|---|---|
+| `Literal`, never `Enum` | an `Enum` subclass hoists into `$defs` behind a `$ref` — +28 chars and an indirection the agent must resolve |
+| Required, never `Optional[Literal[…]]` | `Optional` collapses the enum into an `anyOf`, burying the options a level down |
+| One `Field(description=…)` on `operation` | cheapest of the three documentation channels: 544 chars vs 579 for a dedented docstring vs 601 raw |
+| Tool docstring stays ONE line | docstrings publish **verbatim including source indentation** (`base.py:78`, no `cleandoc`) — a multi-line docstring ships its leading whitespace on the wire |
+
+⚠️ **Shared `Literal` aliases must be imported by bare name.** They live in
+`mcp_server/_ops.py`, and MCP resolves annotations via
+`inspect.signature(fn, eval_str=True)` against the **wrapped function's own
+module globals**. An alias reached through a namespace raises `InvalidSignature`
+at registration.
+
+**Argument validation runs BEFORE preflight**, which matters more here than
+anywhere: constructing a Pinterest client on an empty vault is a bounded
+**120-second busy-wait** that then raises. `pinterest(operation="metrics")` with
+no `term` is refused from the arguments alone — it never reaches Redis, let alone
+the constructor. Asserted by source order, not by comment.
+
+**`store=False` on the MCP path.** With the SeriesStore active, `metrics()`
+returns *two different row shapes* — a wire row with `date`/`normalizedCount`/
+bounds, or a locally-served row with only `count` — depending on what the store
+happens to hold. Same arguments, different shape, and `split_forecast()` on the
+second silently reports everything as observed. For a surface whose consumer is a
+model reading the shape, that is the real hazard. `_ops.normalise_series()`
+flattens it regardless, and also absorbs the **three different spellings** of the
+upper prediction bound across search `/metrics/`, `category_metrics` and
+`moment_metrics`.
+
+**Findings are stated, not left as empty results.** `etsy_competitors` returning
+`[]` carries an explicit `finding` explaining that no Etsy seller ranks there —
+measured zero in Area rugs, Bath mats, Candles and Cake decorating — because an
+empty list otherwise reads to a model as a broken call rather than as "mass
+retail owns this niche."
+
+**Verified live**, not just registered: `operation="moments"` returned 13 moments
+(13 dated), `operation="related"` returned 5 terms each carrying its own 53–66
+point series free in the same request, and the missing-argument path refused
+cleanly. Published surface now **14,633 chars ≈ 3,658 tokens** for 19 tools
+reaching 33 capabilities — still under the 4,000-token ceiling the plan set.
+MCP suite 30 → **40 assertions**, including that `operation` publishes as a
+top-level `enum` with no `$ref` and no `anyOf`.

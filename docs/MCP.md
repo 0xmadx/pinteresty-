@@ -12,7 +12,7 @@ becoming a source of numbers.
 .venv/Scripts/python.exe -m mcp_server.server
 ```
 
-Speaks stdio. **18 read-only tools.** You do not run this command yourself in
+Speaks stdio. **19 read-only tools** (one of which groups 15 operations). You do not run this command yourself in
 normal use — the MCP client (Claude Code, Claude Desktop, Antigravity) launches
 it as a subprocess on demand, over stdio. Run it by hand only to sanity-check it
 starts, or when writing/debugging a new tool.
@@ -55,7 +55,7 @@ for t in tools: print(' ', t.name)
 "
 ```
 
-18 tools should print. If Claude Code / Antigravity shows a different count
+19 tools should print. If Claude Code / Antigravity shows a different count
 after adding the server, the client is pointed at a stale `cwd` or a different
 Python (not the venv) — check the command path first.
 
@@ -86,6 +86,7 @@ Python (not the venv) — check the command path first.
 | `analyze_keyword` | is there room in this niche — demand, supply, the ratio | **live** |
 | `sourcing_profile` | where sellers in this niche ship from, and how fast | **live** |
 | `cheap_competitors` | why the cheapest listings are cheap — origin of the price floor | **live** |
+| `pinterest` | **15 operations** in one tool — audience, timing and momentum. See below | **live** |
 | `deep_dive_keyword` | full BFS crawl + gap/sourcing arbitrage on a seed — slow, dozens of requests | **live, expensive** |
 | `filter_trust_report` | which Etsy SERP filters can be believed, which silently lie | local |
 | `profit_verdict` | go/no-go on one unit, with the reason it failed | local |
@@ -111,6 +112,46 @@ thing offering this shape of analysis and had no MCP equivalent. Treat it as
 the deep instrument, not the first look — run `analyze_keyword` or `discover`
 first and only reach for this once a seed already looks worth the cost.
 
+### Grouped tools — one tool, many operations
+
+`pinterest` is the first tool of a second kind: instead of one tool per
+capability, it takes an `operation` enum. This is how the surface grows without
+the context cost growing with it.
+
+**Measured on this SDK:** grouping is ~64% cheaper in published schema, and the
+saving is **not** the enum — it is not paying the ~380-char per-tool envelope
+once per capability. Concretely, `pinterest`'s 15 operations cost **1,705
+chars**; as 15 separate tools at this server's mean they would cost ~10,770.
+
+```
+pinterest(operation="related", term="mom necklace")
+pinterest(operation="moment_curve", term="halloween")
+pinterest(operation="category_top", event="SAVE")
+```
+
+The 15 operations: `top_trends · metrics · related · prefix · demographics ·
+moments · moment_curve · categories · category_top · category_metrics ·
+category_demographics · top_products · etsy_competitors · featured · editorial`.
+
+**Writing a grouped tool** — four rules, each with a measured reason:
+
+| Rule | Why |
+|---|---|
+| `Literal`, never `Enum` | `Literal` publishes inline; an `Enum` subclass hoists into `$defs` behind a `$ref` (+28 chars, extra indirection) |
+| Required, never `Optional[Literal[…]]` | `Optional` collapses the enum into an `anyOf` and buries it |
+| One `Field(description=…)` on `operation` | cheapest documentation channel measured (544 vs 579 dedented-docstring vs 601 raw) |
+| Docstring stays ONE line | published **verbatim, including source indentation** — a multi-line docstring ships its leading whitespace on the wire |
+
+⚠️ Shared `Literal` aliases live in `mcp_server/_ops.py` and must be **imported
+into the tool module by bare name**. MCP resolves annotations with
+`inspect.signature(fn, eval_str=True)` against the *wrapped function's* module
+globals — an alias reached through a namespace raises `InvalidSignature`.
+
+⚠️ **Validate arguments BEFORE preflight.** `pinterest` refuses a missing `term`
+from the arguments alone, so a malformed call never touches Redis and never
+constructs a client — and constructing a Pinterest client on an empty vault is a
+bounded **120-second wait** before it raises.
+
 ### Where the code lives
 
 `mcp_server/` is a package, not one file (D-53, 2026-09-01 — it was a single
@@ -124,6 +165,7 @@ first and only reach for this once a seed already looks worth the cost.
 | `tools_economics.py` | does it pay (3) |
 | `tools_decide.py` | what should I list, and when (4) |
 | `tools_learning.py` | did it work (3) |
+| `tools_pinterest.py` | audience, timing, momentum — 15 operations in one tool |
 | `server.py` | wiring + `main()` only — no tool definitions |
 
 ⚠️ **Adding a tool module means adding its import to `server.py`.** Those imports
