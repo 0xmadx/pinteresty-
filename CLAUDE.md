@@ -266,6 +266,21 @@ the Agent tool. Use them when the work is a whole task in one lane:
 `ux-decision-design` inherited the layout discipline of the deleted `ui-builder`
 skill. It designs; `frontend-nextjs` builds.
 
+**Four more are a decision board**, for when the question is *what should we do*
+rather than *how do we build it*. Each has a remit, a veto or an accountability,
+and is instructed to disagree by name rather than converge politely:
+
+| agent | owns | its veto or accountability |
+|---|---|---|
+| `cto` | architecture, build-vs-kill | accountable for **a plausible wrong number reaching the operator** |
+| `head-of-product` | `docs/GOAL.md`, scope, sequencing | must say "we are building the wrong thing" when it is |
+| `growth-strategist` | will it earn, is the edge durable | the seller's lens, not the engineer's |
+| `risk-officer` | what ENDS the business | **veto** on anything risking the seller account (D-29) |
+
+Run them together for a real decision — positions, then cross-examination where
+each reads the others, then convergence. A round where nobody concedes anything is
+four monologues, and the prompt says so.
+
 Skills in `.claude/skills/` — **all 12, and they are enforced, not advisory.**
 
 *The craft lenses — is the work right:*
