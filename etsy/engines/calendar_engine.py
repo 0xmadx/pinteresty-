@@ -108,8 +108,32 @@ def latest_keyword(term, db_path=DB_PATH):
     return dict(row) if row else None
 
 
-def term_evidence(term, product_type=profit.PERSONALIZED, db_path=DB_PATH):
-    """What is known about one term, with the basis of every number attached."""
+def term_evidence(term, product_type=profit.PERSONALIZED, db_path=DB_PATH,
+                  profile=None):
+    """What is known about one term, with the basis of every number attached.
+
+    ⚠️ `profile` is the operator's NAMED cost profile, and without one this
+    function was answering a question nobody asked. `profit.verdict(price=...,
+    product_type=...)` defaults every cost to ZERO, so it was asking *"is this
+    price profitable for a product that costs nothing to make?"* — to which the
+    answer is always yes.
+
+    Measured 2026-09-01 on `halloween badge reel` at its $9.00 band price:
+
+        no profile (cogs=0)   margin +85.5%   go=True    <- what the calendar showed
+        "Felt decor"          margin  -9.1%   go=False
+        "Custom sign"         margin -256%    go=False
+
+    The profiles have existed in `config/settings.json` since 2026-08-15 and
+    `settings_store.verdict_kwargs()` was written to feed exactly this call. The
+    calendar simply never called it, and `settings_store.add_profile` REFUSES a
+    personalized profile with zero labour_minutes (`:173`) — so the guard against
+    this existed at the write end while the read end walked past it.
+
+    With no profile the verdict is now withheld entirely rather than defaulted:
+    `profitable` is None and `profit_basis` says why. An unanswerable question gets
+    no answer (N-02) — it does not get an optimistic one.
+    """
     obs = latest_keyword(term, db_path)
     if not obs:
         return {"term": term, "basis": "unmeasured",
@@ -121,11 +145,20 @@ def term_evidence(term, product_type=profit.PERSONALIZED, db_path=DB_PATH):
     ratio = (volume / supply) if (volume and supply) else None
     price = obs.get("median_price_low")
 
-    verdict = None
-    if price:
+    verdict, profit_basis = None, "no measured price"
+    if price and profile:
         # The LOW end of the band: clearing there clears across it. Using the high
         # end would flatter every candidate.
-        verdict = profit.verdict(price=price, product_type=product_type)
+        from core.settings_store import load
+        try:
+            verdict = profit.verdict(price=price, **load().verdict_kwargs(profile))
+            profit_basis = f"derived from the '{profile}' cost profile"
+        except (KeyError, ValueError) as e:
+            profit_basis = f"profile '{profile}' unusable: {e}"
+    elif price:
+        profit_basis = ("NOT JUDGED — no cost profile given, and a verdict with "
+                        "cogs=0 would say every price is profitable. Pass "
+                        "profile=<name> from config/settings.json product_profiles.")
 
     return {
         "term": term, "basis": "measured",
@@ -137,12 +170,13 @@ def term_evidence(term, product_type=profit.PERSONALIZED, db_path=DB_PATH):
         "price_low": price, "price_high": obs.get("median_price_high"),
         "profitable": verdict["go"] if verdict else None,
         "margin": verdict["margin"] if verdict else None,
-        "profit_basis": "provisional" if verdict else "no measured price",
+        "profit_basis": profit_basis,
     }
 
 
 def build(db_path=DB_PATH, country="US", lead_weeks=6, terms=None,
-          product_type=profit.PERSONALIZED, now=None, include_passed=False):
+          product_type=profit.PERSONALIZED, now=None, include_passed=False,
+          profile=None):
     """The calendar, with Etsy evidence attached to every term on it."""
     from core.settings_store import load
 
@@ -152,13 +186,20 @@ def build(db_path=DB_PATH, country="US", lead_weeks=6, terms=None,
                      include_passed=include_passed)
 
     for row in rows:
-        evidence = [term_evidence(t, product_type, db_path) for t in row.get("terms", [])]
+        evidence = [term_evidence(t, product_type, db_path, profile=profile)
+                    for t in row.get("terms", [])]
         # Best first, by demand-per-listing — NOT by volume. Unmeasured terms sort
         # last because they cannot be compared, not because they are worst.
         evidence.sort(key=lambda e: -(e.get("demand_per_listing") or -1))
         row["evidence"] = evidence
+        # `actionable` now requires the money to work too. Without a profile the
+        # profit verdict is None, so a row can be RANKABLE but not actionable — and
+        # the reason is on the row rather than implied by its absence.
         row["actionable"] = any(e.get("basis") == "measured" and not e.get("is_wall")
+                                and e.get("profitable") is True
                                 for e in evidence)
+        row["rankable"] = any(e.get("basis") == "measured" and not e.get("is_wall")
+                              for e in evidence)
     return rows
 
 

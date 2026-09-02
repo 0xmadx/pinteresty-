@@ -79,7 +79,13 @@ def main():
 
     # --- the join: a date with demand attached --------------------------------------
     print()
-    rows = ce.build(db_path=path, terms=["christmas ornament", "christmas stocking"],
+    # `profile=` is REQUIRED for a profit verdict now. Without it the calendar
+    # withholds one, because profit.verdict defaults every cost to ZERO and would
+    # answer "is this profitable for a product that costs nothing to make?" — always
+    # yes. Measured: halloween badge reel read +85.5% go=True with no profile and
+    # -9.1% go=False against the operator's real "Felt decor" costs.
+    rows = ce.build(db_path=path, profile="Digital printable",
+                    terms=["christmas ornament", "christmas stocking"],
                     lead_weeks=6, now=NOW)
     by_moment = {r["moment"]: r for r in rows}
     check("christmas is on the calendar", "christmas" in by_moment, list(by_moment))
@@ -100,10 +106,27 @@ def main():
     orn = next(e for e in xmas["evidence"] if e["term"] == "christmas ornament")
     check("a 25k-search term with 1.4M listings is called a WALL",
           orn["is_wall"] is True, orn)
-    check("and it clears the margin gate anyway — profitable but unrankable",
-          orn["profitable"] is True, orn)
-    check("so the moment is still actionable via the winnable term",
+    # A digital product genuinely has no COGS, so this profile clears at $7.20 —
+    # but it clears because a REAL profile said so, not because nothing was costed.
+    check("with a real profile the margin gate is answered, not assumed",
+          orn["profitable"] is True and "Digital printable" in orn["profit_basis"], orn)
+    check("so the moment is actionable via the winnable, profitable term",
           xmas["actionable"] is True)
+
+    # The regression this pins: no profile must mean NO VERDICT, never a
+    # flattering one. The old code returned profitable=True here.
+    unpriced = ce.build(db_path=path, terms=["christmas ornament", "christmas stocking"],
+                        lead_weeks=6, now=NOW)
+    u_xmas = next(r for r in unpriced if r["moment"] == "christmas")
+    u_orn = next(e for e in u_xmas["evidence"] if e["term"] == "christmas ornament")
+    check("WITHOUT a profile the profit verdict is WITHHELD, not defaulted to go",
+          u_orn["profitable"] is None, u_orn)
+    check("and it says why, naming the cogs=0 trap",
+          "cogs=0" in u_orn["profit_basis"], u_orn["profit_basis"])
+    check("an unpriced moment is therefore NOT actionable",
+          u_xmas["actionable"] is False, u_xmas["actionable"])
+    check("but it is still RANKABLE — winnability is a separate question from money",
+          u_xmas["rankable"] is True, u_xmas.get("rankable"))
 
     # --- unmeasured is not zero -------------------------------------------------------
     print()
