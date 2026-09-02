@@ -142,6 +142,49 @@ def find_terms(
 
 @mcp.tool()
 @_guarded
+def hunt(
+    seed: str,
+    sources: str = "etsy_suggest,pinterest_prefix",
+    mode: str = "any",
+    size_mode: str = "cheap",
+    limit: int = 24,
+) -> dict:
+    """The whole strategy in ONE call: discover across doors, size, rank.
+
+    Cheap doors find candidates, the private tier sizes only the survivors, the
+    gates rank what is left. Running it the other way spends the seller account on
+    terms that were never going to matter.
+
+    sources/mode are `find_terms`'s (any / all / min_n). size_mode is `compare`'s
+    (cheap = ~2*ceil(N/3) requests + seasonal curve, no CVR; full = 1/term + CVR).
+    Over `limit` it sizes the most-corroborated first and NAMES what it skipped in
+    `not_sized` — a cut, declared, never a slice posing as the neighbourhood.
+
+    Every row carries `found_by` beside its verdict: which populations use the word,
+    and whether you could rank for it, stay SEPARATE facts.
+    """
+    from etsy.analytics.sources import DOORS, hunt as _hunt
+    want = [x.strip() for x in (sources or "").split(",") if x.strip()]
+    if not seed or not seed.strip():
+        return _fail("`seed` is required")
+    unknown = [d for d in want if d not in DOORS]
+    if unknown:
+        return _fail(f"no such door: {unknown}", fix=f"Pick from: {sorted(DOORS)}")
+
+    # Sizing always spends the seller tier, so preflight it alongside whichever
+    # discovery tiers were asked for.
+    tiers = {DOORS[d]["tier"] for d in want} | {"etsy_private"}
+    blocked = _preflight(tuple(sorted(tiers)))
+    if blocked:
+        return blocked
+
+    out = _hunt(seed.strip(), sources=tuple(want), mode=mode,
+                size_mode=size_mode, limit=limit)
+    return _ok({"operation": "hunt", **out})
+
+
+@mcp.tool()
+@_guarded
 def keyword_crawl(
     operation: Annotated[CrawlOp, Field(description=_OP_DOC)],
     seed: str,

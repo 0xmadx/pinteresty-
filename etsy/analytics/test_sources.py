@@ -145,6 +145,67 @@ def main():
           src.discover_terms("x", sources=("astrology",), fetchers=stub)["basis"]
           == "unknown_source")
 
+    print(chr(10) + "hunt — discover, size, rank in one call")
+    # Injected sizer: the sizing half is compare's, covered by its own 61 assertions.
+    # What matters here is that provenance survives the join and a cut is declared.
+    def fake_sizer(terms, mode="cheap"):
+        ts = [t.strip() for t in terms.split(",")]
+        return {"ok": True, "ranked": [{"term": ts[0], "score": 0.9}],
+                "rankable": {"ok": True},
+                "floors": {"min_pool_to_score": 3},
+                "spent": {"private_requests_upper_bound": len(ts)},
+                "rows": [{"term": t, "demand_per_listing": 0.5,
+                          "verdict": "contested"} for t in ts]}
+
+    h = src.hunt("badge reel", sources=("etsy_suggest", "pinterest_prefix"),
+                 fetchers=stub, sizer=fake_sizer)
+    # 6, not 5: SUGGEST and PINTEREST share NOTHING — the overlap in this
+    # fixture () is between EXPAND and PINTEREST, and EXPAND
+    # is not one of the two doors opened here.
+    check("every discovered term is sized", h["sized"] == 6, h["sized"])
+    # The join that makes the table worth reading: two different questions, both
+    # answered, neither collapsed into the other.
+    row = next(r for r in h["rows"] if r["term"] == "cute badge reel")
+    check("provenance survives the join into the sized table",
+          row["found_by"] == ["pinterest_prefix"], row)
+    check("and winnability rides beside it, not merged into it",
+          row["verdict"] == "contested" and row["source_count"] == 1, row)
+    check("the ranking comes through", h["ranked"] is not None)
+    check("the seller-account cost is declared for BOTH stages",
+          "compare" in h["spent"]["spends_seller_account"], h["spent"])
+
+    # A cut is a cut. Naming the dropped terms is the difference between a slice and
+    # a slice presented as the whole neighbourhood.
+    cut = src.hunt("badge reel", sources=("etsy_suggest", "etsy_expand",
+                                          "pinterest_prefix"),
+                   fetchers=stub, sizer=fake_sizer, limit=3)
+    check("over the limit it sizes only the top N", cut["sized"] == 3, cut["sized"])
+    check("and NAMES what it did not size, rather than counting it",
+          len(cut["not_sized"]) == cut["found_total"] - 3 and cut["not_sized"],
+          cut["not_sized"])
+    check("the note warns the cut is by corroboration, not by merit",
+          "least" in cut["note"] and "re-run" in cut["note"])
+    check("least-corroborated are the ones dropped",
+          all(t not in [c["term"] for c in cut["rows"][:1]] for t in cut["not_sized"]))
+
+    # Discovery failing and discovery finding nothing are different claims, and
+    # neither should spend a sizing call.
+    empty = src.hunt("x", sources=("etsy_suggest",),
+                     fetchers={"etsy_suggest": lambda s: []}, sizer=fake_sizer)
+    check("nothing discovered means nothing sized", empty["rows"] == [])
+    check("...and it does not read as 'these are walls'",
+          "no candidate survived discovery" in empty["note"], empty["note"])
+
+    def broken_sizer(terms, mode="cheap"):
+        return {"ok": False, "error": "SessionDown"}
+
+    fell = src.hunt("badge reel", sources=("etsy_suggest",), fetchers=stub,
+                    sizer=broken_sizer)
+    check("a sizing failure is NOT reported as an empty market",
+          "unmeasured" in fell["note"] and "not walls" in fell["note"], fell["note"])
+    check("and the sizing error is surfaced", fell["sizing_error"] == "SessionDown")
+
+
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
 

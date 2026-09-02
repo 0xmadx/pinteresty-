@@ -233,3 +233,84 @@ def discover_terms(seed, sources=("etsy_suggest", "pinterest_prefix"),
     if errors:
         out["errors"] = errors
     return out
+
+
+# Above this the sizing call refuses rather than trims, so the pipeline must cut the
+# candidate list itself — and SAY what it cut. A cap applied in silence reads as
+# "this is the whole neighbourhood" when it is a slice, which is the same error the
+# drill made at max_nodes=60.
+DEFAULT_SIZE_LIMIT = 24
+
+
+def hunt(seed, sources=("etsy_suggest", "pinterest_prefix"), mode="any",
+         min_n=None, size_mode="cheap", limit=DEFAULT_SIZE_LIMIT,
+         fetchers=None, sizer=None):
+    """Discover terms across doors, size them, rank them — one call, one table.
+
+    The whole strategy in order: cheap doors find candidates, the private tier sizes
+    only the survivors, and the gates rank what is left. Running it the other way —
+    sizing everything, then filtering — spends the seller account on terms that were
+    never going to matter.
+
+    Returns `compare`'s table with each row carrying the `found_by` / `source_count`
+    provenance from discovery, so "two independent populations use this word" and
+    "it is winnable" stay visible as SEPARATE facts. They answer different questions
+    and a term can pass one while failing the other.
+    """
+    from etsy.analytics.compare import compare as _compare
+
+    found = discover_terms(seed, sources=sources, mode=mode, min_n=min_n,
+                           fetchers=fetchers)
+    cands = found.get("candidates") or []
+    if not cands:
+        # Discovery failing and discovery finding nothing are different claims, and
+        # `basis` already carries which. Do not spend a sizing call on either.
+        return {**found, "rows": [], "ranked": None,
+                "note": f"{found.get('note', '')} Nothing was sized — "
+                        f"no candidate survived discovery."}
+
+    keep = cands[:limit]
+    dropped = cands[len(keep):]
+    # Ordered by corroboration, so a cut takes the least-corroborated first — but it
+    # is still a cut, and the dropped terms are named rather than counted so the
+    # operator can re-run on them.
+    sized = (sizer or _compare)(",".join(c["term"] for c in keep), mode=size_mode)
+    if not sized.get("ok"):
+        return {**found, "rows": [], "ranked": None,
+                "sizing_error": sized.get("error"),
+                "note": "Discovery succeeded; SIZING failed. The candidates below are "
+                        "real, they are simply unmeasured — not walls."}
+
+    prov = {_norm(c["term"]): c for c in keep}
+    rows = []
+    for row in sized.get("rows") or []:
+        p = prov.get(_norm(row.get("term"))) or {}
+        rows.append({**row,
+                     "found_by": p.get("found_by", []),
+                     "source_count": p.get("source_count")})
+
+    return {
+        "seed": seed, "rows": rows, "ranked": sized.get("ranked"),
+        "rankable": sized.get("rankable"), "floors": sized.get("floors"),
+        "discovery": {k: found.get(k) for k in
+                      ("sources_ok", "sources_failed", "per_source_count",
+                       "corroborated", "mode", "required_sources", "basis")},
+        "sized": len(rows),
+        "found_total": len(cands),
+        "not_sized": [c["term"] for c in dropped],
+        "size_limit": limit,
+        "spent": {"discovery": found.get("cost"),
+                  "sizing_private_requests_upper_bound":
+                      (sized.get("spent") or {}).get("private_requests_upper_bound"),
+                  "spends_seller_account": found.get("spends_seller_account", [])
+                                           + (["compare"] if rows else [])},
+        "basis": "measured",
+        "note": ("Provenance and winnability are SEPARATE facts on every row: "
+                 "`found_by` says which populations use the word, the verdict says "
+                 "whether you could rank for it. A term both doors know can still be "
+                 "a wall. "
+                 + (f"⚠️ {len(dropped)} candidate(s) were NOT sized — over the "
+                    f"limit of {limit}. They are named in `not_sized`, least "
+                    f"corroborated first; re-run on them rather than assuming they "
+                    f"were worse." if dropped else "Every candidate was sized.")),
+    }
