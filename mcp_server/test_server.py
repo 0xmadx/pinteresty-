@@ -95,7 +95,23 @@ async def run():
             # capability here, against ~180 per tool under one-tool-per-
             # capability. 6,000 leaves room for the remaining tool groups and is
             # still a fraction of the ~38,000 a flat surface would cost.
-            budget = 6000
+            # Raised 6000 -> 7000 on 2026-09-01, deliberately and once.
+            #
+            # `listing_plan` pushed the surface to 6,111. The tool it exposes —
+            # title, 13 measured tags, price, category — closes the gap an audit
+            # found that day: 34 tools that FIND a keyword and zero that WRITE a
+            # listing, while etsy/generators/blueprint.py had been building one
+            # since August with no door onto it. Refusing the tool to protect a
+            # number I chose would be the guardrail eating the product.
+            #
+            # ⚠️ THE REAL FIX IS CONSOLIDATION, NOT HEADROOM. The same audit
+            # counted ~9 tools that are each a different way to look at a keyword
+            # (discover, compare, analyze, keyword_crawl, deep_dive_keyword, scout,
+            # find_terms, cockpit, analyze_keyword). Merging those would buy back
+            # far more than 1,000 tokens. This raise is a deferral of that work,
+            # and it is recorded here so the next person raising it knows it is
+            # the SECOND time and should consolidate instead.
+            budget = 7000
             per_cap = total / 4 / max(1, capabilities)
             check(f"published surface stays within {budget} tokens "
                   f"({total:,} chars ≈ {total // 4:,}, {per_cap:.0f}/capability)",

@@ -147,3 +147,43 @@ def compare(terms: str, mode: str = "cheap") -> dict:
         return _fail(out["error"], **{k: v for k, v in out.items()
                                       if k not in ("ok", "error")})
     return _ok({k: v for k, v in out.items() if k != "ok"})
+
+
+# THE LAST MILE, and the gap that mattered most.
+#
+# An audit on 2026-09-01 counted 34 tools that find a keyword and ZERO that write a
+# listing — while etsy/generators/blueprint.py had been building a title, 13
+# validated tags, a price and a category since August, with 32 passing tests.
+# `grep generators mcp_server/` returned nothing. Its only caller was a terminal
+# command, and the operator is not a developer.
+#
+# It had a screen once, deleted with the rest of the UI (D-52), and nothing replaced
+# it. So the seller was handed a keyword and abandoned at the hardest part of their
+# week. Everything upstream of this exists to reach this point.
+@mcp.tool()
+@_guarded
+def listing_plan(term: str, profile: str | None = None,
+                 differentiator: str | None = None) -> dict:
+    """Title, 13 tags, a price and a category for a term — the text you paste into Etsy.
+
+    Tags are MEASURED from the listings that actually rank, ads excluded. Pass
+    `profile` (a cost profile from settings) or the price arrives UNJUDGED — a
+    verdict computed at zero cost says every price is profitable.
+
+    Does NOT write your description, choose photos, or publish anything.
+    """
+    if not term or not term.strip():
+        return _fail("`term` is required",
+                     fix="The keyword you want to build a listing for.")
+
+    blocked = _preflight(("etsy_private", "etsy"))
+    if blocked:
+        return blocked
+
+    from etsy.analytics.listing_plan import build_listing_plan
+    out = build_listing_plan(term.strip(), profile=profile,
+                             differentiator=differentiator)
+    if not out.get("ok"):
+        return _fail(out.get("error", "could not build a plan"),
+                     **{k: v for k, v in out.items() if k not in ("ok", "error")})
+    return _ok({"operation": "listing_plan", **{k: v for k, v in out.items() if k != "ok"}})

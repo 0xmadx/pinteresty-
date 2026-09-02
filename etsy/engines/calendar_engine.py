@@ -277,12 +277,38 @@ def main(argv=None):
     print(render(rows))
 
     actionable = [r for r in rows if r["actionable"]]
-    print(f"{len(rows)} dated moment(s); {len(actionable)} with a measured, "
-          f"non-wall term behind them.")
-    if not actionable:
-        print("Every dated moment is either unmatched or backed only by wall terms. "
-              "That is a real answer: the dates are right and nothing you watch fits "
-              "them. Add terms with: settings_store term add \"christmas ornament\"")
+    rankable = [r for r in rows if r.get("rankable")]
+    print(f"{len(rows)} dated moment(s); {len(rankable)} with a measured, non-wall "
+          f"term behind them; {len(actionable)} where the money also works.")
+
+    # ⚠️ This block used to print "Every dated moment is either unmatched or backed
+    # only by wall terms" whenever `actionable` was empty. That sentence was FALSE
+    # on 2026-09-01: `halloween badge reel` sat two lines above it at 0.655 — well
+    # above the wall line — and the moment was un-actionable only because no cost
+    # profile had been passed, so the profit verdict was withheld rather than failed.
+    #
+    # It is the line most likely to be read as the verdict, and it told the operator
+    # the market was closed when the truth was that we had not been given their
+    # costs. Rankable and actionable are now reported apart, and each empty case
+    # says which one is missing.
+    if rankable and not actionable:
+        unpriced = [e for r in rankable for e in r.get("evidence", [])
+                    if e.get("profitable") is None and not e.get("is_wall")
+                    and e.get("basis") == "measured"]
+        if unpriced:
+            print(chr(10) + f"{len(rankable)} moment(s) HAVE a rankable term — the money is "
+                  f"simply unjudged, because no cost profile was given. Re-run with "
+                  f"--profile \"<name>\" to get a real verdict; without one, a profit "
+                  f"check assumes the product costs nothing to make and would say yes "
+                  f"to anything.")
+        else:
+            print(chr(10) + f"{len(rankable)} moment(s) have a rankable term, but none clears "
+                  f"the margin floor at its measured price. That is the money saying "
+                  f"no, not the market.")
+    elif not rankable:
+        print(chr(10) + "No dated moment has a measured, non-wall term behind it. The dates "
+              "are right and nothing you watch fits them. Add terms with: "
+              "settings_store term add \"christmas ornament\"")
     return 0
 
 
