@@ -254,12 +254,20 @@ def job_keyword_sweep():
                 failed.append({"term": term, "why": "no searchVolume in response"})
                 continue
             cvr = data.get("cvr")
+            from etsy.analytics.pod_check import page_one_prices
+            _p1 = page_one_prices(data.get("listings")) or {}
             db.record_keyword(
                 term, source="etsy_private", volume=volume,
                 competition=data.get("supply"), cvr=cvr,
                 cvr_source="measured" if cvr is not None else "default",
                 price_low=data.get("price_low"),
-                price_high=data.get("price_high"))
+                price_high=data.get("price_high"),
+                # D-46: the band is market-wide and includes every listing that
+                # never ranks; the median of the ~20 that DO rank is the number a
+                # margin floor should be priced against. They ride free on this
+                # same response, so storing them costs nothing.
+                page_one_median_price=_p1.get("median"),
+                page_one_n=_p1.get("n"))
             recorded.append(term)
         except Exception as e:
             failed.append({"term": term, "why": f"{type(e).__name__}: {e}"})

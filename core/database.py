@@ -375,6 +375,21 @@ class MarketDatabase:
                     cursor.execute(
                         f"ALTER TABLE shop_observations ADD COLUMN {column} {decl}")
 
+            # D-46 applied to the calendar: `price_low`/`price_high` are the
+            # MARKET-WIDE band, which includes every listing that never ranks. The
+            # median of the 20 that DO rank is a different, higher number and is the
+            # one a margin floor should be priced against — measured on `halloween
+            # badge reel`, $9.00 band-low gives -9.1% margin against the operator's
+            # real costs while the $14.12 page-one median gives +17.5%. The cards
+            # ride free on the same results-data call, so this costs no request.
+            kw_cols = {row[1] for row in
+                       cursor.execute("PRAGMA table_info(keyword_observations)")}
+            for column, decl in (("page_one_median_price", "REAL"),
+                                 ("page_one_n", "INTEGER")):
+                if column not in kw_cols:
+                    cursor.execute(
+                        f"ALTER TABLE keyword_observations ADD COLUMN {column} {decl}")
+
             observed = {row[1] for row in
                         cursor.execute("PRAGMA table_info(listing_observations)")}
             for column, decl in [
@@ -415,22 +430,31 @@ class MarketDatabase:
     # --- KEYWORDS API ---
     def record_keyword(self, keyword, source="etsy_private", collected_at=None,
                        volume=None, competition=None, cvr=None, cvr_source="unspecified",
-                       price_low=None, price_high=None, price_basis="measured"):
+                       price_low=None, price_high=None, price_basis="measured",
+                       page_one_median_price=None, page_one_n=None):
         """Append one observation of a keyword. Never overwrites.
 
         cvr_source must say where the CVR came from: 'measured' when the source returned
         one, 'default' when it fell back to the 0.02 assumption. Storing those two as the
         same number is how a guess becomes indistinguishable from a measurement.
+
+        ⚠️ `price_low`/`price_high` are the MARKET-WIDE band and are the wrong number
+        to price a margin floor against — they include every listing that never ranks.
+        `page_one_median_price` is what the ~20 competitors that DO rank charge, and
+        `page_one_n` is how many of them had a readable price, because a median over
+        3 cards is not the same claim as a median over 20 (D-46).
         """
         collected_at = collected_at or datetime.now(timezone.utc).isoformat(timespec="seconds")
         with self.get_connection() as conn:
             conn.execute('''
                 INSERT OR REPLACE INTO keyword_observations (
                     keyword, collected_at, source, search_volume, competition,
-                    query_cvr, cvr_source, median_price_low, median_price_high, price_basis
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    query_cvr, cvr_source, median_price_low, median_price_high, price_basis,
+                    page_one_median_price, page_one_n
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (keyword, collected_at, source, volume, competition,
-                  cvr, cvr_source, price_low, price_high, price_basis))
+                  cvr, cvr_source, price_low, price_high, price_basis,
+                  page_one_median_price, page_one_n))
             conn.commit()
         return collected_at
 

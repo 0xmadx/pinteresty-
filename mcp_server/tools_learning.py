@@ -89,3 +89,50 @@ def verdict_history(subject: str) -> dict:
     state = verdict_log.explain(subject)
     return _ok({"state": state, "findings": verdict_log.read(state),
                 "basis": "measured" if state.get("readings") else "unmeasured"})
+
+
+# ⚠️ THE FIRST WRITE TOOL ON THIS SURFACE. Everything else here reads; this one
+# inserts a row into `launches`, and the server instructions were corrected in the
+# same commit because they claimed "every tool is read-only" — which stopped being
+# true the moment this shipped. A false self-description is exactly the class of
+# wrong-but-plausible statement this project exists to prevent.
+#
+# It is still safe in the sense that matters: it touches nothing outside our own
+# SQLite, spends no money, and cannot list a product on Etsy. It records that the
+# operator ALREADY did.
+#
+# Why it had to exist: `learn.py` needs 10 launches, `rank_tracker.py:85` starts
+# with `db.get_launches()` and so `rank_check` has returned [] on every scheduled
+# run for weeks, and MCP is the only interface (D-52). The one write that unblocks
+# the entire DID-IT-WORK half of the goal was CLI-only.
+@mcp.tool()
+@_guarded
+def record_launch(listing_id: str, term: str, predicted_score: float | None = None,
+                  predicted_profit: float | None = None,
+                  product_type: str | None = None, is_control: bool = False,
+                  notes: str | None = None) -> dict:
+    """WRITES. Record a listing the operator has ALREADY published, with what we predicted.
+
+    The only write on this surface. It cannot list anything on Etsy or spend money —
+    it records a launch that already happened, which is what turns every verdict
+    from an untested prediction into something that can be graded.
+
+    is_control=True marks a DELIBERATE mid/low-scored launch. Without controls the
+    loop only ever sees the model's own picks: it can measure precision and never
+    recall, and can never learn it was wrong to REJECT a niche (B-04). Target ~10%.
+    """
+    if not listing_id or not str(listing_id).strip():
+        return _fail("`listing_id` is required",
+                     fix="The numeric id from the Etsy listing URL, e.g. 1864690497.")
+    if not term or not term.strip():
+        return _fail("`term` is required",
+                     fix="The keyword this listing was launched FOR — it is the join "
+                         "key to the prediction, so a wrong one is worse than none.")
+
+    from etsy.analytics.launch import record_result
+    out = record_result(term.strip(), str(listing_id).strip(),
+                        score=predicted_score, profit=predicted_profit,
+                        product_type=product_type, is_control=is_control, notes=notes)
+    return _ok({"operation": "record_launch", **out,
+                "wrote": "graph.db → launches (INSERT OR IGNORE, so re-recording the "
+                         "same listing is a no-op rather than a duplicate)"})

@@ -145,7 +145,20 @@ def term_evidence(term, product_type=profit.PERSONALIZED, db_path=DB_PATH,
     ratio = (volume / supply) if (volume and supply) else None
     price = obs.get("median_price_low")
 
+    # D-46: prefer what the listings that ACTUALLY RANK charge. The band's low end
+    # includes every dead listing that never surfaces, so pricing a margin floor
+    # against it understates by a lot — measured on `halloween badge reel`, $9.00
+    # band-low gives -9.1% against the operator's real costs while the $14.12
+    # page-one median gives +17.5%. Same term, opposite side of break-even.
+    page_one = obs.get("page_one_median_price")
+    page_one_n = obs.get("page_one_n")
+    price_used, price_used_basis = price, "band low (market-wide, conservative)"
+    if page_one:
+        price_used = page_one
+        price_used_basis = f"page-one median of {page_one_n or '?'} ranking listings (D-46)"
+
     verdict, profit_basis = None, "no measured price"
+    price = price_used
     if price and profile:
         # The LOW end of the band: clearing there clears across it. Using the high
         # end would flatter every candidate.
@@ -167,7 +180,10 @@ def term_evidence(term, product_type=profit.PERSONALIZED, db_path=DB_PATH,
         "demand_per_listing": round(ratio, 4) if ratio else None,
         "is_wall": (ratio is not None and ratio < WALL_RATIO),
         "cvr": obs.get("query_cvr"), "cvr_basis": obs.get("cvr_source"),
-        "price_low": price, "price_high": obs.get("median_price_high"),
+        "price_low": obs.get("median_price_low"),
+        "price_high": obs.get("median_price_high"),
+        "price_used": price_used, "price_used_basis": price_used_basis,
+        "page_one_median_price": page_one, "page_one_n": page_one_n,
         "profitable": verdict["go"] if verdict else None,
         "margin": verdict["margin"] if verdict else None,
         "profit_basis": profit_basis,

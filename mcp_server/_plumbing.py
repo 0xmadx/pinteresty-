@@ -32,8 +32,13 @@ mcp = MCPServer(
         "so the verdict may move.\n\n"
         "Rank opportunities by demand-per-listing, never by search volume — a term "
         "with 2M listings is a wall, not an opportunity.\n\n"
-        "Every tool is read-only. Nothing here can list a product or spend money; if "
-        "asked to, say so and hand the step back to the operator."
+        "Almost every tool is read-only, and NONE can list a product or spend money — "
+        "if asked to, say so and hand the step back to the operator. The single "
+        "exception is `record_launch`, which writes one row to our own database "
+        "recording a listing the operator has ALREADY published. It is what turns "
+        "a verdict from an untested prediction into something that can be graded, "
+        "and with 0 launches recorded that is the binding constraint on the whole "
+        "system."
     ),
 )
 
