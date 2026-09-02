@@ -2269,3 +2269,32 @@ anything calls it. Coverage of a function is not coverage of a path. The audit
 found this by grepping for call sites, which is a check no test in this repo
 performs.
 
+
+---
+
+## D-66 — chat is the interface. No UI, by the operator's decision.
+
+**2026-09-01.** The operator, asked directly whether they wanted a web page built
+on top of this system, chose to keep using chat only.
+
+This is not a deferral for lack of time. It is the second time this question has
+been answered the same way: D-52 deleted 7 HTML screens and a read server that had
+**zero callers**, built in a two-day burst and never opened again. Building the
+same thing a second time, before anything demonstrated a daily need for it, would
+repeat a mistake this log already records.
+
+**What "chat only" actually costs, so the trade is visible:** nothing that
+matters. Every number the system produces is already reachable — the calendar,
+the comparison table, the drill, the rank history. A page would render the same
+figures in colour. It would save the operator from typing a question each
+morning, and that is the entire benefit.
+
+**What would change the decision.** One thing: if the operator finds they ask
+*"what should I list?"* every day for a week or two. That is a measured signal of
+a daily habit, and a daily habit is the only thing that justifies a screen. Until
+then, `frontend-nextjs` and `ux-decision-design` remain written and unused, which
+costs nothing to keep.
+
+⚠️ Note for whoever reads this next: **do not propose a UI unprompted.** The
+answer has been "not yet" twice, and the second time it was explicit. If the
+operator asks, the smallest useful thing is ONE calendar page — never a dashboard.

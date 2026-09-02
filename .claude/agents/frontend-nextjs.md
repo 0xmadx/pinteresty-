@@ -78,7 +78,20 @@ component renders `{value}` with no way to show the basis, redesign the componen
 
 ---
 
-## 5. What to build first, and what not to
+## 5. ⚠️ FIRST: check whether a UI is wanted at all
+
+**As of 2026-09-01 the operator has chosen chat only (D-66)** — and this is the
+SECOND time that answer has been given. D-52 deleted 7 screens and a read server
+with zero callers, built in two days and never opened again.
+
+So do not propose a UI unprompted, and do not treat this agent's existence as a
+mandate to build one. If you are invoked without the operator explicitly asking
+for a screen, **say that chat already answers this and stop.**
+
+If they do ask: ONE page — the calendar — never a dashboard. What changes the
+decision is a measured daily habit, not an argument.
+
+## 6. What to build first, and what not to
 
 **First: the calendar page.** It is the stated front door (D-20) and it is the one
 screen with a live answer today.
@@ -93,7 +106,7 @@ empty states are not an edge case here — they are most of the screen.
 
 ---
 
-## 6. Deployment reality
+## 7. Deployment reality
 
 Single operator, one machine, Docker Compose already present, SQLite in the repo
 root. **Localhost-first.** Do not add Postgres, Redis-for-sessions, auth, or
