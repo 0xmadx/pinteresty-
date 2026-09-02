@@ -273,7 +273,8 @@ and is instructed to disagree by name rather than converge politely:
 
 | agent | owns | its veto or accountability |
 |---|---|---|
-| `cto` | architecture, build-vs-kill | accountable for **a plausible wrong number reaching the operator** |
+| `cto` | architecture, build-vs-kill, **and how much compute each seat gets** | accountable for **a plausible wrong number reaching the operator** |
+| `eng-manager` | turning a decision into sequenced, assigned work | owns the release gate; **escalates rather than absorbing scope** |
 | `head-of-product` | `docs/GOAL.md`, scope, sequencing | must say "we are building the wrong thing" when it is |
 | `growth-strategist` | will it earn, is the edge durable | the seller's lens, not the engineer's |
 | `risk-officer` | what ENDS the business | **veto** on anything risking the seller account (D-29) |
