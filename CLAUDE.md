@@ -251,6 +251,20 @@ account costs the business.
 | `docs/GOAL.md` | the north star |
 | `BIASES_AND_BLIND_SPOTS.md` | ⚠️ self-declared **unverified**; 2 of its 10 claims were wrong. Prefer `bias_audit.md`. |
 
+Subagents in `.claude/agents/` — **four, added 2026-09-01.** A skill fires inside
+your context; an agent is a separate worker with its own system prompt, spawned via
+the Agent tool. Use them when the work is a whole task in one lane:
+
+| agent | owns | the rule it exists to enforce |
+|---|---|---|
+| `mcp-tool-builder` | `mcp_server/` | the tool is an **envelope**; logic lives in `etsy/analytics/` (D-64). Carries the measured SDK schema costs and the 6,000-token budget |
+| `backend-analytics` | `etsy/`, `core/` | read through the parsers · absent is not zero · **name the unit before dividing** · the access layer is off limits |
+| `ux-decision-design` | what the operator SEES | calendar first (D-20) · three sources before one verdict · no number without its basis · refusals are content |
+| `frontend-nextjs` | the web app | **there is no read API — D-52 deleted it** · never reimplement analytics in TypeScript · SQLite needs WAL first |
+
+`ux-decision-design` inherited the layout discipline of the deleted `ui-builder`
+skill. It designs; `frontend-nextjs` builds.
+
 Skills in `.claude/skills/` — **all 12, and they are enforced, not advisory.**
 
 *The craft lenses — is the work right:*
