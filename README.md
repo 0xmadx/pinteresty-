@@ -215,25 +215,47 @@ before people search Etsy. No keyword tool can tell you the date.
 
 ---
 
-## Skills and agents (the part that makes answers trustworthy)
+## The expert rules behind the answers
 
-The folders `.claude/skills/` and `.claude/agents/` are **rules Claude must follow**
-when it uses this system. You do not run them — they load automatically.
+When Claude uses this system it loads **rules** that decide what it is allowed to
+conclude. You never run them — they switch on by themselves. They are the reason an
+answer here is different from asking a chatbot to guess.
 
-**Skills** stop bad conclusions. Examples of what they enforce:
+These are the ones that shape **your** answers:
 
-- Never rank by search volume — always searches-per-listing
-- A missing number means *"nobody checked"*, never *"zero"*
-- Etsy's own filters lie — **9 of 12** were tested and cannot be trusted
-- If the data cannot separate two options, say so instead of picking
+| Acting as | What it enforces |
+|---|---|
+| **Etsy SEO expert** | rank by searches-per-listing, never by market size; a term you cannot rank for is not an opportunity however big it is |
+| **Market analyst** | which source can answer which question, and what a signal is actually worth before spending anything to get it |
+| **Product picker** | five checks in order — can you rank · do they buy · does it pay · is it too late · is this even comparable. Each one can only *reject* |
+| **Timing** | takeoff dates → your list-by date, and the difference between **late** and **missed** |
+| **Reading Etsy's seller data** | search volume and conversion are relative, not absolute — compare between terms, never read as orders |
+| **Reading Etsy's public data** | 9 of Etsy's 12 search filters were tested and **cannot be believed**; page one is ~12 slots and half are ads |
+| **Reading Pinterest** | every Pinterest number is relative (0–100), never a real count |
 
-**Agents** are specialists you can call: a backend engineer, a UX designer, a CTO,
-a risk officer, a growth strategist. Ask *"get the growth strategist's view on
-this niche"* and Claude answers wearing that hat, with that hat's rules.
+Plus one command you can type directly:
 
-Why you should care: **these are the difference between a confident answer and a
-correct one.** They exist because this system has produced wrong numbers before,
-and each rule is a scar.
+```
+/pod halloween badge reel
+```
+
+→ can print-on-demand serve this term profitably? Price ceiling and lead time.
+
+**Why this matters to you:** these rules are scars. Each one exists because this
+system once produced a confident number that was wrong. They are what stops it
+telling you a niche is open when the sample was too small to know.
+
+---
+
+## For developers only
+
+If you want to modify the code, the repo also contains rules and specialist roles
+that have **nothing to do with selling** — a CTO, a risk officer, an engineering
+manager, backend and frontend engineers, plus skills about pipelines, architecture
+and git discipline.
+
+**Ignore all of that if you are here to sell things.** It is the workshop, not the
+tool. Start at [`CLAUDE.md`](CLAUDE.md) if you want in.
 
 ---
 
