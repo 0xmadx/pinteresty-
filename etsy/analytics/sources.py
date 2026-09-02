@@ -242,10 +242,18 @@ def discover_terms(seed, sources=("etsy_suggest", "pinterest_prefix"),
 DEFAULT_SIZE_LIMIT = 24
 
 
-def hunt(seed, sources=("etsy_suggest", "pinterest_prefix"), mode="any",
-         min_n=None, size_mode="cheap", limit=DEFAULT_SIZE_LIMIT,
-         fetchers=None, sizer=None):
+def scout(seed, sources=("etsy_suggest", "pinterest_prefix"), mode="any",
+          min_n=None, size_mode="cheap", limit=DEFAULT_SIZE_LIMIT,
+          fetchers=None, sizer=None):
     """Discover terms across doors, size them, rank them — one call, one table.
+
+    ⚠️ NOT `hunt`. This was called `hunt` for about an hour and that was a name
+    collision: `etsy/analytics/hunt.py` has existed since 2026-08-25 and is a
+    DIFFERENT pipeline — Etsy's trending terms → calendar → profit gate → listing
+    blueprint, seeded from nothing. This one is seeded from a term you supply and
+    stops at a ranked table. Two functions with one name in one package is how a
+    caller imports the wrong thing and gets a plausible answer to a question it did
+    not ask.
 
     The whole strategy in order: cheap doors find candidates, the private tier sizes
     only the survivors, and the gates rank what is left. Running it the other way —

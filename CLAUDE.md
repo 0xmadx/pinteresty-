@@ -81,8 +81,8 @@ and says so. Verified green 2026-08-14: 11 etsy · 1 etsy_private · 8 pinterest
 
 ```bash
 # Full verification — run before every commit
-.venv/Scripts/python.exe -m core.test_graph_db          # + the other 54 suites
-# 55 OFFLINE suites, 1,589 assertions, no network required.
+.venv/Scripts/python.exe -m core.test_graph_db          # + the other 55 suites
+# 56 OFFLINE suites, ~1,700 assertions, no network required.
 # ⚠️ pinterest/tests/ holds 5 more that are LIVE — their own docstrings say
 # "Live verification". They hit real Pinterest, their assertion counts VARY
 # with session state, and they print no summary when the vault is down. Never
@@ -373,6 +373,10 @@ reaching the ranking it guards.
 · `keyword_crawl(operation="drill")` opens **any** row into its sub-niches as rows of
 the *same shape*, drillable again — sub-niche by sub-niche. Free per child: one
 expansion buys 120–173 children each already carrying volume and supply.
+· `scout` runs the whole loop in one call — discover across doors, size the
+survivors, rank. ⚠️ NOT `hunt`: `etsy/analytics/hunt.py` (2026-08-25) is a
+different pipeline (trending → calendar → gate → blueprint) and two functions with
+one name is how a caller imports the wrong thing.
 · `etsy_public(operation="suggest")` — Etsy's own autocomplete, **buyer session**,
 2 requests, no seller cost.
 

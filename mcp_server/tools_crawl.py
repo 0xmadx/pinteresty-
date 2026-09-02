@@ -142,7 +142,7 @@ def find_terms(
 
 @mcp.tool()
 @_guarded
-def hunt(
+def scout(
     seed: str,
     sources: str = "etsy_suggest,pinterest_prefix",
     mode: str = "any",
@@ -163,7 +163,7 @@ def hunt(
     Every row carries `found_by` beside its verdict: which populations use the word,
     and whether you could rank for it, stay SEPARATE facts.
     """
-    from etsy.analytics.sources import DOORS, hunt as _hunt
+    from etsy.analytics.sources import DOORS, scout as _scout
     want = [x.strip() for x in (sources or "").split(",") if x.strip()]
     if not seed or not seed.strip():
         return _fail("`seed` is required")
@@ -178,9 +178,9 @@ def hunt(
     if blocked:
         return blocked
 
-    out = _hunt(seed.strip(), sources=tuple(want), mode=mode,
+    out = _scout(seed.strip(), sources=tuple(want), mode=mode,
                 size_mode=size_mode, limit=limit)
-    return _ok({"operation": "hunt", **out})
+    return _ok({"operation": "scout", **out})
 
 
 @mcp.tool()

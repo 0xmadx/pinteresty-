@@ -145,7 +145,9 @@ def main():
           src.discover_terms("x", sources=("astrology",), fetchers=stub)["basis"]
           == "unknown_source")
 
-    print(chr(10) + "hunt — discover, size, rank in one call")
+    print(chr(10) + "scout — discover, size, rank in one call")
+    # Named `scout`, not `hunt`: etsy/analytics/hunt.py has existed since
+    # 2026-08-25 and is a different pipeline. Pinned below.
     # Injected sizer: the sizing half is compare's, covered by its own 61 assertions.
     # What matters here is that provenance survives the join and a cut is declared.
     def fake_sizer(terms, mode="cheap"):
@@ -157,7 +159,7 @@ def main():
                 "rows": [{"term": t, "demand_per_listing": 0.5,
                           "verdict": "contested"} for t in ts]}
 
-    h = src.hunt("badge reel", sources=("etsy_suggest", "pinterest_prefix"),
+    h = src.scout("badge reel", sources=("etsy_suggest", "pinterest_prefix"),
                  fetchers=stub, sizer=fake_sizer)
     # 6, not 5: SUGGEST and PINTEREST share NOTHING — the overlap in this
     # fixture () is between EXPAND and PINTEREST, and EXPAND
@@ -176,7 +178,7 @@ def main():
 
     # A cut is a cut. Naming the dropped terms is the difference between a slice and
     # a slice presented as the whole neighbourhood.
-    cut = src.hunt("badge reel", sources=("etsy_suggest", "etsy_expand",
+    cut = src.scout("badge reel", sources=("etsy_suggest", "etsy_expand",
                                           "pinterest_prefix"),
                    fetchers=stub, sizer=fake_sizer, limit=3)
     check("over the limit it sizes only the top N", cut["sized"] == 3, cut["sized"])
@@ -190,7 +192,7 @@ def main():
 
     # Discovery failing and discovery finding nothing are different claims, and
     # neither should spend a sizing call.
-    empty = src.hunt("x", sources=("etsy_suggest",),
+    empty = src.scout("x", sources=("etsy_suggest",),
                      fetchers={"etsy_suggest": lambda s: []}, sizer=fake_sizer)
     check("nothing discovered means nothing sized", empty["rows"] == [])
     check("...and it does not read as 'these are walls'",
@@ -199,12 +201,34 @@ def main():
     def broken_sizer(terms, mode="cheap"):
         return {"ok": False, "error": "SessionDown"}
 
-    fell = src.hunt("badge reel", sources=("etsy_suggest",), fetchers=stub,
+    fell = src.scout("badge reel", sources=("etsy_suggest",), fetchers=stub,
                     sizer=broken_sizer)
     check("a sizing failure is NOT reported as an empty market",
           "unmeasured" in fell["note"] and "not walls" in fell["note"], fell["note"])
     check("and the sizing error is surfaced", fell["sizing_error"] == "SessionDown")
 
+
+    # --- the NAME, pinned ------------------------------------------------------------
+    #
+    # This function shipped as `hunt` for about an hour. etsy/analytics/hunt.py has
+    # existed since 2026-08-25 and is a DIFFERENT pipeline: Etsy trending terms ->
+    # calendar -> profit gate -> listing blueprint, seeded from nothing. This one is
+    # seeded from a term you supply and stops at a ranked table.
+    #
+    # Two functions with one name in one package is how a caller imports the wrong
+    # thing and gets a plausible answer to a question it did not ask — which is this
+    # project's whole failure mode, arriving through the import system instead of
+    # through a parser.
+    print(chr(10) + "the name")
+    import importlib
+    old = importlib.import_module("etsy.analytics.hunt")
+    check("the OLDER hunt pipeline still exists and is untouched",
+          hasattr(old, "main"))
+    check("it is a DIFFERENT thing — seeded from trending, not from a term",
+          "discover" in (old.__doc__ or "").lower(), (old.__doc__ or "")[:60])
+    check("this module exposes scout, not hunt", hasattr(src, "scout"))
+    check("and does NOT re-export hunt, which would restore the ambiguity",
+          not hasattr(src, "hunt"))
 
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
