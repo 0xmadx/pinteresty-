@@ -100,6 +100,48 @@ _OP_DOC = (
 
 @mcp.tool()
 @_guarded
+def find_terms(
+    seed: str,
+    sources: str = "etsy_suggest,pinterest_prefix",
+    mode: str = "any",
+    min_n: int = 2,
+) -> dict:
+    """Find candidate terms across SEVERAL doors and combine them with a stated rule.
+
+    sources: comma list of etsy_suggest (PUBLIC, 2 req) · pinterest_prefix (1 req,
+    each term carries 52wk momentum free) · etsy_expand (SPENDS THE SELLER ACCOUNT,
+    but the only door returning volume+supply inline). Defaults to the two FREE ones.
+    mode: any = union · all = only terms EVERY door returned · min_n = at least N agree.
+
+    The doors return DIFFERENT SHAPES — Etsy's box gives children, its expansion
+    gives siblings, Pinterest gives its own vocabulary — and the two Etsy doors were
+    measured completely disjoint. Strings only: size with `compare` before ranking.
+    """
+    from etsy.analytics.sources import DOORS, discover_terms
+    want = [x.strip() for x in (sources or "").split(",") if x.strip()]
+    if not seed or not seed.strip():
+        return _fail("`seed` is required")
+    if not want:
+        return _fail("`sources` is required",
+                     fix=f"Pick from: {sorted(DOORS)}")
+
+    # Preflight only the tiers actually asked for — requiring a pinterest session to
+    # read Etsy's public search box would refuse a call that costs nothing.
+    tiers = {DOORS[d]["tier"] for d in want if d in DOORS}
+    blocked = _preflight(tuple(sorted(tiers))) if tiers else None
+    if blocked:
+        return blocked
+
+    out = discover_terms(seed.strip(), sources=tuple(want), mode=mode, min_n=min_n)
+    if out.get("basis") in ("unknown_source", "bad_mode"):
+        return _fail(out.get("note", "bad request"))
+    return _ok({"operation": "find_terms", **out,
+                "next": "These are STRINGS — no volume, no supply. Size them with "
+                        "`compare` (mode=cheap) before ranking anything."})
+
+
+@mcp.tool()
+@_guarded
 def keyword_crawl(
     operation: Annotated[CrawlOp, Field(description=_OP_DOC)],
     seed: str,
