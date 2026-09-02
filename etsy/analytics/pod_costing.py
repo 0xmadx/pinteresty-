@@ -212,8 +212,15 @@ def affordable_cogs(price, product_type, shipping_cost=0.0, shipping_charged=0.0
     $X", which is a number a supplier can be asked about.
 
     Returns None when even a FREE product misses the floor at this price, which
-    means the price itself is too low to carry Etsy's fees plus labour. That is a
-    real and common answer: it says the problem is not the supplier.
+    means the price itself is too low to carry Etsy's fees. That is a real and
+    common answer: it says the problem is not the supplier.
+
+    ⚠️ `labor_minutes` no longer moves this number (changed 2026-09-01). The floor
+    is now tested against CASH margin — fees, materials and shipping — because the
+    operator does not pay themselves a wage, they keep the profit. Their time is
+    reported as `profit_per_hour` and judged by them, not gated here. For POD this
+    is also simply more accurate: the printer does the work, and charging the
+    seller 12 minutes of labour against a printed unit was never right.
     """
     def margin_at(c):
         return profit.unit_economics(price, product_type, c, shipping_cost,

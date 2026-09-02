@@ -103,11 +103,41 @@ def etsy_fees(price, shipping_charged=0.0, config=None, offsite_ads=False, over_
 
 def unit_economics(price, product_type, cogs=0.0, shipping_cost=0.0, shipping_charged=0.0,
                    labor_minutes=0.0, config=None, offsite_ads=False, over_10k=False):
-    """Per-unit profit and margin after fees, COGS, shipping and the operator's own time.
+    """Per-unit money, the way a SELLER counts it — plus what an hour of their time earns.
 
-    Labour is costed even though it is not cash out: an hour spent on a product is an hour
-    unavailable for another, and pretending it is free is exactly what makes a
-    made-to-order item look as good as a download.
+    ⚠️ CHANGED 2026-09-01, and it changed verdicts across the system.
+
+    This used to subtract the operator's own labour at their hourly rate as a COST,
+    and then require the remainder to clear a 35-70% margin floor. That charges the
+    product a wage AND takes half of what is left. Measured on the operator's real
+    "Custom sign" profile, a $45 sign taking 45 minutes:
+
+        revenue                     $45.00
+        materials                  -$12.00
+        Etsy fees                   -$4.73
+        their own labour           -$18.75   <- subtracted as a cost
+        ------------------------------------
+        "profit"                     $9.53   margin 21%  ->  BELOW the 50% floor, REJECTED
+
+    But the seller actually takes home $9.53 + $18.75 = **$28.28 for 45 minutes**,
+    which is **$37.70/hour**. The system rejected a product paying $37.70/hour. As
+    the operator put it: *"i dont need this $25/hr cos am seller"*. They do not pay
+    themselves a wage; they keep the profit.
+
+    So now:
+      * `profit` / `margin` are CASH — what actually reaches them, labour NOT deducted.
+        The floor tests this.
+      * `profit_per_hour` is what an hour of their time earns. That is the number a
+        maker judges "is this worth doing" by, and it is theirs to judge.
+
+    The old docstring's point was real — an hour on one product is an hour not on
+    another — and it survives BETTER here: $/hour compares a 45-minute sign against a
+    5-minute download directly, in the unit a seller already thinks in. Costing the
+    wage and then flooring the remainder did not measure that trade-off, it just
+    rejected everything handmade.
+
+    `labor_cost` and `margin_after_labor` are still reported, so nothing is lost and
+    an opportunity-cost view is one field away.
     """
     if product_type not in PRODUCT_TYPES:
         raise ValueError(f"unknown product_type {product_type!r}; expected one of {PRODUCT_TYPES}")
@@ -123,9 +153,18 @@ def unit_economics(price, product_type, cogs=0.0, shipping_cost=0.0, shipping_ch
     shipping_gap = shipping_cost - shipping_charged   # positive = subsidised by the seller
 
     revenue = price + shipping_charged
-    costs = fees["total"] + cogs + shipping_cost + labor_cost
-    profit = revenue - costs
+    # CASH costs only — money that actually leaves. The operator's own time is not
+    # cash out, and treating it as such is what rejected a $37.70/hour product.
+    cash_costs = fees["total"] + cogs + shipping_cost
+    profit = revenue - cash_costs
     margin = profit / revenue if revenue else 0.0
+
+    # The seller's real question. Reported, never used as a gate — how much an hour
+    # of their own time is worth is their call, not this file's.
+    hours = labor_minutes / 60.0
+    profit_per_hour = (profit / hours) if hours else None
+    after_labor = profit - labor_cost
+    margin_after_labor = (after_labor / revenue) if revenue else 0.0
 
     return {
         "product_type": product_type,
@@ -136,7 +175,17 @@ def unit_economics(price, product_type, cogs=0.0, shipping_cost=0.0, shipping_ch
         "shipping_subsidy": round(shipping_gap, 4),
         "labor_cost": round(labor_cost, 4),
         "labor_minutes": labor_minutes,
-        "total_costs": round(costs, 4),
+        # What an hour of your time earns on this product. None for a digital item
+        # with no build time — that is unmeasured, not infinite.
+        "profit_per_hour": None if profit_per_hour is None else round(profit_per_hour, 2),
+        # The old view, kept and clearly named: profit after charging your own wage.
+        # Informational — the floor no longer tests it.
+        "profit_after_labor": round(after_labor, 4),
+        "margin_after_labor": round(margin_after_labor, 4),
+        "margin_basis": "CASH — fees, materials and shipping only. Your own labour is "
+                        "NOT deducted; see profit_per_hour for what your time earns.",
+        # Cash out only. profit_after_labor carries the other view.
+        "total_costs": round(cash_costs, 4),
         "profit_per_unit": round(profit, 4),
         "margin": round(margin, 4),
     }

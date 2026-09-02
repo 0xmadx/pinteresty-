@@ -45,10 +45,8 @@ def main():
     print()
     check("unknown COGS yields no price, never a default one",
           required_price(None, profit.PERSONALIZED) is None)
-    check("labour is costed into the required price",
-          required_price(10.10, profit.PERSONALIZED, shipping_cost=7.99,
-                         labor_minutes=45) >
-          required_price(10.10, profit.PERSONALIZED, shipping_cost=7.99))
+    pass  # REPLACED — see the labour block below
+    
 
     # --- lead time ----------------------------------------------------------------------
     print()
@@ -112,16 +110,63 @@ def main():
     # answer: the problem is the labour, and no sourcing decision fixes it.
     with_labour = affordable_cogs(45.78, profit.PERSONALIZED, shipping_cost=7.99,
                                   labor_minutes=45)
-    check("labour can make a price impossible outright, not merely tighter",
-          with_labour is None, with_labour)
-    check("with less labour it becomes possible again, and is tighter than with none",
-          0 < affordable_cogs(45.78, profit.PERSONALIZED, shipping_cost=7.99,
-                              labor_minutes=5) < m)
+    pass  # REPLACED — see the labour block below
+    
+    pass  # REPLACED — see the labour block below
+    
     ladder = cogs_ladder([16.60, 30.0, 45.78, 80.0], profit.PERSONALIZED,
                          shipping_cost=7.99)
     check("the ladder returns one entry per price", len(ladder) == 4)
     check("it shows where a product BECOMES possible, not just that it failed",
           ladder[0][1] is None and ladder[-1][1] is not None, ladder)
+
+    # --- labour is REPORTED, not charged (changed 2026-09-01) ----------------------
+    #
+    # These three assertions used to pin the opposite: "labour is costed into the
+    # required price", "labour can make a price impossible outright". That model
+    # subtracted the operator's own hourly rate as a COST and then required the
+    # remainder to clear a 35-70% floor — charging the product a wage AND taking half
+    # of what was left.
+    #
+    # Measured on the real "Custom sign" profile, a $45 sign taking 45 minutes:
+    #     old:  profit $9.53, margin 21%  -> REJECTED (below the 50% floor)
+    #     true: the seller takes home $28.28 for 45 min = $37.70/hour
+    # The operator's words: "i dont need this $25/hr cos am seller". They do not pay
+    # themselves a wage; they keep the profit.
+    print()
+    from etsy.analytics import profit as _p
+    base = dict(product_type="personalized", cogs=12.0, shipping_cost=0.0,
+                shipping_charged=0.0)
+    none_ = _p.unit_economics(45.0, labor_minutes=0.0, **base)
+    lots_ = _p.unit_economics(45.0, labor_minutes=45.0, **base)
+
+    check("labour does NOT change the cash margin — it is not cash out",
+          none_["margin"] == lots_["margin"], (none_["margin"], lots_["margin"]))
+    check("nor the profit that reaches the seller",
+          none_["profit_per_unit"] == lots_["profit_per_unit"])
+    check("so it cannot make a price impossible any more",
+          lots_["margin"] > 0.5, lots_["margin"])
+
+    # What replaced it: the number a maker actually judges by.
+    check("but the TIME is reported, as dollars per hour",
+          lots_["profit_per_hour"] == round(lots_["profit_per_unit"] / 0.75, 2),
+          lots_["profit_per_hour"])
+    check("and it is the seller's call, not a gate — a 45-min sign at $45 pays ~$37/hr",
+          36 < lots_["profit_per_hour"] < 39, lots_["profit_per_hour"])
+    check("no build time means no hourly rate — unmeasured, NOT infinite",
+          none_["profit_per_hour"] is None)
+    # The old view is kept, clearly named, so an opportunity-cost read is one field away.
+    check("the after-labour view survives under its own name",
+          lots_["margin_after_labor"] < lots_["margin"]
+          and lots_["profit_after_labor"] < lots_["profit_per_unit"])
+    check("and the margin says which basis it is on",
+          "CASH" in lots_["margin_basis"])
+
+    # The floor now tests cash. A price genuinely too thin still fails.
+    thin = _p.verdict(price=9.0, product_type="physical", cogs=4.0,
+                      shipping_cost=4.5, shipping_charged=5.0, labor_minutes=12.0)
+    check("a genuinely thin price is still refused — this is not a rubber stamp",
+          thin["go"] is False and thin["margin"] < 0.35, (thin["margin"], thin["go"]))
 
     print(f"\n{PASS} passed, {FAIL} failed")
     return FAIL

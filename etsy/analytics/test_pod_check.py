@@ -61,8 +61,16 @@ check_("the page-one ceiling is materially higher than the band's",
 # $12 is a business; at $5 it is not. Same term, same margin floor, one anchor.
 
 # --- a price too low to carry fees says so, and blames the price ------------------
-tiny = price_reality({"price_low": 1.0, "price_high": 1.2,
-                      "listings": [{"price": 1.1}]})
+# ⚠️ The threshold MOVED on 2026-09-01 and this fixture moved with it. It used to
+# use $1.00-$1.20 and expect None, but that None came from LABOUR — 12 minutes at
+# $25/hr is $5, which no dollar price can carry. Now the floor is tested on CASH
+# only (fees, materials, shipping), because the operator does not pay themselves a
+# wage. At $1.00 the fees leave $0.10, and a $0.10 product really does clear 35%.
+#
+# So the fixture uses a price where the FEES alone are the problem, which is what
+# this check was always about. Measured: $0.75 -> None, $1.00 -> $0.10.
+tiny = price_reality({"price_low": 0.5, "price_high": 0.75,
+                      "listings": [{"price": 0.6}]})
 tiny_caps = ceilings(tiny, profit.PHYSICAL)
 check_("a price that cannot carry Etsy's fees yields None, not a negative ceiling",
        any(c["max_cogs"] is None for c in tiny_caps), tiny_caps)
