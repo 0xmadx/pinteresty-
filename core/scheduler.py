@@ -309,10 +309,18 @@ def job_keyword_sweep():
 
 
 def job_rank_check():
-    """3x/week: where our launched listings actually rank.
+    """Daily pass; the CADENCE is per-listing and age-aware.
 
-    Not daily: rank is noisy hour to hour, and three readings a week is enough to see a
-    trend without spending a request per listing per day on jitter.
+    This used to run every 56 hours for every listing, reasoning that "rank is noisy
+    hour to hour" and 3 readings a week show a trend without paying for jitter. That
+    is right for a SETTLED listing and wrong for a new one: rank moves most in the
+    first weeks, and you cannot reconstruct the shape of a curve you sampled three
+    times. The first weeks are also the only window in which a launch answers the
+    question LEARN exists to ask.
+
+    So the job runs daily and `track_ranks` decides per listing — daily inside
+    FRESH_DAYS of launch, 56-hourly after. Cost stays proportional, and it is the
+    PUBLIC tier anyway: a replaceable buyer session, one request per due listing.
     """
     from etsy.analytics.rank_tracker import track_ranks
     return track_ranks()
@@ -604,8 +612,8 @@ def default_jobs():
             description="page-one saturation (star seller, free shipping, rating) per term"),
         Job("calendar", 24, job_calendar, platforms=(),
             description="recompute list-by dates and record verdict changes"),
-        Job("rank_check", 56, job_rank_check, platforms=("etsy",),
-            description="rank of our launched listings (~3x/week)"),
+        Job("rank_check", 24, job_rank_check, platforms=("etsy",),
+            description="rank of launched listings (daily when new, ~3x/week once settled)"),
         Job("discover", 168, job_discover, platforms=("etsy_private",),
             description="expand watched terms into ranked long-tail candidates (weekly)"),
         Job("pinterest_bridge", 168, job_pinterest_bridge, platforms=("pinterest",),

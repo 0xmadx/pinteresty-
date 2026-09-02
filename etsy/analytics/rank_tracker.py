@@ -70,8 +70,61 @@ def find_rank(search_result, listing_id):
     }
 
 
+# A listing's rank moves most in its first weeks, and that is exactly the window a
+# 3x/week cadence cannot reconstruct — you cannot see the shape of a curve you
+# sampled three times. After that it settles and dense sampling is just jitter.
+#
+# So the cadence is AGE-AWARE rather than fixed. The original 56-hour rationale
+# ("rank is noisy hour to hour... without spending a request per listing per day on
+# jitter") is right for a settled listing and wrong for a new one, and the cost
+# argument is weakest exactly where the data is most valuable: this is the PUBLIC
+# tier — a replaceable buyer session, one request per listing.
+FRESH_DAYS = 21
+FRESH_INTERVAL_H = 24
+STEADY_INTERVAL_H = 56
+
+
+def _due(launch, last_observed_at, now=None, fresh_days=FRESH_DAYS,
+         fresh_h=FRESH_INTERVAL_H, steady_h=STEADY_INTERVAL_H):
+    """Is this listing due for a reading? Pure — no I/O, so the cadence is testable.
+
+    Returns `(due, reason)`. A launch with no observation yet is ALWAYS due: the
+    first reading is the baseline every later delta is measured against, and
+    deferring it loses a day that cannot be recovered.
+    """
+    from datetime import datetime, timedelta, timezone
+    now = now or datetime.now(timezone.utc)
+
+    def _parse(ts):
+        try:
+            d = datetime.fromisoformat(ts)
+            return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
+        except (ValueError, TypeError):
+            return None
+
+    if last_observed_at is None:
+        return True, "first reading — the baseline every delta needs"
+
+    launched = _parse(launch.get("launched_at"))
+    last = _parse(last_observed_at)
+    if last is None:
+        return True, "last observation timestamp unreadable — read again rather than skip"
+
+    age_days = (now - launched).days if launched else None
+    fresh = age_days is not None and age_days <= fresh_days
+    interval = timedelta(hours=fresh_h if fresh else steady_h)
+    elapsed = now - last
+    if elapsed >= interval:
+        return True, (f"{'new listing' if fresh else 'settled'} "
+                      f"({age_days}d old) — {elapsed.total_seconds() / 3600:.0f}h "
+                      f"since last reading")
+    return False, (f"not due — {elapsed.total_seconds() / 3600:.0f}h of "
+                   f"{interval.total_seconds() / 3600:.0f}h elapsed")
+
+
 @logged_stage("rank_tracker")
-def track_ranks(db=None, public_api=None, term_lookup=None):
+def track_ranks(db=None, public_api=None, term_lookup=None,
+                respect_cadence=True):
     """Observe every launched listing's current rank. Returns a list of results.
 
     `term_lookup` maps a stored `term_id` to the query string to search. Defaults to
@@ -92,9 +145,19 @@ def track_ranks(db=None, public_api=None, term_lookup=None):
     results = []
     checked = missing = 0
 
+    skipped = 0
     for launch in launches:
         listing_id, term_id = launch["listing_id"], launch["term_id"]
         query = term_lookup(term_id)
+
+        if respect_cadence:
+            history = db.get_rank_history(listing_id)
+            last_at = history[-1]["observed_at"] if history else None
+            due, why = _due(launch, last_at)
+            if not due:
+                skipped += 1
+                print(f"    [ ] {listing_id} @ '{query}': {why}")
+                continue
 
         search = public_api.get_public_search(query)
         if search is None:
@@ -125,8 +188,8 @@ def track_ranks(db=None, public_api=None, term_lookup=None):
         results.append({**found, "listing_id": listing_id, "term_id": term_id})
 
     runlog.count(rows_in=len(launches), rows_out=checked)
-    print(f"[+] {checked} observed, {missing} unranked, "
-          f"{len(launches) - checked} unchecked (search failed).")
+    print(f"[+] {checked} observed, {missing} unranked, {skipped} not due, "
+          f"{len(launches) - checked - skipped} unchecked (search failed).")
 
     # D-12: the calibration gate. Reported every run so the operator knows how far off
     # auto-tuning is, rather than discovering the threshold when they try to use it.

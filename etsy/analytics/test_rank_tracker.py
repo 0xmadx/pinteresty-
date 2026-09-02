@@ -202,6 +202,48 @@ def main():
     check("tracking with no launches returns empty and does not crash",
           track_ranks(db=empty_db, public_api=FakeAPI({})) == [])
 
+
+    # --- the cadence is AGE-AWARE, because a launch is only new once ------------------
+    #
+    # rank_check ran every 56h for every listing, reasoning that rank is noisy hour to
+    # hour and 3 readings a week show a trend without paying for jitter. True of a
+    # SETTLED listing. False of a new one: rank moves most in the first weeks and you
+    # cannot reconstruct the shape of a curve you sampled three times — and those weeks
+    # are the only window in which a launch answers the question LEARN exists to ask.
+    #
+    # Pure function, so the cadence is testable without a clock or a network.
+    print()
+    from datetime import datetime, timedelta, timezone
+    from etsy.analytics.rank_tracker import _due, FRESH_DAYS
+
+    NOW = datetime(2026, 9, 10, 12, 0, tzinfo=timezone.utc)
+    launched = lambda d: {"launched_at": (NOW - timedelta(days=d)).isoformat()}
+    seen = lambda h: (NOW - timedelta(hours=h)).isoformat()
+
+    # The first reading is the baseline every later delta is measured against. Deferring
+    # it loses a day that cannot be recovered, so it is never "not due".
+    check("a launch with NO observation yet is always due",
+          _due(launched(0), None, now=NOW)[0] is True)
+    check("and the reason names it as the baseline",
+          "baseline" in _due(launched(0), None, now=NOW)[1])
+
+    check("a NEW listing is read daily", _due(launched(3), seen(25), now=NOW)[0] is True)
+    check("but not twice in a day", _due(launched(3), seen(6), now=NOW)[0] is False)
+    check("a SETTLED listing is not read daily",
+          _due(launched(40), seen(25), now=NOW)[0] is False)
+    check("it is read every ~56h", _due(launched(40), seen(60), now=NOW)[0] is True)
+    check("the boundary is FRESH_DAYS, and it is stated not magic",
+          _due(launched(FRESH_DAYS - 1), seen(25), now=NOW)[0] is True
+          and _due(launched(FRESH_DAYS + 5), seen(25), now=NOW)[0] is False)
+
+    # A skip is a decision not to measure. If we cannot tell when we last looked, the
+    # safe direction is to look — an extra public request costs a buyer session nothing,
+    # and a wrongly-skipped day is gone permanently.
+    check("an unreadable last-observation timestamp reads AGAIN rather than skipping",
+          _due(launched(3), "not-a-date", now=NOW)[0] is True)
+    check("a launch with no launched_at falls back to the settled interval, not to never",
+          _due({}, seen(60), now=NOW)[0] is True and _due({}, seen(25), now=NOW)[0] is False)
+
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
 
