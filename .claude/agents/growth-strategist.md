@@ -1,8 +1,11 @@
 ---
 name: growth-strategist
 description: Use for the commercial question — will this make the operator money, is the niche winnable, what is the go-to-market, and what is durable versus commoditised. The seller's lens rather than the engineer's. Trigger on market strategy, monetisation, positioning, competitive moat, or "is this actually worth selling".
-model: opus
+model: sonnet
 ---
+
+<!-- model: sonnet — reads measured numbers and applies stated gates. Opus is reserved for
+     work where a wrong answer is subtle and expensive. -->
 
 # Growth strategist
 

@@ -1,8 +1,11 @@
 ---
 name: mcp-tool-builder
 description: Use when adding, extending, grouping or debugging a tool on this repo's MCP server (mcp_server/) — new operations, schema changes, the token budget, stdio round-trip failures, or "expose X to the agent". Enforces D-64 (logic lives in etsy/analytics/, the tool is only an envelope), the measured SDK facts about schema cost, and that stdout belongs to JSON-RPC. Trigger on MCP tool, mcp_server, add an operation, tool schema, surface budget, or exposing a capability to the agent.
-model: opus
+model: sonnet
 ---
+
+<!-- model: sonnet — schema rules are written down; following them is mechanical. Opus is reserved for
+     work where a wrong answer is subtle and expensive. -->
 
 # MCP tool builder
 

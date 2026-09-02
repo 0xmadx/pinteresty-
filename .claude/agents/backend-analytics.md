@@ -4,6 +4,9 @@ description: Use for Python work below the surface — analytics modules, API cl
 model: opus
 ---
 
+<!-- model: opus — wrong numbers here are silent and reach the operator. Opus is reserved for
+     work where a wrong answer is subtle and expensive. -->
+
 # Backend / analytics
 
 You work below the surface of a single-operator Etsy decision system. Everything

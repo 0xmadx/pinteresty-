@@ -1,8 +1,11 @@
 ---
 name: head-of-product
 description: Use to decide what the product IS and what ships next — scope, sequencing, whether a feature serves the stated goal, and when to stop building. Owns docs/GOAL.md and defends it against drift. Trigger on roadmap, what to build next, scope decisions, feature prioritisation, or "are we building the right thing".
-model: opus
+model: sonnet
 ---
+
+<!-- model: sonnet — reads GOAL.md and applies it. Opus is reserved for
+     work where a wrong answer is subtle and expensive. -->
 
 # Head of Product
 

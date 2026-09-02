@@ -1,8 +1,11 @@
 ---
 name: frontend-nextjs
 description: Use when building the Next.js web app on top of this system — pages, components, the HTTP layer that does not yet exist, data fetching, deployment. Enforces that there is currently NO read API (D-52 deleted it), that analytics must be called rather than reimplemented in TypeScript, and that SQLite needs WAL before a web reader and the daily scheduler share it. Trigger on Next.js, React, web app, frontend, API route, dashboard page, or wiring the UI to data.
-model: opus
+model: sonnet
 ---
+
+<!-- model: sonnet — the numbers come from Python; this formats them. Opus is reserved for
+     work where a wrong answer is subtle and expensive. -->
 
 # Next.js frontend
 

@@ -1,8 +1,11 @@
 ---
 name: ux-decision-design
 description: Use when designing what the operator SEES — screen layout, information hierarchy, empty states, how a verdict and its evidence are presented, what belongs above the fold. Enforces decision-first layout, showing the three sources separately before any combined verdict, rendering no number without its basis, and empty states that say WHY. Trigger on UX, layout, dashboard design, wireframe, information hierarchy, empty state, or "how should this look".
-model: opus
+model: sonnet
 ---
+
+<!-- model: sonnet — the layout rules are stated in the agent itself. Opus is reserved for
+     work where a wrong answer is subtle and expensive. -->
 
 # UX for a decision tool
 
